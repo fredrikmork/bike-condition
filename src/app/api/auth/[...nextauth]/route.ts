@@ -22,7 +22,7 @@ const handler = NextAuth({
       clientSecret: process.env.STRAVA_CLIENT_SECRET ?? "",
       authorization: {
         params:{
-          scope: "activity:read_all,profile:read_all",
+          scope: "read,activity:read_all,profile:read_all",
         }
       }
     })
@@ -36,6 +36,7 @@ const handler = NextAuth({
       if (user) {
         token.userId = user.id;
       }
+      
       if (account && account.access_token) {
         token.accessToken = account.access_token;
       }
