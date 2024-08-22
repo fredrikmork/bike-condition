@@ -1,22 +1,31 @@
 import NextAuth from "next-auth"
+import Strava from "next-auth/providers/strava";
 import StravaProvider from "next-auth/providers/strava";
 
-const stravaProvider = StravaProvider({
-  clientId: process.env.STRAVA_CLIENT_ID ?? "",
-  clientSecret: process.env.STRAVA_CLIENT_SECRET ?? "",
-});
+// const stravaProvider = StravaProvider({
+//   clientId: process.env.STRAVA_CLIENT_ID ?? "",
+//   clientSecret: process.env.STRAVA_CLIENT_SECRET ?? "",
+// });
 
-if (
-  typeof stravaProvider.authorization !== "string" &&
-  stravaProvider.authorization?.params?.scope
-) {
-  stravaProvider.authorization.params.scope =
-    "activity:read_all,profile:read_all";
-}
+// if (
+//   typeof stravaProvider.authorization !== "string" &&
+//   stravaProvider.authorization?.params?.scope
+// ) {
+//   stravaProvider.authorization.params.scope =
+//     "activity:read_all,profile:read_all";
+// }
 
 const handler = NextAuth({
   providers: [
-    stravaProvider
+    StravaProvider({
+      clientId: process.env.STRAVA_CLIENT_ID ?? "",
+      clientSecret: process.env.STRAVA_CLIENT_SECRET ?? "",
+      authorization: {
+        params:{
+          scope: "activity:read_all,profile:read_all",
+        }
+      }
+    })
   ],
   session: {
     strategy: "jwt",
@@ -24,8 +33,6 @@ const handler = NextAuth({
   },
   callbacks: {
     jwt: async ({ token, user, account }) => {
-      console.log("jwt callback", { token, user, account });
-
       if (user) {
         token.userId = user.id;
       }

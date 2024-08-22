@@ -18,11 +18,17 @@
     --neon-blue: #2e00ff;
     --bright-purple: #8200ff;
     --neon-orange: #ff6600;
-    --dark-grey-1: #333333;
-    --dark-grey-2: #4F4F4F;
-    --dark-grey-3: #828282;
-    --dark-grey-4: #BDBDBD;
-    --dark-grey-5: #E0E0E0;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 18, 18, 18;
+    --background-end-rgb: 34, 34, 34;
+    --primary-color: #fc4c02; /* Strava Orange */
+    --secondary-color: #ffffff; /* White */
+    --accent-color: #ff7f50; /* Coral */
+    --dark-grey-1: #121212; /* Very dark grey */
+    --dark-grey-2: #1c1c1c; /* Dark grey */
+    --dark-grey-3: #2a2a2a; /* Medium dark grey */
+    --dark-grey-4: #3a3a3a; /* Medium grey */
+    --dark-grey-5: #4a4a4a; /* Light grey */
   }
 }
 
@@ -44,15 +50,19 @@
 } */
 
 h1 {
-  color: var(--hot-pink);
+  color: var(--primary-color);
   font-size: xx-large;
 }
 
 h2 {
-  color: var(--neon-orange);
+  color: var(--secondary-color);
   font-size: x-large;
 }
 
 p {
-  color: var(--bright-teal);
+  color: var(--secondary-color);
+}
+
+dl {
+  color: var(--secondary-color);
 }
