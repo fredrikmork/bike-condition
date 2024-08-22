@@ -13,7 +13,7 @@ export function StravaLoginButton() {
   return (
     <button
       onClick={() => onClick()}
-      className="flex h-12 w-40 items-center justify-center rounded border border-orange-600"
+      className="flex h-12 w-40 items-center justify-center rounded border border-orange-600 bg-black"
     >
       {/* <Image
         src="noe-strava.svg"
