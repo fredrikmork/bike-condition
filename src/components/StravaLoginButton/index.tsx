@@ -14,7 +14,7 @@ export function StravaLoginButton() {
   return (
     <button
       onClick={() => onClick()}
-      className="text-sm md:text-base flex items-center flex-row gap-2 border-2 border-transparent hover:border-2 hover:border-current p-2 rounded-md mr-4"
+      className="text-sm md:text-base flex items-center flex-row gap-2 border-2 border-transparent hover:border-2 hover:border-current p-2 rounded-md"
     >
       {session?.user?.image ? (
         <Image

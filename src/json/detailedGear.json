@@ -1,0 +1,35 @@
+[
+    {
+        "id": "1233",
+        "resource_state": 3,
+        "primary": true,
+        "name": "Aeromonsteret",
+        "distance": 12455404,
+        "brand_name": "Canyon",
+        "model_name": "Aeroad CF SLX 8.0 Disc",
+        "frame_type": 3,
+        "description": "This is a very fast bike"
+    },
+    {
+        "id": "1234",
+        "resource_state": 3,
+        "primary": false,
+        "name": "Jobb",
+        "distance": 702000,
+        "brand_name": "Diamant",
+        "model_name": "Elan Super Leggera",
+        "frame_type": 2,
+        "description": "Jobbsykkel..."
+    },
+    {
+        "id": "1235",
+        "resource_state": 3,
+        "primary": false,
+        "name": "Velociraptor",
+        "distance": 1755404,
+        "brand_name": "Velo Vie",
+        "model_name": "Vetta 300",
+        "frame_type": 1,
+        "description": "Sti og skogsykkelen"
+    }
+]
