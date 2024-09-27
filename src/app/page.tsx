@@ -20,7 +20,7 @@ export default async function Home() {
   // console.log("Props: ", brand_name, model_name, weight, distance, primary);
 
   return (
-    <div className="font-poppins min-h-screen">
+    <div className="bg-dark-grey-2 font-poppins min-h-screen -mt-2 px-4">
       <Navbar />
       <main className="flex flex-row gap-2 m-2 min-h-screen pt-2">
         {/* <section className="bg-dark-grey-1 rounded-md">
