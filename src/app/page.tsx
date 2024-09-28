@@ -22,8 +22,8 @@ export default async function Home() {
   const primaryBike = detailedGear.find(({ primary }) => Boolean(primary));
   const otherBikes = detailedGear.filter(({ primary }) => !Boolean(primary));
   return (
-    <div className="bg-dark-grey-3 font-poppins min-h-screen -mt-2 px-4">
-      <header className="text-white rounded-md m-2 flex md:flex-row justify-between items-center h-32 container flex-col w-full">
+    <div className="font-poppins min-h-screen -mt-2 px-4">
+      <header className="text-white rounded-md m-2 flex md:flex-row justify-between items-center py-3 flex-col">
         <h1 className="mt-6 md:mt-0">Strava Bike Dashboard</h1>
         <StravaLoginButton />
       </header>
