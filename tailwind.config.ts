@@ -25,6 +25,13 @@ const config: Config = {
         'bright-purple': 'var(--bright-purple)',
         'dark-grey-1': 'var(--dark-grey-1)',
         'dark-grey-2': 'var(--dark-grey-2)',
+        'dark-grey-3': 'var(--dark-grey-3)',
+        'dark-grey-4': 'var(--dark-grey-4)',
+        'dark-grey-5': 'var(--dark-grey-5)',
+        'light-grey-1': 'var(--light-grey-1)',
+        'primary-strava': 'var(--primary-color)',
+        'secondary-strava': 'var(--secondary-color)',
+        'accent-strava': 'var(--accent-color)',
       },
       fontFamily: {
         'poppins': ['Poppins', 'sans-serif']
