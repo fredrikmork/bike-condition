@@ -50,7 +50,7 @@ export default async function Home() {
                       </dd>
                     </div>
                     <div className="flex flex-col md:flex-row gap-1">
-                      <dt>Description</dt>
+                      <dt>Descriptiond</dt>
                       <dd className="text-gray-300">{bike.description}</dd>
                     </div>
                   </dl>
