@@ -123,6 +123,20 @@ Required in `.env.local`:
 - Prefer modular, testable functions and components.
 - When suggesting refactors or improvements, prioritize readability, maintainability, and long‑term scalability.
 
+## Sub-Agents
+
+Specialized agents for delegating complex tasks (see `.claude/agents/`):
+
+| Agent | Role |
+|-------|------|
+| master-orchestrator | Coordinate multi-step tasks, plan implementations, delegate to specialists |
+| supabase-specialist | Database schemas, migrations, RLS policies, queries |
+| backend-engineer | Server actions, Strava integration, business logic |
+| frontend-specialist | React components, shadcn/ui, D3.js, SVG interactions |
+| performance-optimizer | Analyze and fix performance bottlenecks |
+| security-auditor | Review code for vulnerabilities, audit auth flows |
+| qa-engineer | Test strategies, coverage planning, acceptance criteria |
+
 ## Documentation
 
 - [Project Spec](./docs/project_spec.md) - Full requirements, API spec, tech details
