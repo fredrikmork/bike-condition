@@ -1,0 +1,132 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Bike Condition is a Next.js application that displays Strava bike condition and maintenance tracking. It integrates with the Strava API via OAuth to show bike data and component wear status.
+
+## Project goals
+
+You are assisting in the development of a cycling component wear‑tracking application.  
+The purpose of the app is to measure and visualize wear on bicycle components based on riding distance.
+
+High‑level goals:
+
+- Integrate with Strava for authentication and retrieval of the user’s bikes and ride data.
+- Allow the user to select one of their Strava‑registered bikes.
+- Track total distance ridden per bike and automatically update distance‑based wear on each component.
+- Each component has a recommended replacement interval (e.g., a chain at 3000 km).  
+  The app should calculate progress toward this limit and provide:
+  - visual indicators when components approach or exceed recommended wear thresholds
+  - later: optional email notifications reminding the user to replace components
+- Implement a database to store user data, component states, and persistent login sessions.
+- Present the user with clean, modern UI including graphs and visualizations of component wear over time.
+
+Interactive dashboard & SVG manipulation:
+
+- The main dashboard will use an SVG illustration of a bicycle.
+- Users should be able to click on individual components in the SVG to view wear data, history, and replacement recommendations.
+- Use D3.js or similar libraries to manipulate SVG elements dynamically, highlight selected components, and animate wear progression.
+- Support interactive visualizations such as progress arcs, color‑coded wear states, and component‑specific graphs.
+
+Your role:
+
+- Help plan architecture, data models, and database structure.
+- Suggest implementation strategies for Strava integration and persistent authentication.
+- Propose UI/UX patterns for visualizing wear, alerts, and interactive SVG components.
+- Assist in breaking down tasks, writing code, and refining the overall system design.
+- Ensure all suggestions align with the project’s purpose: accurate wear tracking, clear visual feedback, and a smooth user experience.
+
+## Design style guide:
+
+- The UI should be clean, simple, and visually appealing, with minimal distractions.
+- Use shadcn/ui components as the primary design system for consistent styling and interaction patterns.
+- Visualizations should be clear and intuitive, including:
+  - progress bars showing component wear relative to recommended replacement distance
+  - graphs illustrating historical wear progression or ride‑based accumulation
+  - color‑coded states (e.g., green → yellow → red) to indicate component health
+- The main dashboard layout:
+  - Left side: an SVG illustration of a road bike
+    - Users can click individual components in the SVG to view detailed wear information
+    - SVG elements should highlight or animate when selected
+  - Right side: statistics, progress bars, and component details
+    - Show current distance, recommended replacement interval, and percentage toward wear limit
+- The MVP does not require advanced animations or complex visual design; prioritize clarity and usability.
+- All interactive SVG behavior (highlighting, selection, transitions) may be implemented using D3.js or similar libraries.
+- Maintain a cohesive visual hierarchy with consistent spacing, typography, and color usage.
+
+## Commands
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm start        # Start production server
+npm run lint     # Run ESLint
+```
+
+## Tech Stack
+
+- Next.js 14 with App Router (want to upgrade to Next.js 16)
+- React 18, TypeScript (strict mode) (want to upgrade to React 19)
+- NextAuth for Strava OAuth
+- Tailwind CSS for styling
+- Zod for validation
+- React hook form for form
+- Zustand for global states
+
+## Architecture
+
+### Directory Structure
+
+- `src/app/` - Next.js App Router pages and API routes
+- `src/components/` - React components (each in its own folder)
+- `src/types/` - TypeScript interfaces
+- `src/enums/` - Enums (e.g., ResourceState for Strava API)
+- `src/json/` - Static mock data
+
+### Key Files
+
+- `src/app/page.tsx` - Main dashboard (server component)
+- `src/app/getActivites.ts` - Strava API utilities
+- `src/app/api/auth/[...nextauth]/route.ts` - NextAuth Strava OAuth config
+- `src/components/selectedBike/` - Primary bike display with SVG and progress bars
+
+### Patterns
+
+- Server components for pages, `"use client"` for interactive components
+- Path alias: `@/*` maps to `./src/*`
+- JWT session strategy with NextAuth
+
+## Environment Variables
+
+Required in `.env.local`:
+
+- `STRAVA_CLIENT_ID` - OAuth client ID
+- `STRAVA_CLIENT_SECRET` - OAuth client secret
+- `ACCESS_TOKEN` - Strava API access token
+- `NEXTAUTH_SECRET` - Required for production
+
+## Security requirements:
+
+- Never commit, push, or suggest committing `.env` files, API keys, Strava tokens, secrets, or any other sensitive credentials.
+- Always assume secrets must be stored securely using environment variables or a secrets manager.
+- When generating code examples, ensure that placeholder values (e.g., `STRAVA_CLIENT_SECRET`) are used instead of real secrets.
+- Avoid logging sensitive data in server logs, console output, or debugging tools.
+- Follow the principle of least privilege when suggesting database schemas, API scopes, or Strava permissions.
+
+## Code quality requirements:
+
+- All code should follow the project's linting and formatting rules.
+- Before any commit, ensure that `npm run lint` passes without errors.
+- When generating code, follow consistent naming conventions, clear structure, and idiomatic patterns for the chosen tech stack.
+- Prefer modular, testable functions and components.
+- When suggesting refactors or improvements, prioritize readability, maintainability, and long‑term scalability.
+
+## Documentation
+
+- [Project Spec](./docs/project_spec.md) - Full requirements, API spec, tech details
+- [Architecture](./docs/architecture.md) - System design and data flow
+- [Changelog](docs/changelog) - Version history
+- [Project Status](docs/project_status.md) - Current progress
+- Update files in the docs folder except project_spec.md after major milestones and major additions to the project.
