@@ -1,96 +1,153 @@
-import getStravaType from "@/app/getActivites";
-import { DetailedGear } from "@/types/detailedGear";
+import type { BikeWithComponents, Component } from "@/lib/supabase/types";
+import {
+  calculateComponentWear,
+  getWearColor,
+  formatDistance,
+  type WearStatus,
+} from "@/lib/wear/calculator";
 
 interface Props {
-  selectedBike: DetailedGear;
+  bike: BikeWithComponents;
 }
 
-export function SelectedBike({ selectedBike }: Props) {
-  const profile = getStravaType("https://www.strava.com/api/v3/athlete");
-  console.log("Profile: ", profile);
-
-  const bikeParts = [
-    { name: "Tires", id: "tires", distance: 3000, recommended: 5000 },
-    { name: "Wheels", id: "wheels", distance: 19124, recommended: 20000 },
-    { name: "Chain", id: "chain", distance: 2200, recommended: 2000 },
-    { name: "Cassette", id: "cassette", distance: 1500, recommended: 6000 },
-    { name: "Frame", id: "frame", distance: 10000, recommended: 50000 },
-    { name: "Seatpost", id: "seatpost", distance: 8000, recommended: 30000 },
-    { name: "Aerobar", id: "aerobar", distance: 6000, recommended: 25000 },
-  ];
+export function SelectedBike({ bike }: Props) {
+  const bikeType =
+    bike.frame_type === 3
+      ? "Road bike"
+      : bike.frame_type === 2
+        ? "Gravel/Cyclocross"
+        : bike.frame_type === 1
+          ? "Mountain bike"
+          : "Bicycle";
 
   return (
-    <section className="p-5 flex flex-col gap-2 bg-dark-grey-4 rounded-xl text-white">
-      <header className="flex-row flex gap-4">
-        <h2 className="">{selectedBike.name}</h2>
-        {selectedBike.primary && (
-          <div className="px-3 rounded-3xl bg-primary-strava flex items-center">
-            Primary
-          </div>
+    <section className="p-6 md:p-8 flex flex-col gap-6 bg-dark-grey-4 rounded-xl text-white">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl md:text-2xl font-semibold">{bike.name}</h2>
+          {bike.is_primary && (
+            <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary-strava">
+              Primary
+            </span>
+          )}
+        </div>
+        {(bike.brand_name || bike.model_name) && (
+          <span className="text-gray-400 text-sm md:text-base">
+            {bike.brand_name} {bike.model_name}
+          </span>
         )}
       </header>
-      <div className="flex flex-row w-full gap-10">
-        <div className="rounded-lg bg-dark-grey-5">
-          <RoadBikeSvg width={800} height={400} />
+
+      {/* Bike stats bar */}
+      <div className="flex flex-wrap gap-6 py-3 px-4 bg-dark-grey-3 rounded-lg">
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-sm">Distance</span>
+          <span className="font-medium">{formatDistance(bike.total_distance)}</span>
         </div>
-        <div className="md:grid flex md:grid-cols-2 md:grid-rows-4 flex-col gap-6 w-1/2">
-          {bikeParts.map((part) => (
-            <div
-              key={part.id}
-              className="bg-dark-grey-3 p-4 rounded-xl flex flex-col justify-between"
-            >
-              <dl className="flex flex-row justify-between">
-                <dt>{part.name}</dt>
-                <dd className="text-secondary-strava">
-                  <span>{part.distance}</span>
-                  <span className="font-bold text-light-grey-1"> / </span>
-                  <span className="text-light-grey-1 ">{part.recommended}</span>
-                  <span> km</span>
-                </dd>
-              </dl>
-              <ProgressBar value={part.distance} max={part.recommended} />
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-sm">Type</span>
+          <span className="font-medium">{bikeType}</span>
+        </div>
+        {bike.description && (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-sm">Description</span>
+            <span className="font-medium">{bike.description}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-col lg:flex-row w-full gap-8">
+        {/* Bike SVG */}
+        <div className="flex-shrink-0 rounded-xl bg-dark-grey-5 p-4 flex items-center justify-center">
+          <RoadBikeSvg width={400} height={200} />
+        </div>
+
+        {/* Components grid */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {bike.components.length > 0 ? (
+            bike.components.map((component) => (
+              <ComponentCard key={component.id} component={component} />
+            ))
+          ) : (
+            <div className="col-span-2 flex items-center justify-center text-center text-gray-400 py-12 bg-dark-grey-3 rounded-xl">
+              <p>No components tracked yet. Sync with Strava to add default components.</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
-      <dl className="flex flex-row gap-4 py-3">
-        <div>
-          <dt>Total distance</dt>
-          <dd className="text-gray-300">{selectedBike.distance / 1000} km</dd>
-        </div>
-        <div>
-          <dt>Description</dt>
-          <dd className="text-gray-300">{selectedBike.description}</dd>
-        </div>
-        <div>
-          <dt>Type</dt>
-          <dd className="text-gray-300">
-            {selectedBike.frame_type === 3 ? "Road bike" : "Mountain bike"}
-          </dd>
-        </div>
-      </dl>
     </section>
   );
 }
 
-// I want a svg of a road bike
+interface ComponentCardProps {
+  component: Component;
+}
+
+function ComponentCard({ component }: ComponentCardProps) {
+  const wear = calculateComponentWear(component);
+
+  return (
+    <div className="bg-dark-grey-3 p-4 rounded-xl flex flex-col justify-between">
+      <dl className="flex flex-row justify-between">
+        <dt className="flex items-center gap-2">
+          {component.name}
+          {wear.status !== "healthy" && (
+            <StatusBadge status={wear.status} />
+          )}
+        </dt>
+        <dd className="text-secondary-strava">
+          <span>{formatDistance(component.current_distance)}</span>
+          <span className="font-bold text-light-grey-1"> / </span>
+          <span className="text-light-grey-1">
+            {formatDistance(component.recommended_distance)}
+          </span>
+        </dd>
+      </dl>
+      <ProgressBar
+        value={component.current_distance}
+        max={component.recommended_distance}
+        status={wear.status}
+      />
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: WearStatus }) {
+  const colors = {
+    warning: "bg-yellow-500/20 text-yellow-400",
+    critical: "bg-red-500/20 text-red-400",
+    healthy: "",
+  };
+
+  const labels = {
+    warning: "Due soon",
+    critical: "Overdue",
+    healthy: "",
+  };
+
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded ${colors[status]}`}>
+      {labels[status]}
+    </span>
+  );
+}
+
+// Road bike SVG component
 interface RoadBikeProps {
   width: number;
   height: number;
 }
 
 function RoadBikeSvg({ width = 200, height = 100 }: RoadBikeProps) {
-  // Center of the second wheel
   const cx2 = 150;
   const cy2 = 75;
-
-  // Length of the line
   const lineLength = 50;
-
-  // Calculate the endpoint of the line using 30 degrees from vertical
-  const angle = 30 * (Math.PI / 180); // Convert degrees to radians
+  const angle = 30 * (Math.PI / 180);
   const x2 = cx2 - lineLength * Math.sin(angle);
   const y2 = cy2 - lineLength * Math.cos(angle);
+
   return (
     <svg
       width={width}
@@ -127,36 +184,24 @@ function RoadBikeSvg({ width = 200, height = 100 }: RoadBikeProps) {
     </svg>
   );
 }
-// I want a svg of a mountain bike
-// I want a svg of a gravel bike
-// I want a svg of a commuter bike
 
 interface ProgressBarProps {
   value: number;
   max?: number;
   height?: number;
-  backgroundColor?: string;
-  fillColor?: string;
+  status?: WearStatus;
 }
 
 function ProgressBar({
   value,
   max = 100,
   height = 8,
-  backgroundColor = "#4a4a4a",
-  fillColor = "#81C784",
+  status = "healthy",
 }: ProgressBarProps) {
-  const percentage = (value / max) * 100;
+  const percentage = Math.min((value / max) * 100, 100);
+  const fillColor = getWearColor(status);
+  const backgroundColor = "#4a4a4a";
 
-  const warningYellow = "#FFEE58";
-  const warningRed = "#FF7f50";
-
-  const currentFillColor =
-    percentage >= 100
-      ? warningRed
-      : percentage >= 80
-      ? warningYellow
-      : fillColor;
   return (
     <div
       style={{
@@ -171,7 +216,7 @@ function ProgressBar({
         style={{
           width: `${percentage}%`,
           height: "100%",
-          backgroundColor: currentFillColor,
+          backgroundColor: fillColor,
           transition: "width 0.5s ease-in-out",
         }}
       />
