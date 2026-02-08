@@ -127,6 +127,8 @@ Required in `.env.local`:
 
 - [Project Spec](./docs/project_spec.md) - Full requirements, API spec, tech details
 - [Architecture](./docs/architecture.md) - System design and data flow
-- [Changelog](docs/changelog) - Version history
-- [Project Status](docs/project_status.md) - Current progress
-- Update files in the docs folder except project_spec.md after major milestones and major additions to the project.
+- [Changelog](./docs/changelog.md) - Version history
+- [Project Status](./docs/project_status.md) - Current progress
+- [MCP Setup](./docs/mcp-setup.md) - MCP server configuration
+
+Update files in the docs folder (except project_spec.md) after major milestones.
