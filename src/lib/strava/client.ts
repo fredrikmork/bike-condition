@@ -24,8 +24,11 @@ export class StravaClient {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Strava API error (${response.status}): ${error}`);
+      const status = response.status;
+      if (status === 429) {
+        throw new Error("Strava rate limit exceeded. Please try again later.");
+      }
+      throw new Error(`Strava API request failed (${status})`);
     }
 
     const data = await response.json();
@@ -40,8 +43,11 @@ export class StravaClient {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Strava API error (${response.status}): ${error}`);
+      const status = response.status;
+      if (status === 429) {
+        throw new Error("Strava rate limit exceeded. Please try again later.");
+      }
+      throw new Error(`Strava API request failed (${status})`);
     }
 
     const data = await response.json();

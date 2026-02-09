@@ -150,15 +150,17 @@ async function updateComponentDistances(
 
   if (!components || components.length === 0) return;
 
-  // Update each component's distance
-  for (const component of components) {
-    await supabaseAdmin
-      .from("components")
-      .update({
-        current_distance: component.current_distance + distanceDelta,
-      })
-      .eq("id", component.id);
-  }
+  // Update all component distances in parallel
+  await Promise.all(
+    components.map((component) =>
+      supabaseAdmin
+        .from("components")
+        .update({
+          current_distance: component.current_distance + distanceDelta,
+        })
+        .eq("id", component.id)
+    )
+  );
 }
 
 export async function getBikeByStravaId(

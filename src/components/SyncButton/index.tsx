@@ -25,10 +25,10 @@ export function SyncButton({ className = "" }: SyncButtonProps) {
 
       // Hide result after 5 seconds
       setTimeout(() => setShowResult(false), 5000);
-    } catch (error) {
+    } catch {
       setLastResult({
         success: false,
-        errors: [error instanceof Error ? error.message : "Sync failed"],
+        errors: ["Sync failed. Please try again later."],
       });
       setShowResult(true);
     } finally {

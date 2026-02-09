@@ -59,24 +59,28 @@ export async function getBikeWithComponents(bikeId: string): Promise<BikeWithCom
 
 export async function getBikesWithComponents(userId: string): Promise<BikeWithComponents[]> {
   const bikes = await getBikesForUser(userId);
+  if (bikes.length === 0) return [];
 
-  const bikesWithComponents: BikeWithComponents[] = [];
+  const bikeIds = bikes.map((b) => b.id);
 
-  for (const bike of bikes) {
-    const { data: components } = await supabaseAdmin
-      .from("components")
-      .select("*")
-      .eq("bike_id", bike.id)
-      .is("replaced_at", null)
-      .order("type");
+  const { data: allComponents } = await supabaseAdmin
+    .from("components")
+    .select("*")
+    .in("bike_id", bikeIds)
+    .is("replaced_at", null)
+    .order("type");
 
-    bikesWithComponents.push({
-      ...bike,
-      components: components || [],
-    });
+  const componentsByBike = new Map<string, Component[]>();
+  for (const component of allComponents || []) {
+    const list = componentsByBike.get(component.bike_id) || [];
+    list.push(component);
+    componentsByBike.set(component.bike_id, list);
   }
 
-  return bikesWithComponents;
+  return bikes.map((bike) => ({
+    ...bike,
+    components: componentsByBike.get(bike.id) || [],
+  }));
 }
 
 export async function getPrimaryBike(userId: string): Promise<BikeWithComponents | null> {
@@ -180,16 +184,18 @@ export async function getDashboardStats(userId: string): Promise<{
   const totalDistance = bikes.reduce((sum, b) => sum + b.total_distance, 0);
 
   // Count components with wear >= 80%
+  const bikeIds = bikes.map((b) => b.id);
   let componentsNeedingAttention = 0;
-  for (const bike of bikes) {
+
+  if (bikeIds.length > 0) {
     const { data: components } = await supabaseAdmin
       .from("components")
       .select("current_distance, recommended_distance")
-      .eq("bike_id", bike.id)
+      .in("bike_id", bikeIds)
       .is("replaced_at", null);
 
     if (components) {
-      componentsNeedingAttention += components.filter(
+      componentsNeedingAttention = components.filter(
         (c) => c.current_distance / c.recommended_distance >= 0.8
       ).length;
     }

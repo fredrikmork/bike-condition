@@ -39,7 +39,7 @@ export default async function Home() {
   try {
     bikes = await getBikesWithComponents(session.userId);
   } catch (error) {
-    console.error("Failed to fetch bikes:", error);
+    console.error("Failed to fetch bikes:", error instanceof Error ? error.message : "Unknown error");
   }
 
   const hasBikes = bikes.length > 0;

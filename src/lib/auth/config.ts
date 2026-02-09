@@ -117,7 +117,7 @@ export const authOptions: NextAuthOptions = {
 
         return true;
       } catch (error) {
-        console.error("Error during sign in:", error);
+        console.error("Sign-in failed:", error instanceof Error ? error.message : "Unknown error");
         return false;
       }
     },
@@ -166,7 +166,7 @@ export const authOptions: NextAuthOptions = {
               );
             }
           } catch (error) {
-            console.error("Error refreshing token:", error);
+            console.error("Token refresh failed:", error instanceof Error ? error.message : "Unknown error");
             // Return token as-is, client will need to re-authenticate
           }
         }
