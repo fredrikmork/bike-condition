@@ -1,11 +1,11 @@
-import { IoAccessibilityOutline } from "react-icons/io5";
+import { Accessibility } from "lucide-react";
 
 export function Footer() {
   return (
     <footer className="flex flex-row justify-center">
       {/* GitHub Issue */}
       {/* GitHub Sponsor */}
-      <IoAccessibilityOutline />
+      <Accessibility className="h-5 w-5" />
     </footer>
   );
 }

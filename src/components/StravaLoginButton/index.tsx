@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { signOut, signIn, useSession } from "next-auth/react";
-import { FaRegUser } from "react-icons/fa6";
+import { User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function StravaLoginButton() {
   const { data: session, status } = useSession();
@@ -18,38 +20,33 @@ export function StravaLoginButton() {
   // Show loading state while checking session
   if (status === "loading") {
     return (
-      <button
-        disabled
-        className="flex items-center gap-2 px-4 py-2 rounded-lg opacity-50 bg-dark-grey-3"
-      >
-        <FaRegUser color="white" size="20px" />
-        <span className="text-sm text-gray-400">Loading...</span>
-      </button>
+      <Button variant="ghost" disabled className="gap-2">
+        <User className="h-5 w-5" />
+        <Skeleton className="h-4 w-16" />
+      </Button>
     );
   }
 
   // Logged out state - show prominent login button
   if (!session) {
     return (
-      <button
+      <Button
         onClick={handleClick}
-        className="flex items-center gap-3 px-6 py-3 rounded-lg font-medium
-          bg-primary-strava hover:bg-orange-600 text-white
-          transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="gap-3 bg-primary-strava hover:bg-orange-600 text-white shadow-lg hover:shadow-xl"
+        size="lg"
       >
         <StravaIcon />
         <span>Connect with Strava</span>
-      </button>
+      </Button>
     );
   }
 
   // Logged in state - show user profile
   return (
-    <button
+    <Button
       onClick={handleClick}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg
-        bg-dark-grey-3 hover:bg-dark-grey-2 text-white
-        transition-colors duration-200"
+      variant="ghost"
+      className="gap-2 text-white hover:bg-accent"
     >
       {session.user?.image ? (
         <Image
@@ -61,10 +58,10 @@ export function StravaLoginButton() {
           className="rounded-full"
         />
       ) : (
-        <FaRegUser size="20px" />
+        <User className="h-5 w-5" />
       )}
       <span className="hidden md:block text-sm">{session.user?.name}</span>
-    </button>
+    </Button>
   );
 }
 

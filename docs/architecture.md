@@ -145,6 +145,15 @@ All backend logic runs as Next.js server components and server actions.
 
 **Rate Limits:** 100 requests/15 min, 1000/day
 
+**Known API Limitations:**
+- `primary` field on `SummaryGear`/`DetailedGear` **always returns `false`** since Strava
+  replaced the single "primary bike" concept with "default gear per sport type". The field
+  still exists in the schema but is functionally dead. No API replacement exists for querying
+  sport-specific gear defaults.
+  ([Community Hub discussion](https://communityhub.strava.com/developers-api-7/unable-to-change-gear-for-an-activity-via-api-3180))
+- **Workaround:** The app falls back to showing the most-ridden bike when no bike has
+  `is_primary = true`. Future improvement: let users manually choose their featured bike.
+
 ### 5.2 Resend (Future)
 
 **Purpose:** Email notifications for component replacement reminders

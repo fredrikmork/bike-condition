@@ -1,9 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/config";
+import { Plus } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { SelectedBike } from "@/components/selectedBike";
 import { StravaLoginButton } from "@/components/StravaLoginButton";
 import { SyncButton } from "@/components/SyncButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBikesWithComponents } from "@/lib/db/queries";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
@@ -23,7 +25,7 @@ export default async function Home() {
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
               Welcome to Bike Condition
             </h2>
-            <p className="text-gray-400 mb-8 text-lg leading-relaxed">
+            <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
               Track your bike component wear and know when it&apos;s time for maintenance.
               Connect your Strava account to get started.
             </p>
@@ -42,8 +44,12 @@ export default async function Home() {
     console.error("Failed to fetch bikes:", error);
   }
 
-  const primaryBike = bikes.find((bike) => bike.is_primary);
-  const otherBikes = bikes.filter((bike) => !bike.is_primary);
+  // Show primary bike, or fall back to the most ridden bike
+  const primaryBike =
+    bikes.find((bike) => bike.is_primary) ??
+    bikes.toSorted((a, b) => b.total_distance - a.total_distance)[0] ??
+    null;
+  const otherBikes = bikes.filter((bike) => bike !== primaryBike);
   const hasBikes = bikes.length > 0;
 
   return (
@@ -64,22 +70,10 @@ export default async function Home() {
           <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6">
             <div className="text-center max-w-md px-4">
               <div className="mb-6">
-                <svg
-                  className="w-20 h-20 mx-auto text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
+                <Plus className="w-20 h-20 mx-auto text-muted-foreground" strokeWidth={1.5} />
               </div>
               <h2 className="text-2xl font-bold mb-4 text-white">No bikes yet</h2>
-              <p className="text-gray-400 mb-8 text-lg leading-relaxed">
+              <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
                 Sync with Strava to import your bikes and start tracking component wear.
               </p>
               <SyncButton />
@@ -95,38 +89,40 @@ export default async function Home() {
                 <h2 className="text-lg font-medium text-gray-300 mb-4">Other bikes</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {otherBikes.map((bike) => (
-                    <div
-                      className="rounded-xl bg-dark-grey-4 p-6 hover:bg-dark-grey-3 transition-colors"
+                    <Card
+                      className="border-0 bg-dark-grey-4 hover:bg-dark-grey-3 transition-colors text-white"
                       key={bike.id}
                     >
-                      <div className="flex flex-col gap-2 mb-4">
-                        <h3 className="text-lg font-medium text-white">{bike.name}</h3>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{bike.name}</CardTitle>
                         {(bike.brand_name || bike.model_name) && (
-                          <p className="text-gray-400 text-sm">
+                          <p className="text-muted-foreground text-sm">
                             {bike.brand_name} {bike.model_name}
                           </p>
                         )}
-                      </div>
+                      </CardHeader>
 
-                      <dl className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <dt className="text-gray-400">Total distance</dt>
-                          <dd className="text-white font-medium">
-                            {(bike.total_distance / 1000).toFixed(1)} km
-                          </dd>
-                        </div>
-                        {bike.description && (
+                      <CardContent>
+                        <dl className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <dt className="text-gray-400">Description</dt>
-                            <dd className="text-gray-300">{bike.description}</dd>
+                            <dt className="text-muted-foreground">Total distance</dt>
+                            <dd className="text-white font-medium">
+                              {(bike.total_distance / 1000).toFixed(1)} km
+                            </dd>
                           </div>
-                        )}
-                        <div className="flex justify-between">
-                          <dt className="text-gray-400">Components</dt>
-                          <dd className="text-white">{bike.components.length} tracked</dd>
-                        </div>
-                      </dl>
-                    </div>
+                          {bike.description && (
+                            <div className="flex justify-between">
+                              <dt className="text-muted-foreground">Description</dt>
+                              <dd className="text-gray-300">{bike.description}</dd>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <dt className="text-muted-foreground">Components</dt>
+                            <dd className="text-white">{bike.components.length} tracked</dd>
+                          </div>
+                        </dl>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>

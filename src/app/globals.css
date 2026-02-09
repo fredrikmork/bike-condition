@@ -2,25 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-} */
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    /* --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0; */
+    /* shadcn dark theme (this is a dark-only app) */
+    --background: 0 0% 16.5%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 22.7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 16.5%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+
+    /* App custom colors */
     --hot-pink: #ff007b;
     --bright-teal: #01f9c6;
     --neon-blue: #2e00ff;
     --bright-purple: #8200ff;
     --neon-orange: #ff6600;
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 18, 18, 18;
-    --background-end-rgb: 34, 34, 34;
     --primary-color: #fc4c02; /* Strava Orange */
     --secondary-color: #ffffff; /* White */
     --accent-color: #ff7f50; /* Coral */
@@ -29,7 +45,15 @@
     --dark-grey-3: #2a2a2a; /* Medium dark grey */
     --dark-grey-4: #3a3a3a; /* Medium grey */
     --dark-grey-5: #4a4a4a; /* Light grey */
-    --light-grey-1:  #b3b2b2; /* Light grey */
+    --light-grey-1: #b3b2b2; /* Light grey */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
@@ -38,20 +62,6 @@
   src: url('/fonts/Poppins-Thin.tff') format('truetype');
   font-weight: normal;
   font-style: thin;
-}
-
-/* body {
-  color: rgb(var(--neon-blue));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--hot-pink));
-} */
-
-body {
-background-color: #2a2a2a;
 }
 
 h1 {
