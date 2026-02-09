@@ -40,10 +40,7 @@ export function calculateComponentWear(component: Component): WearInfo {
 
 // Format distance for display
 export function formatDistance(meters: number): string {
-  const km = meters / 1000;
-  if (km >= 1000) {
-    return `${(km / 1000).toFixed(1)}k km`;
-  }
-  return `${Math.round(km).toLocaleString()} km`;
+  const km = Math.round(meters / 1000);
+  return `${km.toLocaleString("nb-NO")} km`;
 }
 
