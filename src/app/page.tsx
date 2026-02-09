@@ -1,11 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/config";
 import { Plus } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { SelectedBike } from "@/components/selectedBike";
 import { StravaLoginButton } from "@/components/StravaLoginButton";
 import { SyncButton } from "@/components/SyncButton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BikeDashboard } from "@/components/BikeDashboard";
 import { getBikesWithComponents } from "@/lib/db/queries";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
@@ -44,12 +42,6 @@ export default async function Home() {
     console.error("Failed to fetch bikes:", error);
   }
 
-  // Show primary bike, or fall back to the most ridden bike
-  const primaryBike =
-    bikes.find((bike) => bike.is_primary) ??
-    bikes.toSorted((a, b) => b.total_distance - a.total_distance)[0] ??
-    null;
-  const otherBikes = bikes.filter((bike) => bike !== primaryBike);
   const hasBikes = bikes.length > 0;
 
   return (
@@ -80,54 +72,8 @@ export default async function Home() {
             </div>
           </div>
         ) : (
-          /* Has bikes - show bike list */
-          <div className="space-y-8">
-            {primaryBike && <SelectedBike bike={primaryBike} />}
-
-            {otherBikes.length > 0 && (
-              <div>
-                <h2 className="text-lg font-medium text-gray-300 mb-4">Other bikes</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {otherBikes.map((bike) => (
-                    <Card
-                      className="border-0 bg-dark-grey-4 hover:bg-dark-grey-3 transition-colors text-white"
-                      key={bike.id}
-                    >
-                      <CardHeader>
-                        <CardTitle className="text-lg">{bike.name}</CardTitle>
-                        {(bike.brand_name || bike.model_name) && (
-                          <p className="text-muted-foreground text-sm">
-                            {bike.brand_name} {bike.model_name}
-                          </p>
-                        )}
-                      </CardHeader>
-
-                      <CardContent>
-                        <dl className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Total distance</dt>
-                            <dd className="text-white font-medium">
-                              {(bike.total_distance / 1000).toFixed(1)} km
-                            </dd>
-                          </div>
-                          {bike.description && (
-                            <div className="flex justify-between">
-                              <dt className="text-muted-foreground">Description</dt>
-                              <dd className="text-gray-300">{bike.description}</dd>
-                            </div>
-                          )}
-                          <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Components</dt>
-                            <dd className="text-white">{bike.components.length} tracked</dd>
-                          </div>
-                        </dl>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          /* Has bikes - show bike selector + detail */
+          <BikeDashboard bikes={bikes} />
         )}
       </main>
     </div>
