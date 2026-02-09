@@ -59,25 +59,7 @@
 
 @font-face {
   font-family: 'Poppins';
-  src: url('/fonts/Poppins-Thin.tff') format('truetype');
-  font-weight: normal;
-  font-style: thin;
-}
-
-h1 {
-  color: var(--primary-color);
-  font-size: xx-large;
-}
-
-h2 {
-  color: var(--secondary-color);
-  font-size: x-large;
-}
-
-p {
-  color: var(--secondary-color);
-}
-
-dl {
-  color: var(--secondary-color);
+  src: url('/fonts/Poppins-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
 }

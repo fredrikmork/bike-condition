@@ -139,8 +139,8 @@ All components migrated to shadcn/ui:
 - [x] `selectedBike/ComponentCard` — `<Card>` + `<Progress>` with color-coded wear indicator
 - [x] `selectedBike/StatusBadge` — `<Badge>` with custom warn/critical styles
 - [x] `selectedBike/ProgressBar` — replaced with `<Progress indicatorClassName={...}>`
-- [x] `footer` — `lucide-react` Accessibility icon
-- [x] `page.tsx` bike cards — `<Card>` + `<CardHeader>` + `<CardContent>` + `lucide-react` Plus icon
+- [x] `BikeDashboard` — `<Card>` + `<Badge>` + `lucide-react` Bike icon (bike selector)
+- [x] `page.tsx` — delegates to `<BikeDashboard>` for bike display
 - [x] All `react-icons` imports removed — `lucide-react` used exclusively
 
 ## Architecture
@@ -149,16 +149,14 @@ All components migrated to shadcn/ui:
 
 - `src/app/` - Next.js App Router pages and API routes
 - `src/components/` - React components (each in its own folder)
-- `src/types/` - TypeScript interfaces
-- `src/enums/` - Enums (e.g., ResourceState for Strava API)
-- `src/json/` - Static mock data
+- `src/lib/` - Shared utilities, auth, database, Strava integration
 
 ### Key Files
 
 - `src/app/page.tsx` - Main dashboard (server component)
-- `src/app/getActivites.ts` - Strava API utilities
 - `src/app/api/auth/[...nextauth]/route.ts` - NextAuth Strava OAuth config
-- `src/components/selectedBike/` - Primary bike display with SVG and progress bars
+- `src/components/BikeDashboard/` - Bike selector with client-side state
+- `src/components/selectedBike/` - Selected bike detail view with SVG and wear progress bars
 
 ### Patterns
 

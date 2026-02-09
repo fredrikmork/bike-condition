@@ -47,26 +47,3 @@ export function formatDistance(meters: number): string {
   return `${Math.round(km).toLocaleString()} km`;
 }
 
-// Get color for wear status
-export function getWearColor(status: WearStatus): string {
-  switch (status) {
-    case "healthy":
-      return "#81C784"; // Green
-    case "warning":
-      return "#FFEE58"; // Yellow
-    case "critical":
-      return "#FF7F50"; // Coral/Red
-  }
-}
-
-// Get background color for wear status (lighter version)
-export function getWearBackgroundColor(status: WearStatus): string {
-  switch (status) {
-    case "healthy":
-      return "rgba(129, 199, 132, 0.1)";
-    case "warning":
-      return "rgba(255, 238, 88, 0.1)";
-    case "critical":
-      return "rgba(255, 127, 80, 0.1)";
-  }
-}

@@ -61,19 +61,3 @@ export function createDefaultComponents(bikeId: string): ComponentInsert[] {
   }));
 }
 
-// Get display name for component type
-export function getComponentDisplayName(type: string): string {
-  const displayNames: Record<string, string> = {
-    chain: "Chain",
-    cassette: "Cassette",
-    tire_front: "Front Tire",
-    tire_rear: "Rear Tire",
-    brake_pads: "Brake Pads",
-    bar_tape: "Bar Tape",
-    cables: "Cables",
-    bottom_bracket: "Bottom Bracket",
-    headset: "Headset",
-  };
-
-  return displayNames[type] || type;
-}
