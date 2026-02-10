@@ -1,7 +1,9 @@
-import { type NextAuthOptions, type Account, type User } from "next-auth";
-import StravaProvider from "next-auth/providers/strava";
+import NextAuth from "next-auth";
+import Strava from "next-auth/providers/strava";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { storeTokens, refreshStravaToken } from "@/lib/strava/tokens";
+
+import type { NextAuthConfig } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
@@ -11,14 +13,12 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    userId?: string;
-    stravaId?: number;
-    accessToken?: string;
-    refreshToken?: string;
-    expiresAt?: number;
-  }
+interface AppJWT {
+  userId?: string;
+  stravaId?: number;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
 }
 
 async function createOrUpdateUser(
@@ -72,9 +72,9 @@ async function createOrUpdateUser(
   return newUser.id;
 }
 
-export const authOptions: NextAuthOptions = {
+const config: NextAuthConfig = {
   providers: [
-    StravaProvider({
+    Strava({
       clientId: process.env.STRAVA_CLIENT_ID ?? "",
       clientSecret: process.env.STRAVA_CLIENT_SECRET ?? "",
       authorization: {
@@ -89,7 +89,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async signIn({ user, account }: { user: User; account: Account | null }) {
+    async signIn({ user, account }) {
       if (!account || account.provider !== "strava") {
         return true;
       }
@@ -123,6 +123,8 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, account }) {
+      const t = token as typeof token & AppJWT;
+
       // Initial sign in
       if (account) {
         const stravaId = parseInt(account.providerAccountId, 10);
@@ -134,35 +136,35 @@ export const authOptions: NextAuthOptions = {
           .eq("strava_id", stravaId)
           .single();
 
-        token.userId = user?.id;
-        token.stravaId = stravaId;
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
-        token.expiresAt = account.expires_at;
+        t.userId = user?.id;
+        t.stravaId = stravaId;
+        t.accessToken = account.access_token as string | undefined;
+        t.refreshToken = account.refresh_token as string | undefined;
+        t.expiresAt = account.expires_at;
 
-        return token;
+        return t;
       }
 
       // Check if token needs refresh
-      if (token.expiresAt && token.refreshToken) {
+      if (t.expiresAt && t.refreshToken) {
         const now = Math.floor(Date.now() / 1000);
         const bufferSeconds = 5 * 60; // 5 minute buffer
 
-        if (token.expiresAt - now < bufferSeconds) {
+        if (t.expiresAt - now < bufferSeconds) {
           try {
-            const newTokens = await refreshStravaToken(token.refreshToken);
+            const newTokens = await refreshStravaToken(t.refreshToken);
 
-            token.accessToken = newTokens.accessToken;
-            token.refreshToken = newTokens.refreshToken;
-            token.expiresAt = Math.floor(newTokens.expiresAt.getTime() / 1000);
+            t.accessToken = newTokens.accessToken;
+            t.refreshToken = newTokens.refreshToken;
+            t.expiresAt = Math.floor(newTokens.expiresAt.getTime() / 1000);
 
             // Update tokens in database
-            if (token.userId) {
+            if (t.userId) {
               await storeTokens(
-                token.userId,
+                t.userId,
                 newTokens.accessToken,
                 newTokens.refreshToken,
-                token.expiresAt
+                t.expiresAt
               );
             }
           } catch (error) {
@@ -172,16 +174,20 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      return token;
+      return t;
     },
 
     async session({ session, token }) {
-      session.userId = token.userId;
-      session.stravaId = token.stravaId;
-      session.accessToken = token.accessToken;
-
-      return session;
+      const t = token as typeof token & AppJWT;
+      return {
+        ...session,
+        userId: t.userId,
+        stravaId: t.stravaId,
+        accessToken: t.accessToken,
+      };
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+export const { handlers, auth, signIn, signOut } = NextAuth(config);

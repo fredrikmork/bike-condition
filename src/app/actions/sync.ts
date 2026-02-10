@@ -1,7 +1,6 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/config";
+import { auth } from "@/lib/auth/config";
 import { syncBikes } from "@/lib/sync/bikes";
 import { syncActivities } from "@/lib/sync/activities";
 import { revalidatePath } from "next/cache";
@@ -21,7 +20,7 @@ export interface SyncResult {
 }
 
 export async function syncStravaData(): Promise<SyncResult> {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.userId) {
     return {

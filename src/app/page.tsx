@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/config";
+import { auth } from "@/lib/auth/config";
 import { Plus } from "lucide-react";
 import { StravaLoginButton } from "@/components/StravaLoginButton";
 import { SyncButton } from "@/components/SyncButton";
@@ -8,7 +7,7 @@ import { getBikesWithComponents } from "@/lib/db/queries";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   // If not authenticated, show login prompt
   if (!session?.userId) {

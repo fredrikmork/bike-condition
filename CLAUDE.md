@@ -59,17 +59,17 @@ Your role:
 ## Commands
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm start        # Start production server
-npm run lint     # Run ESLint
+pnpm run dev     # Start development server (Turbopack default)
+pnpm run build   # Build for production
+pnpm start       # Start production server
+pnpm run lint    # Run ESLint
 ```
 
 ## Tech Stack
 
-- Next.js 14 with App Router (want to upgrade to Next.js 16)
-- React 18, TypeScript (strict mode) (want to upgrade to React 19)
-- NextAuth for Strava OAuth
+- Next.js 16 with App Router (Turbopack by default)
+- React 19, TypeScript 5.9 (strict mode)
+- Auth.js v5 (`next-auth@beta`) for Strava OAuth
 - Tailwind CSS for styling
 - **shadcn/ui** as the component library (New York style, CSS variables)
 - Lucide React for icons (via shadcn)
@@ -154,7 +154,7 @@ All components migrated to shadcn/ui:
 ### Key Files
 
 - `src/app/page.tsx` - Main dashboard (server component)
-- `src/app/api/auth/[...nextauth]/route.ts` - NextAuth Strava OAuth config
+- `src/app/api/auth/[...nextauth]/route.ts` - Auth.js v5 route handlers
 - `src/components/BikeDashboard/` - Bike selector with client-side state
 - `src/components/selectedBike/` - Selected bike detail view with SVG and wear progress bars
 
@@ -162,7 +162,10 @@ All components migrated to shadcn/ui:
 
 - Server components for pages, `"use client"` for interactive components
 - Path alias: `@/*` maps to `./src/*`
-- JWT session strategy with NextAuth
+- JWT session strategy with Auth.js v5
+- Auth config in `src/lib/auth/config.ts` exports `{ handlers, auth, signIn, signOut }`
+- Use `auth()` instead of `getServerSession()` for server-side session access
+- ESLint 9 with flat config (`eslint.config.mjs`)
 
 ## Environment Variables
 
