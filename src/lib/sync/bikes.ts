@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
-import { createDefaultComponents } from "@/lib/components/defaults";
+import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
 import type { Bike, BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -50,11 +50,6 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
         const existingBike = existingBikeMap.get(stravaBike.id);
 
         if (existingBike) {
-          // Calculate distance delta for component updates
-          const previousDistance = existingBike.total_distance;
-          const newDistance = gearDetails.distance;
-          const distanceDelta = newDistance - previousDistance;
-
           // Update existing bike
           await supabaseAdmin
             .from("bikes")
@@ -69,13 +64,11 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             })
             .eq("id", existingBike.id);
 
-          // Update component distances if there's new distance
-          if (distanceDelta > 0) {
-            await updateComponentDistances(existingBike.id, distanceDelta);
-          }
+          // Update component distances using authoritative formula
+          await updateComponentDistances(existingBike.id, gearDetails.distance);
 
-          // Fix default components that were created with 0 distance
-          await migrateZeroDistanceComponents(existingBike.id, gearDetails.distance);
+          // Add any missing default component types
+          await addMissingDefaultComponents(existingBike.id, gearDetails.distance);
 
           result.updated++;
         } else {
@@ -143,26 +136,28 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
   }
 }
 
+/**
+ * Update all active component distances using the authoritative formula:
+ * current_distance = bike.total_distance - component.bike_distance_at_install
+ */
 async function updateComponentDistances(
   bikeId: string,
-  distanceDelta: number
+  bikeTotalDistance: number
 ): Promise<void> {
-  // Get all active components for this bike
   const { data: components } = await supabaseAdmin
     .from("components")
-    .select("id, current_distance")
+    .select("id, bike_distance_at_install")
     .eq("bike_id", bikeId)
     .is("replaced_at", null);
 
   if (!components || components.length === 0) return;
 
-  // Update all component distances in parallel
   await Promise.all(
     components.map((component) =>
       supabaseAdmin
         .from("components")
         .update({
-          current_distance: component.current_distance + distanceDelta,
+          current_distance: bikeTotalDistance - component.bike_distance_at_install,
         })
         .eq("id", component.id)
     )
@@ -170,43 +165,53 @@ async function updateComponentDistances(
 }
 
 /**
- * One-time migration: fix components created with current_distance = 0
- * where the bike already had distance. Only affects components whose
- * installed_at matches created_at (i.e., default components never replaced).
+ * Add missing default component types to an existing bike.
+ * Removes obsolete types (bar_tape, brake_pads) and adds new ones.
  */
-async function migrateZeroDistanceComponents(
+async function addMissingDefaultComponents(
   bikeId: string,
-  bikeDistance: number
+  bikeTotalDistance: number
 ): Promise<void> {
-  if (bikeDistance <= 0) return;
-
-  const { data: components } = await supabaseAdmin
+  const { data: existingComponents } = await supabaseAdmin
     .from("components")
-    .select("id, current_distance, installed_at, created_at")
+    .select("id, type")
     .eq("bike_id", bikeId)
-    .is("replaced_at", null)
-    .eq("current_distance", 0);
+    .is("replaced_at", null);
 
-  if (!components || components.length === 0) return;
+  if (!existingComponents) return;
 
-  // Only migrate components where installed_at ≈ created_at (default components)
-  const defaultComponents = components.filter((c) => {
-    const installed = new Date(c.installed_at).getTime();
-    const created = new Date(c.created_at).getTime();
-    // Within 1 minute = default component (not manually replaced)
-    return Math.abs(installed - created) < 60_000;
-  });
+  const existingTypes = new Set(existingComponents.map((c) => c.type));
 
-  if (defaultComponents.length === 0) return;
+  // Remove obsolete component types
+  const obsoleteTypes = ["bar_tape", "brake_pads"];
+  const obsoleteIds = existingComponents
+    .filter((c) => obsoleteTypes.includes(c.type))
+    .map((c) => c.id);
 
-  await Promise.all(
-    defaultComponents.map((c) =>
-      supabaseAdmin
-        .from("components")
-        .update({ current_distance: bikeDistance })
-        .eq("id", c.id)
-    )
+  if (obsoleteIds.length > 0) {
+    await supabaseAdmin
+      .from("components")
+      .delete()
+      .in("id", obsoleteIds);
+  }
+
+  // Add missing default component types
+  const missingDefaults = DEFAULT_COMPONENTS.filter(
+    (d) => !existingTypes.has(d.type)
   );
+
+  if (missingDefaults.length > 0) {
+    const inserts = missingDefaults.map((d) => ({
+      bike_id: bikeId,
+      name: d.name,
+      type: d.type,
+      recommended_distance: d.recommended_distance,
+      current_distance: bikeTotalDistance,
+      bike_distance_at_install: 0, // assumed on since beginning
+    }));
+
+    await supabaseAdmin.from("components").insert(inserts);
+  }
 }
 
 export async function getBikeByStravaId(

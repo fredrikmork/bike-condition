@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import type { Bike, Component, User, SyncStatus, BikeWithComponents } from "@/lib/supabase/types";
+import type { Bike, Component, ComponentInsert, User, SyncStatus, BikeWithComponents } from "@/lib/supabase/types";
 
 // User queries
 export async function getUserById(userId: string): Promise<User | null> {
@@ -129,27 +129,12 @@ export async function getComponentById(componentId: string): Promise<Component |
   return data;
 }
 
-export async function calculateDistanceFromActivities(
-  bikeId: string,
-  sinceDate: string
-): Promise<number> {
-  const { data } = await supabaseAdmin
-    .from("activities")
-    .select("distance")
-    .eq("bike_id", bikeId)
-    .gte("start_date", sinceDate);
-
-  if (!data || data.length === 0) return 0;
-
-  return data.reduce((sum, a) => sum + a.distance, 0);
-}
-
 export async function replaceComponent(
   componentId: string,
+  bikeDistance: number,
   replacedAt?: Date,
   notes?: string
 ): Promise<Component | null> {
-  // Get the existing component
   const existing = await getComponentById(componentId);
   if (!existing) return null;
 
@@ -165,13 +150,7 @@ export async function replaceComponent(
     })
     .eq("id", componentId);
 
-  // Calculate distance from activities since the replacement date
-  const distanceSinceReplacement = await calculateDistanceFromActivities(
-    existing.bike_id,
-    replacedIso
-  );
-
-  // Create new component with same type
+  // Create new component — distance = bike.total_distance - bike_distance_at_install
   const { data: newComponent } = await supabaseAdmin
     .from("components")
     .insert({
@@ -179,7 +158,8 @@ export async function replaceComponent(
       name: existing.name,
       type: existing.type,
       recommended_distance: existing.recommended_distance,
-      current_distance: distanceSinceReplacement,
+      current_distance: 0,
+      bike_distance_at_install: bikeDistance,
       installed_at: replacedIso,
     })
     .select()
@@ -188,44 +168,35 @@ export async function replaceComponent(
   return newComponent;
 }
 
-/**
- * Recalculate distances for all active components on a bike.
- * - Default components (installed_at ≈ created_at): use bike total distance
- * - Replaced components (installed_at ≠ created_at): sum activities since installed_at
- */
-export async function recalculateComponentDistances(
-  bikeId: string,
-  bikeTotalDistance: number
-): Promise<void> {
-  const { data: components } = await supabaseAdmin
+export async function addComponent(
+  insert: ComponentInsert
+): Promise<Component | null> {
+  const { data } = await supabaseAdmin
     .from("components")
-    .select("id, installed_at, created_at")
-    .eq("bike_id", bikeId)
-    .is("replaced_at", null);
+    .insert(insert)
+    .select()
+    .single();
 
-  if (!components || components.length === 0) return;
+  return data;
+}
 
-  await Promise.all(
-    components.map(async (c) => {
-      const installed = new Date(c.installed_at).getTime();
-      const created = new Date(c.created_at).getTime();
-      const isDefault = Math.abs(installed - created) < 60_000;
+export async function deleteComponent(componentId: string): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from("components")
+    .delete()
+    .eq("id", componentId);
 
-      let distance: number;
-      if (isDefault) {
-        // Original component — assume it's been on since the beginning
-        distance = bikeTotalDistance;
-      } else {
-        // Replaced component — sum activities since installation
-        distance = await calculateDistanceFromActivities(bikeId, c.installed_at);
-      }
+  return !error;
+}
 
-      await supabaseAdmin
-        .from("components")
-        .update({ current_distance: distance })
-        .eq("id", c.id);
-    })
-  );
+export async function getBikeById(bikeId: string): Promise<Bike | null> {
+  const { data } = await supabaseAdmin
+    .from("bikes")
+    .select("*")
+    .eq("id", bikeId)
+    .single();
+
+  return data;
 }
 
 // Sync status queries

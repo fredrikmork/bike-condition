@@ -125,6 +125,7 @@ export interface Database {
           type: string;
           recommended_distance: number;
           current_distance: number;
+          bike_distance_at_install: number;
           installed_at: string;
           replaced_at: string | null;
           notes: string | null;
@@ -138,6 +139,7 @@ export interface Database {
           type: string;
           recommended_distance: number;
           current_distance?: number;
+          bike_distance_at_install?: number;
           installed_at?: string;
           replaced_at?: string | null;
           notes?: string | null;
@@ -151,6 +153,7 @@ export interface Database {
           type?: string;
           recommended_distance?: number;
           current_distance?: number;
+          bike_distance_at_install?: number;
           installed_at?: string;
           replaced_at?: string | null;
           notes?: string | null;

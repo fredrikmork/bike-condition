@@ -129,6 +129,11 @@ When building or modifying components, use these MCP tools:
 - Progress (`@shadcn/progress`) — used in ComponentCard (wear bars), extended with `indicatorClassName` prop
 - Tooltip (`@shadcn/tooltip`) — available for future use
 - Skeleton (`@shadcn/skeleton`) — used in StravaLoginButton loading state
+- Dialog (`@shadcn/dialog`) — used in ReplaceDialog, AddComponentDialog
+- Input (`@shadcn/input`) — used in AddComponentDialog
+- Label (`@shadcn/label`) — used in ReplaceDialog, AddComponentDialog
+- Calendar (`@shadcn/calendar`) — used in ReplaceDialog date picker
+- Popover (`@shadcn/popover`) — used in ReplaceDialog date picker
 
 ### Component migration status
 

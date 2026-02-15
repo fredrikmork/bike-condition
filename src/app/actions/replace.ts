@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth/config";
-import { replaceComponent, getComponentById } from "@/lib/db/queries";
+import { replaceComponent, getComponentById, getBikeById } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
 
 export async function replaceComponentAction(
@@ -25,7 +25,17 @@ export async function replaceComponentAction(
     return { success: false, error: "Invalid date" };
   }
 
-  const newComponent = await replaceComponent(componentId, replacedDate);
+  // Fetch the bike to get its current total_distance
+  const bike = await getBikeById(component.bike_id);
+  if (!bike) {
+    return { success: false, error: "Bike not found" };
+  }
+
+  const newComponent = await replaceComponent(
+    componentId,
+    bike.total_distance,
+    replacedDate
+  );
   if (!newComponent) {
     return { success: false, error: "Failed to replace component" };
   }

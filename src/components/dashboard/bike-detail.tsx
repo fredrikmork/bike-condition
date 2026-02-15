@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ComponentList } from "./component-list";
+import { AddComponentDialog } from "./add-component-dialog";
 import { formatDistance } from "@/lib/wear/calculator";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
@@ -32,7 +33,10 @@ export function BikeDetail({ bike }: BikeDetailProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <h3 className="text-sm font-medium mb-3">Components</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium">Components</h3>
+          <AddComponentDialog bikeId={bike.id} />
+        </div>
         <ComponentList components={bike.components} />
       </CardContent>
     </Card>
