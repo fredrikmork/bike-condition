@@ -9,11 +9,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function StravaLoginButton() {
   const { data: session, status } = useSession();
 
-  const handleClick = () => {
-    if (session) {
-      signOut();
-    } else {
-      signIn("strava");
+  const handleClick = async () => {
+    try {
+      if (session) {
+        await signOut();
+      } else {
+        await signIn("strava");
+      }
+    } catch (error) {
+      console.error("Auth action failed:", error);
     }
   };
 

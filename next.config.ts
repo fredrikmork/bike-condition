@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
               "connect-src 'self' https://www.strava.com https://*.supabase.co",
               "frame-ancestors 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://www.strava.com",
             ].join("; "),
           },
         ],

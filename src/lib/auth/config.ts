@@ -73,6 +73,7 @@ async function createOrUpdateUser(
 }
 
 const config: NextAuthConfig = {
+  trustHost: true,
   providers: [
     Strava({
       clientId: process.env.STRAVA_CLIENT_ID ?? "",
