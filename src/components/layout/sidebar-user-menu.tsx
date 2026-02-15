@@ -2,6 +2,7 @@
 
 import { LogOut, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
+import { useMounted } from "@/hooks/use-mounted";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,9 +15,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SidebarUserMenu() {
   const { data: session } = useSession();
+  const mounted = useMounted();
+
+  // Render a placeholder during SSR to avoid Radix useId hydration mismatch
+  if (!mounted) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="grid flex-1 gap-1">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-2 w-14" />
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>

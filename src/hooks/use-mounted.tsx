@@ -1,0 +1,11 @@
+import { useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
+
+export function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true, // client: always mounted
+    () => false // server: not mounted
+  );
+}

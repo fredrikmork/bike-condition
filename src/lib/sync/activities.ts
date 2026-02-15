@@ -9,7 +9,14 @@ interface SyncActivitiesResult {
   errors: string[];
 }
 
-export async function syncActivities(userId: string): Promise<SyncActivitiesResult> {
+interface SyncActivitiesOptions {
+  fullSync?: boolean;
+}
+
+export async function syncActivities(
+  userId: string,
+  options: SyncActivitiesOptions = {}
+): Promise<SyncActivitiesResult> {
   const result: SyncActivitiesResult = {
     synced: 0,
     skipped: 0,
@@ -28,13 +35,15 @@ export async function syncActivities(userId: string): Promise<SyncActivitiesResu
       .eq("user_id", userId)
       .single();
 
-    // Default to 30 days ago if no previous sync
-    const lastSync = syncStatus?.last_activity_sync
-      ? new Date(syncStatus.last_activity_sync)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    // Fetch all history on first sync or when full resync is requested
+    const isFullSync = options.fullSync || !syncStatus?.last_activity_sync;
+    const lastSync = isFullSync
+      ? new Date(0) // epoch — fetch entire activity history
+      : new Date(syncStatus.last_activity_sync as string);
 
-    // Fetch activities since last sync
-    const activities = await client.getAllActivitiesSince(lastSync);
+    // Use higher page limit for full sync to capture full history
+    const maxPages = isFullSync ? 50 : 10;
+    const activities = await client.getAllActivitiesSince(lastSync, maxPages);
 
     if (activities.length === 0) {
       return result;

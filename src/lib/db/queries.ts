@@ -129,22 +129,47 @@ export async function getComponentById(componentId: string): Promise<Component |
   return data;
 }
 
+export async function calculateDistanceFromActivities(
+  bikeId: string,
+  sinceDate: string
+): Promise<number> {
+  const { data } = await supabaseAdmin
+    .from("activities")
+    .select("distance")
+    .eq("bike_id", bikeId)
+    .gte("start_date", sinceDate);
+
+  if (!data || data.length === 0) return 0;
+
+  return data.reduce((sum, a) => sum + a.distance, 0);
+}
+
 export async function replaceComponent(
   componentId: string,
+  replacedAt?: Date,
   notes?: string
 ): Promise<Component | null> {
   // Get the existing component
   const existing = await getComponentById(componentId);
   if (!existing) return null;
 
+  const replacedDate = replacedAt ?? new Date();
+  const replacedIso = replacedDate.toISOString();
+
   // Mark old component as replaced
   await supabaseAdmin
     .from("components")
     .update({
-      replaced_at: new Date().toISOString(),
+      replaced_at: replacedIso,
       notes: notes || existing.notes,
     })
     .eq("id", componentId);
+
+  // Calculate distance from activities since the replacement date
+  const distanceSinceReplacement = await calculateDistanceFromActivities(
+    existing.bike_id,
+    replacedIso
+  );
 
   // Create new component with same type
   const { data: newComponent } = await supabaseAdmin
@@ -154,12 +179,53 @@ export async function replaceComponent(
       name: existing.name,
       type: existing.type,
       recommended_distance: existing.recommended_distance,
-      current_distance: 0,
+      current_distance: distanceSinceReplacement,
+      installed_at: replacedIso,
     })
     .select()
     .single();
 
   return newComponent;
+}
+
+/**
+ * Recalculate distances for all active components on a bike.
+ * - Default components (installed_at ≈ created_at): use bike total distance
+ * - Replaced components (installed_at ≠ created_at): sum activities since installed_at
+ */
+export async function recalculateComponentDistances(
+  bikeId: string,
+  bikeTotalDistance: number
+): Promise<void> {
+  const { data: components } = await supabaseAdmin
+    .from("components")
+    .select("id, installed_at, created_at")
+    .eq("bike_id", bikeId)
+    .is("replaced_at", null);
+
+  if (!components || components.length === 0) return;
+
+  await Promise.all(
+    components.map(async (c) => {
+      const installed = new Date(c.installed_at).getTime();
+      const created = new Date(c.created_at).getTime();
+      const isDefault = Math.abs(installed - created) < 60_000;
+
+      let distance: number;
+      if (isDefault) {
+        // Original component — assume it's been on since the beginning
+        distance = bikeTotalDistance;
+      } else {
+        // Replaced component — sum activities since installation
+        distance = await calculateDistanceFromActivities(bikeId, c.installed_at);
+      }
+
+      await supabaseAdmin
+        .from("components")
+        .update({ current_distance: distance })
+        .eq("id", c.id);
+    })
+  );
 }
 
 // Sync status queries

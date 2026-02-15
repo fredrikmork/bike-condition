@@ -74,6 +74,9 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             await updateComponentDistances(existingBike.id, distanceDelta);
           }
 
+          // Fix default components that were created with 0 distance
+          await migrateZeroDistanceComponents(existingBike.id, gearDetails.distance);
+
           result.updated++;
         } else {
           // Create new bike
@@ -102,8 +105,11 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             continue;
           }
 
-          // Create default components for new bike
-          const defaultComponents = createDefaultComponents(newBike.id);
+          // Create default components for new bike with the bike's current distance
+          const defaultComponents = createDefaultComponents(
+            newBike.id,
+            gearDetails.distance
+          );
           await supabaseAdmin.from("components").insert(defaultComponents);
 
           result.created++;
@@ -159,6 +165,46 @@ async function updateComponentDistances(
           current_distance: component.current_distance + distanceDelta,
         })
         .eq("id", component.id)
+    )
+  );
+}
+
+/**
+ * One-time migration: fix components created with current_distance = 0
+ * where the bike already had distance. Only affects components whose
+ * installed_at matches created_at (i.e., default components never replaced).
+ */
+async function migrateZeroDistanceComponents(
+  bikeId: string,
+  bikeDistance: number
+): Promise<void> {
+  if (bikeDistance <= 0) return;
+
+  const { data: components } = await supabaseAdmin
+    .from("components")
+    .select("id, current_distance, installed_at, created_at")
+    .eq("bike_id", bikeId)
+    .is("replaced_at", null)
+    .eq("current_distance", 0);
+
+  if (!components || components.length === 0) return;
+
+  // Only migrate components where installed_at ≈ created_at (default components)
+  const defaultComponents = components.filter((c) => {
+    const installed = new Date(c.installed_at).getTime();
+    const created = new Date(c.created_at).getTime();
+    // Within 1 minute = default component (not manually replaced)
+    return Math.abs(installed - created) < 60_000;
+  });
+
+  if (defaultComponents.length === 0) return;
+
+  await Promise.all(
+    defaultComponents.map((c) =>
+      supabaseAdmin
+        .from("components")
+        .update({ current_distance: bikeDistance })
+        .eq("id", c.id)
     )
   );
 }

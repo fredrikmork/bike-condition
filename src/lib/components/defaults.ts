@@ -51,13 +51,16 @@ export const DEFAULT_COMPONENTS: DefaultComponent[] = [
   },
 ];
 
-export function createDefaultComponents(bikeId: string): ComponentInsert[] {
+export function createDefaultComponents(
+  bikeId: string,
+  initialDistance = 0
+): ComponentInsert[] {
   return DEFAULT_COMPONENTS.map((component) => ({
     bike_id: bikeId,
     name: component.name,
     type: component.type,
     recommended_distance: component.recommended_distance,
-    current_distance: 0,
+    current_distance: initialDistance,
   }));
 }
 
