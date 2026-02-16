@@ -86,7 +86,7 @@ export class StravaClient {
     return this.fetchArray(endpoint, StravaActivitySchema);
   }
 
-  async getAllActivitiesSince(afterDate: Date, maxPages = 10): Promise<StravaActivity[]> {
+  async getAllActivitiesSince(afterDate: Date, maxPages = 200): Promise<StravaActivity[]> {
     const allActivities: StravaActivity[] = [];
     const after = Math.floor(afterDate.getTime() / 1000);
 

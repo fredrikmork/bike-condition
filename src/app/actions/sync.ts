@@ -19,7 +19,7 @@ export interface SyncResult {
   errors?: string[];
 }
 
-export async function syncStravaData(): Promise<SyncResult> {
+export async function syncStravaData(fullSync = false): Promise<SyncResult> {
   const session = await auth();
 
   if (!session?.userId) {
@@ -31,13 +31,13 @@ export async function syncStravaData(): Promise<SyncResult> {
 
   const errors: string[] = [];
 
-  // Sync bikes (also updates component distances via authoritative formula)
+  // Sync activities first so component distance calculation has fresh data
+  const activityResult = await syncActivities(session.userId, { fullSync });
+  errors.push(...activityResult.errors);
+
+  // Sync bikes (updates component distances using activity data + gear fallback)
   const bikeResult = await syncBikes(session.userId);
   errors.push(...bikeResult.errors);
-
-  // Sync activities
-  const activityResult = await syncActivities(session.userId);
-  errors.push(...activityResult.errors);
 
   // Revalidate the dashboard page
   revalidatePath("/");

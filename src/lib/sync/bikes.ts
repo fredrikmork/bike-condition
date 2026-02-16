@@ -64,8 +64,8 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             })
             .eq("id", existingBike.id);
 
-          // Update component distances using authoritative formula
-          await updateComponentDistances(existingBike.id, gearDetails.distance);
+          // Update component distances using activity data + gear fallback
+          await updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance);
 
           // Add any missing default component types
           await addMissingDefaultComponents(existingBike.id, gearDetails.distance);
@@ -137,30 +137,45 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
 }
 
 /**
- * Update all active component distances using the authoritative formula:
- * current_distance = bike.total_distance - component.bike_distance_at_install
+ * Update all active component distances using the higher of:
+ * 1. Activity-based: SUM(activities.distance) WHERE bike_id AND start_date >= installed_at
+ * 2. Gear-based:     bike.total_distance - component.bike_distance_at_install
+ *
+ * Taking MAX ensures we never under-report: if the gear API is stale, activity
+ * data wins; if activities are incomplete, gear data wins.
  */
-async function updateComponentDistances(
+async function updateComponentDistancesFromActivities(
   bikeId: string,
   bikeTotalDistance: number
 ): Promise<void> {
   const { data: components } = await supabaseAdmin
     .from("components")
-    .select("id, bike_distance_at_install")
+    .select("id, bike_distance_at_install, installed_at")
     .eq("bike_id", bikeId)
     .is("replaced_at", null);
 
   if (!components || components.length === 0) return;
 
   await Promise.all(
-    components.map((component) =>
-      supabaseAdmin
+    components.map(async (component) => {
+      const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
+
+      // Sum activity distances for this bike since the component was installed
+      const { data: activitySum } = await supabaseAdmin
+        .from("activities")
+        .select("distance")
+        .eq("bike_id", bikeId)
+        .gte("start_date", component.installed_at);
+
+      const activityDistance = activitySum?.reduce((sum, a) => sum + a.distance, 0) ?? 0;
+
+      await supabaseAdmin
         .from("components")
         .update({
-          current_distance: bikeTotalDistance - component.bike_distance_at_install,
+          current_distance: Math.max(activityDistance, gearDistance),
         })
-        .eq("id", component.id)
-    )
+        .eq("id", component.id);
+    })
   );
 }
 

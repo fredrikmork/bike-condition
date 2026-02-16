@@ -41,8 +41,16 @@ export async function syncActivities(
       ? new Date(0) // epoch — fetch entire activity history
       : new Date(syncStatus.last_activity_sync as string);
 
-    // Use higher page limit for full sync to capture full history
-    const maxPages = isFullSync ? 50 : 10;
+    // Full re-sync: delete existing activities so we rebuild from scratch
+    if (options.fullSync) {
+      await supabaseAdmin
+        .from("activities")
+        .delete()
+        .eq("user_id", userId);
+    }
+
+    // Full sync: no page limit (default 200 safety cap); incremental: 10 pages
+    const maxPages = isFullSync ? undefined : 10;
     const activities = await client.getAllActivitiesSince(lastSync, maxPages);
 
     if (activities.length === 0) {
