@@ -1,13 +1,14 @@
 "use server";
 
 import { auth } from "@/lib/auth/config";
-import { addComponent, deleteComponent, getComponentById, getBikeById } from "@/lib/db/queries";
+import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
 
 export async function addCustomComponentAction(
   bikeId: string,
   name: string,
-  recommendedDistanceKm: number
+  recommendedDistanceKm: number,
+  icon?: string
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
 
@@ -32,6 +33,7 @@ export async function addCustomComponentAction(
     bike_id: bikeId,
     name: name.trim(),
     type: "custom",
+    icon: icon || null,
     recommended_distance: recommendedDistanceKm * 1000, // km to meters
     current_distance: 0,
     bike_distance_at_install: bike.total_distance,
@@ -60,8 +62,9 @@ export async function deleteComponentAction(
     return { success: false, error: "Component not found" };
   }
 
+  // For default components, record the type so sync won't re-add it
   if (component.type !== "custom") {
-    return { success: false, error: "Only custom components can be deleted" };
+    await addDeletedDefault(component.bike_id, component.type);
   }
 
   const deleted = await deleteComponent(componentId);

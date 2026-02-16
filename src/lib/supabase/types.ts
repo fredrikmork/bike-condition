@@ -82,6 +82,7 @@ export interface Database {
           total_distance: number;
           is_primary: boolean;
           retired: boolean;
+          deleted_defaults: string[];
           created_at: string;
           updated_at: string;
         };
@@ -97,6 +98,7 @@ export interface Database {
           total_distance?: number;
           is_primary?: boolean;
           retired?: boolean;
+          deleted_defaults?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -112,6 +114,7 @@ export interface Database {
           total_distance?: number;
           is_primary?: boolean;
           retired?: boolean;
+          deleted_defaults?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -123,6 +126,7 @@ export interface Database {
           bike_id: string;
           name: string;
           type: string;
+          icon: string | null;
           recommended_distance: number;
           current_distance: number;
           bike_distance_at_install: number;
@@ -137,6 +141,7 @@ export interface Database {
           bike_id: string;
           name: string;
           type: string;
+          icon?: string | null;
           recommended_distance: number;
           current_distance?: number;
           bike_distance_at_install?: number;
@@ -151,6 +156,7 @@ export interface Database {
           bike_id?: string;
           name?: string;
           type?: string;
+          icon?: string | null;
           recommended_distance?: number;
           current_distance?: number;
           bike_distance_at_install?: number;

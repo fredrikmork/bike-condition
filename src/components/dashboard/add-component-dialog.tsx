@@ -16,6 +16,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { addCustomComponentAction } from "@/app/actions/components";
+import { CUSTOM_ICON_OPTIONS } from "@/lib/components/icons";
+import { cn } from "@/lib/utils";
 
 interface AddComponentDialogProps {
   bikeId: string;
@@ -25,6 +27,7 @@ export function AddComponentDialog({ bikeId }: AddComponentDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [distance, setDistance] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("wrench");
   const [loading, setLoading] = useState(false);
 
   async function handleAdd() {
@@ -33,12 +36,13 @@ export function AddComponentDialog({ bikeId }: AddComponentDialogProps) {
 
     setLoading(true);
     try {
-      const result = await addCustomComponentAction(bikeId, name, distanceKm);
+      const result = await addCustomComponentAction(bikeId, name, distanceKm, selectedIcon);
       if (result.success) {
         toast.success(`${name} added`);
         setOpen(false);
         setName("");
         setDistance("");
+        setSelectedIcon("wrench");
       } else {
         toast.error("Failed to add component", {
           description: result.error,
@@ -91,6 +95,27 @@ export function AddComponentDialog({ bikeId }: AddComponentDialogProps) {
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
             />
+          </div>
+          <div className="grid gap-2">
+            <Label>Icon</Label>
+            <div className="grid grid-cols-10 gap-1">
+              {CUSTOM_ICON_OPTIONS.map(({ key, icon: IconComp }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedIcon(key)}
+                  className={cn(
+                    "flex items-center justify-center h-8 w-8 rounded-md transition-colors",
+                    selectedIcon === key
+                      ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                  title={key}
+                >
+                  <IconComp className="h-4 w-4" />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

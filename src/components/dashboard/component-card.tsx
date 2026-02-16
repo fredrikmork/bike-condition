@@ -8,9 +8,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { StatusIndicator } from "./status-indicator";
 import { ReplaceDialog } from "./replace-dialog";
 import { deleteComponentAction } from "@/app/actions/components";
+import { getComponentIcon } from "@/lib/components/icons";
 import {
   calculateComponentWear,
   formatDistance,
@@ -27,6 +39,8 @@ export function ComponentCard({ component }: ComponentCardProps) {
   const wear = calculateComponentWear(component);
   const cappedPercentage = Math.min(wear.percentage, 100);
   const isCustom = component.type === "custom";
+
+  const Icon = getComponentIcon(component.type, component.icon);
 
   // Show "Replaced" if installed_at differs from created_at (manual replacement)
   const installed = new Date(component.installed_at).getTime();
@@ -62,12 +76,25 @@ export function ComponentCard({ component }: ComponentCardProps) {
     }
   }
 
+  const deleteButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+      disabled={deleting}
+      title="Delete component"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
+
   return (
     <>
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5 min-w-0">
+              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <h4 className="text-sm font-medium truncate">{component.name}</h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
@@ -86,17 +113,29 @@ export function ComponentCard({ component }: ComponentCardProps) {
               >
                 <RotateCw className="h-3.5 w-3.5" />
               </Button>
-              {isCustom && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  title="Delete component"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+              {isCustom ? (
+                <span onClick={handleDelete}>{deleteButton}</span>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    {deleteButton}
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove {component.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will stop tracking {component.name} on this bike.
+                        It won&apos;t be re-added on the next sync.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           </div>

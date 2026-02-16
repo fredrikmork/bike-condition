@@ -157,6 +157,7 @@ export async function replaceComponent(
       bike_id: existing.bike_id,
       name: existing.name,
       type: existing.type,
+      icon: existing.icon,
       recommended_distance: existing.recommended_distance,
       current_distance: 0,
       bike_distance_at_install: bikeDistance,
@@ -187,6 +188,24 @@ export async function deleteComponent(componentId: string): Promise<boolean> {
     .eq("id", componentId);
 
   return !error;
+}
+
+export async function addDeletedDefault(bikeId: string, componentType: string): Promise<void> {
+  const { data: bike } = await supabaseAdmin
+    .from("bikes")
+    .select("deleted_defaults")
+    .eq("id", bikeId)
+    .single();
+
+  if (!bike) return;
+
+  const current = bike.deleted_defaults ?? [];
+  if (current.includes(componentType)) return;
+
+  await supabaseAdmin
+    .from("bikes")
+    .update({ deleted_defaults: [...current, componentType] })
+    .eq("id", bikeId);
 }
 
 export async function getBikeById(bikeId: string): Promise<Bike | null> {

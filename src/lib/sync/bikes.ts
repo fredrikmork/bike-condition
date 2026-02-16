@@ -167,6 +167,7 @@ async function updateComponentDistances(
 /**
  * Add missing default component types to an existing bike.
  * Removes obsolete types (bar_tape, brake_pads) and adds new ones.
+ * Respects deleted_defaults — types the user explicitly removed.
  */
 async function addMissingDefaultComponents(
   bikeId: string,
@@ -180,6 +181,14 @@ async function addMissingDefaultComponents(
 
   if (!existingComponents) return;
 
+  // Fetch bike's deleted_defaults to skip user-removed types
+  const { data: bike } = await supabaseAdmin
+    .from("bikes")
+    .select("deleted_defaults")
+    .eq("id", bikeId)
+    .single();
+
+  const deletedDefaults = new Set(bike?.deleted_defaults ?? []);
   const existingTypes = new Set(existingComponents.map((c) => c.type));
 
   // Remove obsolete component types
@@ -195,9 +204,9 @@ async function addMissingDefaultComponents(
       .in("id", obsoleteIds);
   }
 
-  // Add missing default component types
+  // Add missing default component types (skip user-deleted ones)
   const missingDefaults = DEFAULT_COMPONENTS.filter(
-    (d) => !existingTypes.has(d.type)
+    (d) => !existingTypes.has(d.type) && !deletedDefaults.has(d.type)
   );
 
   if (missingDefaults.length > 0) {
