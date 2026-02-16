@@ -8,24 +8,30 @@ This document provides a comprehensive understanding of the codebase's architect
 bike-condition/
 ├── src/
 │   ├── app/                    # Next.js App Router
-│   │   ├── page.tsx           # Main dashboard page
+│   │   ├── page.tsx           # Main dashboard (server component)
 │   │   ├── layout.tsx         # Root layout with providers
-│   │   ├── globals.css        # Global styles
-│   │   ├── getActivites.ts    # Strava API utilities
+│   │   ├── globals.css        # Global styles (dark theme)
+│   │   ├── actions/
+│   │   │   └── sync.ts       # Server action: syncStravaData
 │   │   └── api/
 │   │       └── auth/[...nextauth]/
-│   │           └── route.ts   # NextAuth Strava OAuth
+│   │           └── route.ts   # Auth.js v5 route handler
 │   ├── components/            # React components
-│   │   ├── StravaLoginButton/ # OAuth login/logout
-│   │   ├── selectedBike/      # Bike display with SVG
-│   │   ├── SessionProvider/   # NextAuth session wrapper
-│   │   └── footer/            # Footer component
-│   ├── types/                 # TypeScript interfaces
-│   ├── enums/                 # Enums (e.g., ResourceState)
-│   └── json/                  # Static mock data
+│   │   ├── ui/               # shadcn/ui primitives (auto-generated)
+│   │   ├── BikeDashboard/    # Bike selector with client-side state
+│   │   ├── selectedBike/     # Bike detail: ComponentCard, StatusBadge, etc.
+│   │   ├── shared/           # SyncButton, AddComponentDialog, etc.
+│   │   ├── StravaLoginButton/# OAuth login/logout
+│   │   └── SessionProvider/  # Auth.js session wrapper
+│   └── lib/
+│       ├── auth/             # Auth.js v5 config (handlers, auth, signIn, signOut)
+│       ├── strava/           # Strava API client, schemas, token management
+│       ├── sync/             # Sync logic: activities.ts, bikes.ts
+│       ├── components/       # Default component definitions
+│       ├── supabase/         # Supabase client, types
+│       └── utils.ts          # cn() utility
 ├── docs/                      # Project documentation
-├── .claude/                   # Claude Code configuration
-│   └── skills/               # Custom Claude skills
+├── .claude/                   # Claude Code configuration & agents
 ├── public/                    # Static assets
 └── package.json
 ```
@@ -107,23 +113,28 @@ All backend logic runs as Next.js server components and server actions.
 
 **Purpose:** Primary database for all application data
 
-**Tables (planned):**
+**Tables:**
 - `users` - User profiles linked to Strava
-- `bikes` - User's bikes synced from Strava
-- `components` - Bike components with wear tracking
-- `component_history` - Replacement history
-- `activities` - Synced Strava activities
-- `user_tokens` - Encrypted Strava refresh tokens
+- `bikes` - User's bikes synced from Strava (includes `deleted_defaults`)
+- `components` - Bike components with wear tracking (`current_distance`, `bike_distance_at_install`, `installed_at`, `replaced_at`)
+- `activities` - Synced Strava cycling activities (linked to bike via `bike_id`)
+- `user_tokens` - Strava access/refresh tokens with expiry
+- `sync_status` - Last sync timestamps per user
 
 **Security:**
 - Row Level Security (RLS) on all tables
 - Policies scope data to `auth.uid()`
 
-### 4.2 Static Data (Current)
+### 4.2 Component Distance Calculation
 
-**Location:** `src/json/detailedGear.json`
-**Purpose:** Mock bike data for development
-**Note:** Will be replaced by Supabase queries
+Component wear distance uses the higher of two methods:
+
+1. **Activity-based:** `SUM(activities.distance) WHERE bike_id = X AND start_date >= component.installed_at`
+2. **Gear-based:** `bike.total_distance - component.bike_distance_at_install`
+
+`current_distance = MAX(activity_based, gear_based)`
+
+This ensures wear is never under-reported — if the gear API is stale, activity data wins; if activities are incomplete, gear data wins.
 
 ## 5. External Integrations
 
@@ -179,9 +190,9 @@ All backend logic runs as Next.js server components and server actions.
 
 **Local Setup:**
 ```bash
-npm install
+pnpm install
 cp .env.example .env.local  # Add your keys
-npm run dev
+pnpm run dev
 ```
 
 **Testing:** (To be implemented)
@@ -192,12 +203,20 @@ npm run dev
 
 ### Activity Sync Flow
 ```
-Strava Activity → Fetch via API → Calculate distance delta
-    → Update bike.total_distance
-    → Update each component.current_distance
-    → Recalculate wear percentages
-    → Save to Supabase
-    → Revalidate dashboard
+syncStravaData(fullSync?)
+    1. Sync activities (first, so bike sync has fresh data)
+       → Full sync: delete existing activities, fetch all from epoch (no page limit)
+       → Incremental: fetch since last sync (max 10 pages)
+       → Insert new cycling activities into Supabase
+    2. Sync bikes
+       → Fetch athlete bikes from Strava
+       → Update bike details (name, distance, etc.)
+       → For each active component:
+           activity_distance = SUM(activities since installed_at)
+           gear_distance = bike.total_distance - bike_distance_at_install
+           current_distance = MAX(activity_distance, gear_distance)
+       → Add missing default components
+    3. Revalidate dashboard
 ```
 
 ### Component Replacement Flow
@@ -215,7 +234,7 @@ User clicks "Replace" → Create history entry
 **Repository:** github.com/fredrikmork/bike-condition
 **Hosting:** Vercel
 **Database:** Supabase
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-02-16
 
 ## 11. Glossary
 

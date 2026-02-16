@@ -26,30 +26,47 @@ Graphs, statistics, and progress bars on the right side.
 
 Clickable SVG components showing detailed wear information.
 
-## 2. What’s been accomplished?
+## 2. What's been accomplished?
 
-Strava integration is partially implemented and functioning at a basic level.
+### Infrastructure
+- Next.js 16 with App Router, React 19, TypeScript 5.9 (strict mode)
+- Auth.js v5 with Strava OAuth (JWT session strategy)
+- Supabase database with RLS-protected tables: users, bikes, components, activities, user_tokens, sync_status
+- Vercel hosting with automatic deployments from GitHub
+- ESLint 9 flat config
 
-Vercel hosting is set up and the application is deployed.
+### UI & Design
+- shadcn/ui component library (New York style, CSS variables)
+- Dashboard layout with bike selector and component detail view
+- Component cards with color-coded wear progress bars (green → yellow → red)
+- Component icons (Lucide) and category grouping (drivetrain, wheels, braking, contact points)
+- Dark theme
 
-Next.js project is established, but the framework and dependencies have not been updated for ~1.5 years.
+### Core Features
+- Strava OAuth login/logout
+- Activity sync from Strava (full history + incremental)
+- Bike sync with automatic component distance updates
+- Component wear tracking using `MAX(activity-based, gear-based)` distance calculation
+- Default components auto-created for new bikes
+- Custom component support (add/delete)
+- Component replacement with date picker and history tracking
+- Full re-sync capability to rebuild activity data from scratch
 
-## 3. What’s next?
+### Recent Fixes (2026-02-16)
+- Fixed activity sync gap that missed rides from Oct 2025 – Feb 2026 (page limit removed)
+- Component distances now use activity data with gear-based fallback (MAX of both)
+- Sync order: activities first, then bikes
 
-Set up Supabase to store users, bikes, components, wear states, and historical data.
+## 3. What's next?
 
-Update Next.js and all dependencies to current versions.
+### v1 remaining
+- Interactive SVG road bike illustration on the dashboard
+- Click on SVG components to view wear details
+- D3.js-based SVG highlighting, animations, and progress arcs
 
-Implement a logged‑in user flow that fetches Strava data and updates component wear after each workout.
-
-Add functionality for marking components as replaced, resetting wear, and updating historical records.
-
-Implement historical views of component wear over time.
-
-Handle cases where users edit past Strava activities:
-
-Recalculate bike distance based on the date of the change
-
-Update current and historical component wear accordingly
-
-Sending email as notification so that users know when to change parts. Check out possibilities with "Resend".
+### v2
+- Graphs and historical visualizations of component wear over time
+- Handle cases where users edit past Strava activities (recalculate wear)
+- Email notifications for component replacement reminders (Resend)
+- User preferences for replacement intervals
+- Manual bike selection as "featured" bike
