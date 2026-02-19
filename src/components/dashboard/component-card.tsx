@@ -9,6 +9,7 @@ import {
   Trash2,
   History,
   ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,9 +50,10 @@ import type { Component, LubeType } from "@/lib/supabase/types";
 interface ComponentCardProps {
   component: Component;
   hasHistory?: boolean;
+  lastSync?: string | null;
 }
 
-export function ComponentCard({ component, hasHistory = false }: ComponentCardProps) {
+export function ComponentCard({ component, hasHistory = false, lastSync }: ComponentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -69,6 +71,11 @@ export function ComponentCard({ component, hasHistory = false }: ComponentCardPr
   const wasReplaced = Math.abs(installed - created) >= 60_000;
   const installedLabel = wasReplaced ? "Replaced" : "Installed";
   const installedDate = format(new Date(component.installed_at), "d MMM yyyy");
+
+  // True when the component was installed after the last sync — distances are stale
+  const needsSync = lastSync
+    ? new Date(component.installed_at) > new Date(lastSync)
+    : false;
 
   const indicatorColor =
     wear.status === "critical"
@@ -186,9 +193,16 @@ export function ComponentCard({ component, hasHistory = false }: ComponentCardPr
             </span>
             <div className="flex items-center gap-2">
               <span>
-                {wear.isOverdue
-                  ? "Replace now"
-                  : `${formatDistance(wear.remainingDistance)} left`}
+                {needsSync ? (
+                  <span className="flex items-center gap-1 text-muted-foreground/70">
+                    <RefreshCw className="h-3 w-3" />
+                    Sync to update
+                  </span>
+                ) : wear.isOverdue ? (
+                  "Replace now"
+                ) : (
+                  `${formatDistance(wear.remainingDistance)} left`
+                )}
               </span>
               {hasMetadata && (
                 <button

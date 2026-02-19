@@ -15,9 +15,10 @@ import type { BikeWithComponents } from "@/lib/supabase/types";
 interface BikeDetailProps {
   bike: BikeWithComponents;
   typesWithHistory?: Set<string>;
+  lastSync?: string | null;
 }
 
-export function BikeDetail({ bike, typesWithHistory = new Set() }: BikeDetailProps) {
+export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
 
   const subtitle = [bike.brand_name, bike.model_name].filter(Boolean).join(" ");
@@ -75,6 +76,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set() }: BikeDetailPro
             components={bike.components}
             typesWithHistory={typesWithHistory}
             bikeConfig={config}
+            lastSync={lastSync}
           />
         </CardContent>
       </Card>

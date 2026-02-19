@@ -8,12 +8,14 @@ interface ComponentListProps {
   components: Component[];
   typesWithHistory?: Set<string>;
   bikeConfig?: BikeConfig | null;
+  lastSync?: string | null;
 }
 
 export function ComponentList({
   components,
   typesWithHistory = new Set(),
   bikeConfig = null,
+  lastSync,
 }: ComponentListProps) {
   // Filter by visibility rules
   const visible = components.filter((c) => isComponentVisible(c.type, bikeConfig));
@@ -39,7 +41,7 @@ export function ComponentList({
     <div className="space-y-5">
       {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => {
         const categoryComponents = grouped.get(category)!;
-        const rendered = renderWithFamilies(categoryComponents, typesWithHistory);
+        const rendered = renderWithFamilies(categoryComponents, typesWithHistory, lastSync);
 
         return (
           <div key={category}>
@@ -60,7 +62,8 @@ export function ComponentList({
  */
 function renderWithFamilies(
   components: Component[],
-  typesWithHistory: Set<string>
+  typesWithHistory: Set<string>,
+  lastSync?: string | null,
 ) {
   const byType = new Map(components.map((c) => [c.type, c]));
   const rendered: React.ReactNode[] = [];
@@ -83,10 +86,12 @@ function renderWithFamilies(
             <ComponentCard
               component={front}
               hasHistory={typesWithHistory.has(front.type)}
+              lastSync={lastSync}
             />
             <ComponentCard
               component={rear}
               hasHistory={typesWithHistory.has(rear.type)}
+              lastSync={lastSync}
             />
           </div>
         </div>
@@ -110,6 +115,7 @@ function renderWithFamilies(
             key={component.id}
             component={component}
             hasHistory={typesWithHistory.has(component.type)}
+            lastSync={lastSync}
           />
         ))}
       </div>

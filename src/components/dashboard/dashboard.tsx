@@ -36,7 +36,7 @@ export function Dashboard({ bikes, stats, historyByBike }: DashboardProps) {
   return (
     <div className="space-y-6">
       <StatsCards stats={stats} />
-      {selectedBike && <BikeDetail bike={selectedBike} typesWithHistory={typesWithHistory} />}
+      {selectedBike && <BikeDetail bike={selectedBike} typesWithHistory={typesWithHistory} lastSync={stats.lastSync} />}
     </div>
   );
 }
