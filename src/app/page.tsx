@@ -19,14 +19,14 @@ export default async function Home() {
 
   if (bikes.length === 0) {
     return (
-      <AppShell bikes={[]}>
+      <AppShell bikes={[]} lastSynced={stats.lastSync}>
         <EmptyState />
       </AppShell>
     );
   }
 
   return (
-    <AppShell bikes={bikes}>
+    <AppShell bikes={bikes} lastSynced={stats.lastSync}>
       <Dashboard bikes={bikes} stats={stats} />
     </AppShell>
   );

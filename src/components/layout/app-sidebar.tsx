@@ -21,9 +21,10 @@ import type { BikeWithComponents } from "@/lib/supabase/types";
 
 interface AppSidebarProps {
   bikes: BikeWithComponents[];
+  lastSynced?: string | null;
 }
 
-export function AppSidebar({ bikes }: AppSidebarProps) {
+export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -57,7 +58,7 @@ export function AppSidebar({ bikes }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>Actions</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SyncButton />
+            <SyncButton lastSynced={lastSynced} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

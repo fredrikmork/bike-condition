@@ -5,13 +5,14 @@ import type { BikeWithComponents } from "@/lib/supabase/types";
 
 interface AppShellProps {
   bikes: BikeWithComponents[];
+  lastSynced?: string | null;
   children: React.ReactNode;
 }
 
-export function AppShell({ bikes, children }: AppShellProps) {
+export function AppShell({ bikes, lastSynced, children }: AppShellProps) {
   return (
     <SidebarProvider>
-      <AppSidebar bikes={bikes} />
+      <AppSidebar bikes={bikes} lastSynced={lastSynced} />
       <SidebarInset>
         <DashboardHeader />
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
