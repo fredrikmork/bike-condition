@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth/config";
-import { getBikesWithComponents, getDashboardStats } from "@/lib/db/queries";
+import { getBikesWithComponents, getDashboardStats, getTypesWithHistoryForBikes } from "@/lib/db/queries";
 import { LoginPage } from "@/components/shared/login-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -25,9 +25,11 @@ export default async function Home() {
     );
   }
 
+  const historyByBike = await getTypesWithHistoryForBikes(bikes.map((b) => b.id));
+
   return (
     <AppShell bikes={bikes} lastSynced={stats.lastSync}>
-      <Dashboard bikes={bikes} stats={stats} />
+      <Dashboard bikes={bikes} stats={stats} historyByBike={historyByBike} />
     </AppShell>
   );
 }

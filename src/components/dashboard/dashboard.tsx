@@ -14,9 +14,10 @@ interface DashboardProps {
     componentsNeedingAttention: number;
     lastSync: string | null;
   };
+  historyByBike: Record<string, string[]>;
 }
 
-export function Dashboard({ bikes, stats }: DashboardProps) {
+export function Dashboard({ bikes, stats, historyByBike }: DashboardProps) {
   const { selectedBikeId, setSelectedBikeId } = useBikeStore();
 
   // Initialize with primary or most-ridden bike
@@ -30,11 +31,12 @@ export function Dashboard({ bikes, stats }: DashboardProps) {
   }, [bikes, selectedBikeId, setSelectedBikeId]);
 
   const selectedBike = bikes.find((b) => b.id === selectedBikeId);
+  const typesWithHistory = new Set(selectedBike ? (historyByBike[selectedBike.id] ?? []) : []);
 
   return (
     <div className="space-y-6">
       <StatsCards stats={stats} />
-      {selectedBike && <BikeDetail bike={selectedBike} />}
+      {selectedBike && <BikeDetail bike={selectedBike} typesWithHistory={typesWithHistory} />}
     </div>
   );
 }

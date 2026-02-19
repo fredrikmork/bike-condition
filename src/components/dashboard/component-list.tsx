@@ -4,9 +4,10 @@ import type { Component } from "@/lib/supabase/types";
 
 interface ComponentListProps {
   components: Component[];
+  typesWithHistory?: Set<string>;
 }
 
-export function ComponentList({ components }: ComponentListProps) {
+export function ComponentList({ components, typesWithHistory = new Set() }: ComponentListProps) {
   if (components.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4">
@@ -33,7 +34,11 @@ export function ComponentList({ components }: ComponentListProps) {
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {grouped.get(category)!.map((component) => (
-              <ComponentCard key={component.id} component={component} />
+              <ComponentCard
+                key={component.id}
+                component={component}
+                hasHistory={typesWithHistory.has(component.type)}
+              />
             ))}
           </div>
         </div>

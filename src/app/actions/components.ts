@@ -1,8 +1,20 @@
 "use server";
 
+import { z } from "zod";
 import { auth } from "@/lib/auth/config";
-import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault } from "@/lib/db/queries";
+import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault, getComponentHistory, updateComponent } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
+import type { LubeType, Component } from "@/lib/supabase/types";
+
+const UpdateComponentSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  brand: z.string().max(100).nullable().optional(),
+  model: z.string().max(100).nullable().optional(),
+  spec: z.string().max(200).nullable().optional(),
+  lube_type: z.enum(["wet_lube", "dry_lube", "drip_wax", "hot_wax"]).nullable().optional(),
+  recommended_distance: z.number().int().positive("Distance must be greater than 0"),
+  notes: z.string().max(500).nullable().optional(),
+});
 
 export async function addCustomComponentAction(
   bikeId: string,
@@ -46,6 +58,47 @@ export async function addCustomComponentAction(
   revalidatePath("/");
 
   return { success: true };
+}
+
+export async function updateComponentAction(
+  componentId: string,
+  data: {
+    name: string;
+    brand?: string | null;
+    model?: string | null;
+    spec?: string | null;
+    lube_type?: LubeType | null;
+    recommended_distance: number; // in meters
+    notes?: string | null;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  const parsed = UpdateComponentSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid input" };
+  }
+
+  const component = await getComponentById(componentId);
+  if (!component) return { success: false, error: "Component not found" };
+
+  const updated = await updateComponent(componentId, parsed.data);
+  if (!updated) return { success: false, error: "Failed to update component" };
+
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function getComponentHistoryAction(
+  bikeId: string,
+  componentType: string
+): Promise<{ success: boolean; history?: Component[]; error?: string }> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  const history = await getComponentHistory(bikeId, componentType);
+  return { success: true, history };
 }
 
 export async function deleteComponentAction(

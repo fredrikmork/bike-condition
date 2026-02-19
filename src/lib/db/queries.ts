@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import type { Bike, Component, ComponentInsert, User, SyncStatus, BikeWithComponents } from "@/lib/supabase/types";
+import type { Bike, Component, ComponentInsert, User, SyncStatus, BikeWithComponents, LubeType } from "@/lib/supabase/types";
 
 // User queries
 export async function getUserById(userId: string): Promise<User | null> {
@@ -181,6 +181,51 @@ export async function addComponent(
   return data;
 }
 
+export async function updateComponent(
+  componentId: string,
+  data: {
+    name: string;
+    brand?: string | null;
+    model?: string | null;
+    spec?: string | null;
+    lube_type?: LubeType | null;
+    recommended_distance: number;
+    notes?: string | null;
+  }
+): Promise<Component | null> {
+  const { data: updated } = await supabaseAdmin
+    .from("components")
+    .update({
+      name: data.name,
+      brand: data.brand ?? null,
+      model: data.model ?? null,
+      spec: data.spec ?? null,
+      lube_type: data.lube_type ?? null,
+      recommended_distance: data.recommended_distance,
+      notes: data.notes ?? null,
+    })
+    .eq("id", componentId)
+    .select()
+    .single();
+
+  return updated;
+}
+
+export async function getComponentHistory(
+  bikeId: string,
+  componentType: string
+): Promise<Component[]> {
+  const { data } = await supabaseAdmin
+    .from("components")
+    .select("*")
+    .eq("bike_id", bikeId)
+    .eq("type", componentType)
+    .not("replaced_at", "is", null)
+    .order("replaced_at", { ascending: false });
+
+  return data || [];
+}
+
 export async function deleteComponent(componentId: string): Promise<boolean> {
   const { error } = await supabaseAdmin
     .from("components")
@@ -216,6 +261,29 @@ export async function getBikeById(bikeId: string): Promise<Bike | null> {
     .single();
 
   return data;
+}
+
+// Returns a map of bikeId → set of component types that have at least one retired entry.
+// One query for all bikes — avoids N+1.
+export async function getTypesWithHistoryForBikes(
+  bikeIds: string[]
+): Promise<Record<string, string[]>> {
+  if (bikeIds.length === 0) return {};
+
+  const { data } = await supabaseAdmin
+    .from("components")
+    .select("bike_id, type")
+    .in("bike_id", bikeIds)
+    .not("replaced_at", "is", null);
+
+  const result: Record<string, string[]> = {};
+  for (const row of data || []) {
+    if (!result[row.bike_id]) result[row.bike_id] = [];
+    if (!result[row.bike_id].includes(row.type)) {
+      result[row.bike_id].push(row.type);
+    }
+  }
+  return result;
 }
 
 // Sync status queries

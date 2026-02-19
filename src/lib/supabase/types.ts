@@ -127,6 +127,10 @@ export interface Database {
           name: string;
           type: string;
           icon: string | null;
+          brand: string | null;
+          model: string | null;
+          spec: string | null;
+          lube_type: LubeType | null;
           recommended_distance: number;
           current_distance: number;
           bike_distance_at_install: number;
@@ -142,6 +146,10 @@ export interface Database {
           name: string;
           type: string;
           icon?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          spec?: string | null;
+          lube_type?: LubeType | null;
           recommended_distance: number;
           current_distance?: number;
           bike_distance_at_install?: number;
@@ -157,6 +165,10 @@ export interface Database {
           name?: string;
           type?: string;
           icon?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          spec?: string | null;
+          lube_type?: LubeType | null;
           recommended_distance?: number;
           current_distance?: number;
           bike_distance_at_install?: number;
@@ -270,3 +282,5 @@ export type SyncStatus = Database["public"]["Tables"]["sync_status"]["Row"];
 export type BikeWithComponents = Bike & {
   components: Component[];
 };
+
+export type LubeType = 'wet_lube' | 'dry_lube' | 'drip_wax' | 'hot_wax';

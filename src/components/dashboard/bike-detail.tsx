@@ -7,9 +7,10 @@ import type { BikeWithComponents } from "@/lib/supabase/types";
 
 interface BikeDetailProps {
   bike: BikeWithComponents;
+  typesWithHistory?: Set<string>;
 }
 
-export function BikeDetail({ bike }: BikeDetailProps) {
+export function BikeDetail({ bike, typesWithHistory = new Set() }: BikeDetailProps) {
   const subtitle = [bike.brand_name, bike.model_name]
     .filter(Boolean)
     .join(" ");
@@ -37,7 +38,7 @@ export function BikeDetail({ bike }: BikeDetailProps) {
           <h3 className="text-sm font-medium">Components</h3>
           <AddComponentDialog bikeId={bike.id} />
         </div>
-        <ComponentList components={bike.components} />
+        <ComponentList components={bike.components} typesWithHistory={typesWithHistory} />
       </CardContent>
     </Card>
   );
