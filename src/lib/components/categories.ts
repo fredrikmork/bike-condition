@@ -1,16 +1,28 @@
 export type ComponentCategory = "Drivetrain" | "Wheels" | "Brakes" | "Other";
 
 const CATEGORY_MAP: Record<string, ComponentCategory> = {
-  chain: "Drivetrain",
-  cassette: "Drivetrain",
-  chainrings: "Drivetrain",
-  tire_front: "Wheels",
-  tire_rear: "Wheels",
-  brake_pads_front: "Brakes",
-  brake_pads_rear: "Brakes",
+  // Drivetrain
+  chain:          "Drivetrain",
+  cassette:       "Drivetrain",
+  chainrings:     "Drivetrain",
+  bottom_bracket: "Drivetrain",
+  pulley_wheels:  "Drivetrain",
+  // Wheels
+  tire_front:       "Wheels",
+  tire_rear:        "Wheels",
+  inner_tube_front: "Wheels",
+  inner_tube_rear:  "Wheels",
+  // Brakes
+  brake_pads_front:  "Brakes",
+  brake_pads_rear:   "Brakes",
+  brake_rotor_front: "Brakes",
+  brake_rotor_rear:  "Brakes",
+  // Legacy
   brake_rotors: "Brakes",
-  cables: "Other",
-  bottom_bracket: "Other",
+  // Other / cables
+  shift_cables: "Other",
+  brake_cables: "Other",
+  cables:       "Other",
 };
 
 export const CATEGORY_ORDER: ComponentCategory[] = [

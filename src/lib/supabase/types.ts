@@ -83,6 +83,11 @@ export interface Database {
           is_primary: boolean;
           retired: boolean;
           deleted_defaults: string[];
+          shifting_type: ShiftingType | null;
+          brake_type: BrakeType | null;
+          drivetrain_speed: number | null;
+          tire_system: TireSystem | null;
+          config_complete: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -99,6 +104,11 @@ export interface Database {
           is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
+          shifting_type?: ShiftingType | null;
+          brake_type?: BrakeType | null;
+          drivetrain_speed?: number | null;
+          tire_system?: TireSystem | null;
+          config_complete?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -115,6 +125,11 @@ export interface Database {
           is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
+          shifting_type?: ShiftingType | null;
+          brake_type?: BrakeType | null;
+          drivetrain_speed?: number | null;
+          tire_system?: TireSystem | null;
+          config_complete?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -284,3 +299,14 @@ export type BikeWithComponents = Bike & {
 };
 
 export type LubeType = 'wet_lube' | 'dry_lube' | 'drip_wax' | 'hot_wax';
+
+export type ShiftingType = 'mechanical' | 'electronic';
+export type BrakeType = 'disc' | 'rim';
+export type TireSystem = 'tubeless' | 'clincher' | 'tubular';
+
+export interface BikeConfig {
+  shifting_type: ShiftingType;
+  brake_type: BrakeType;
+  drivetrain_speed: number;
+  tire_system: TireSystem;
+}

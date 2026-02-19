@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Bike } from "lucide-react";
+import { AlertTriangle, Bike, Settings2 } from "lucide-react";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import { calculateComponentWear } from "@/lib/wear/calculator";
 import {
@@ -36,7 +36,12 @@ export function SidebarBikeList({ bikes }: SidebarBikeListProps) {
               <Bike className="h-4 w-4" />
               <span className="truncate">{bike.name}</span>
             </SidebarMenuButton>
-            {hasWarning && (
+            {!bike.config_complete && (
+              <SidebarMenuBadge>
+                <Settings2 className="h-3 w-3 text-muted-foreground" />
+              </SidebarMenuBadge>
+            )}
+            {bike.config_complete && hasWarning && (
               <SidebarMenuBadge>
                 <AlertTriangle className="h-3 w-3 text-status-warning" />
               </SidebarMenuBadge>

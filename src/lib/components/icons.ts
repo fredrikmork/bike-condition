@@ -23,16 +23,28 @@ import {
 } from "lucide-react";
 
 const ICON_MAP: Record<string, LucideIcon> = {
-  chain: Link,
-  cassette: Disc3,
-  tire_front: CircleDot,
-  tire_rear: CircleDot,
-  brake_pads_front: Hand,
-  brake_pads_rear: Hand,
-  brake_rotors: Disc,
-  cables: Cable,
+  // Drivetrain
+  chain:          Link,
+  cassette:       Disc3,
+  chainrings:     Cog,
   bottom_bracket: Hexagon,
-  chainrings: Cog,
+  pulley_wheels:  CircleDashed,
+  // Wheels
+  tire_front:       CircleDot,
+  tire_rear:        CircleDot,
+  inner_tube_front: CircleDashed,
+  inner_tube_rear:  CircleDashed,
+  // Brakes
+  brake_pads_front:  Hand,
+  brake_pads_rear:   Hand,
+  brake_rotor_front: Disc,
+  brake_rotor_rear:  Disc,
+  // Cables
+  shift_cables: Cable,
+  brake_cables: Cable,
+  // Legacy
+  brake_rotors: Disc,
+  cables:       Cable,
 };
 
 /**
