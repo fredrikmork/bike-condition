@@ -15,7 +15,9 @@ export function AppShell({ bikes, lastSynced, children }: AppShellProps) {
       <AppSidebar bikes={bikes} lastSynced={lastSynced} />
       <SidebarInset>
         <DashboardHeader />
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+          <div className="mx-auto w-full max-w-5xl">{children}</div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );
