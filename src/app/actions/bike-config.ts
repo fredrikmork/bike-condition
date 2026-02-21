@@ -23,7 +23,7 @@ export async function saveBikeConfigAction(
 
   const parsed = BikeConfigSchema.safeParse(config);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid config" };
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid config" };
   }
 
   // Verify bike belongs to this user

@@ -35,7 +35,7 @@ const schema = z.object({
   spec: z.string().max(200).optional(),
   lube_type: z.enum(["wet_lube", "dry_lube", "drip_wax", "hot_wax"]).optional(),
   recommended_distance_km: z
-    .number({ invalid_type_error: "Enter a number" })
+    .number({ error: "Enter a number" })
     .int()
     .positive("Distance must be greater than 0"),
   notes: z.string().max(500).optional(),
