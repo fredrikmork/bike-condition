@@ -84,14 +84,14 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
         ? "bg-status-warning"
         : "bg-status-healthy";
 
-  // Determine if there's any metadata worth showing
-  const hasMetadata = !!(
-    component.brand ||
-    component.model ||
-    component.spec ||
-    component.lube_type ||
-    component.notes
-  );
+  // Brand/model/spec → shown on card face
+  const hasFaceInfo = !!(component.brand || component.model || component.spec);
+
+  // Lube/notes → live behind expand
+  const canExpand = !!(component.lube_type || component.notes);
+
+  // All metadata null → show ghost CTA
+  const isUnedited = !hasFaceInfo && !component.lube_type && !component.notes;
 
   async function handleDelete() {
     setDeleting(true);
@@ -117,7 +117,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
       <Card>
         <CardContent className="p-4">
           {/* Header row */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <h4 className="text-sm font-medium truncate">{component.name}</h4>
@@ -168,10 +168,36 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
             </div>
           </div>
 
+          {/* Subtitle: brand/model text + spec chip, or unedited ghost CTA */}
+          {(hasFaceInfo || isUnedited) && (
+            <div className="flex items-center gap-1.5 min-w-0 mt-0.5 mb-3">
+              {(component.brand || component.model) && (
+                <span className="text-xs text-muted-foreground truncate">
+                  {[component.brand, component.model].filter(Boolean).join(" ")}
+                </span>
+              )}
+              {component.spec && (
+                <Badge variant="outline" className="text-[10px] font-normal shrink-0">
+                  {component.spec}
+                </Badge>
+              )}
+              {isUnedited && (
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  aria-label="Add component details"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Add details
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Wear bar */}
           <Progress
             value={cappedPercentage}
-            className="h-2 mb-3"
+            className={cn("h-2 mb-3", !hasFaceInfo && !isUnedited && "mt-3")}
             indicatorClassName={indicatorColor}
           />
 
@@ -186,7 +212,18 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
           </div>
 
           {/* Distance row + expand toggle */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div
+            className={cn(
+              "flex items-center justify-between text-xs text-muted-foreground",
+              canExpand && "cursor-pointer select-none"
+            )}
+            role={canExpand ? "button" : undefined}
+            aria-expanded={canExpand ? expanded : undefined}
+            aria-label={canExpand ? (expanded ? "Collapse details" : "Expand details") : undefined}
+            tabIndex={canExpand ? 0 : undefined}
+            onClick={canExpand ? () => setExpanded((v) => !v) : undefined}
+            onKeyDown={canExpand ? (e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); } : undefined}
+          >
             <span>
               {formatDistance(component.current_distance)} /{" "}
               {formatDistance(component.recommended_distance)}
@@ -204,43 +241,31 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
                   `${formatDistance(wear.remainingDistance)} left`
                 )}
               </span>
-              {hasMetadata && (
-                <button
-                  onClick={() => setExpanded((v) => !v)}
-                  className="flex items-center text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-                  aria-label={expanded ? "Collapse details" : "Expand details"}
-                >
+              {canExpand && (
+                <span aria-hidden="true" className="flex items-center text-muted-foreground/60">
                   <ChevronDown
                     className={cn(
                       "h-3.5 w-3.5 transition-transform duration-200",
                       expanded && "rotate-180"
                     )}
                   />
-                </button>
+                </span>
               )}
             </div>
           </div>
 
-          {/* Expanded metadata */}
-          {expanded && hasMetadata && (
-            <div className="mt-3 pt-3 border-t grid gap-1.5">
-              {(component.brand || component.model) && (
-                <MetaRow
-                  label="Brand / Model"
-                  value={[component.brand, component.model].filter(Boolean).join(" ")}
-                />
-              )}
-              {component.spec && (
-                <MetaRow label="Spec" value={component.spec} />
-              )}
+          {/* Expanded metadata: lube chip + notes */}
+          {canExpand && expanded && (
+            <div className="mt-3 pt-3 border-t space-y-2">
               {component.lube_type && (
-                <MetaRow
-                  label="Lube"
-                  value={LUBE_LABELS[component.lube_type as LubeType]}
-                />
+                <Badge variant="secondary" className="text-[10px]">
+                  {LUBE_LABELS[component.lube_type as LubeType]}
+                </Badge>
               )}
               {component.notes && (
-                <MetaRow label="Notes" value={component.notes} />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {component.notes}
+                </p>
               )}
             </div>
           )}
@@ -289,14 +314,5 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-}
-
-function MetaRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-2 text-xs">
-      <span className="text-muted-foreground/60 w-20 shrink-0">{label}</span>
-      <span className="text-muted-foreground">{value}</span>
-    </div>
   );
 }
