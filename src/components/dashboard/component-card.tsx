@@ -50,9 +50,11 @@ interface ComponentCardProps {
   component: Component;
   hasHistory?: boolean;
   lastSync?: string | null;
+  /** Override the name shown on the card face (dialogs still use component.name) */
+  displayName?: string;
 }
 
-export function ComponentCard({ component, hasHistory = false, lastSync }: ComponentCardProps) {
+export function ComponentCard({ component, hasHistory = false, lastSync, displayName }: ComponentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -117,7 +119,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <h4 className="text-sm font-medium truncate">{component.name}</h4>
+              <h4 className="text-sm font-medium truncate">{displayName ?? component.name}</h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   Custom

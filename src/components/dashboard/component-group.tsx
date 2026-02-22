@@ -55,6 +55,12 @@ export function ComponentGroup({
 
   const Icon = group.id === "drivetrain" ? Cog : CircleDot;
 
+  function shortName(name: string) {
+    if (group.id === "front_wheel") return name.replace(/^front\s+/i, "");
+    if (group.id === "rear_wheel") return name.replace(/^rear\s+/i, "");
+    return name;
+  }
+
   return (
     <>
       <Card>
@@ -77,7 +83,7 @@ export function ComponentGroup({
                 <StatusIndicator status={worstStatus} isOverdue={worstIsOverdue} />
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                {mostWorn.name}
+                {shortName(mostWorn.name)}
                 {" — "}
                 {Math.round(Math.min(mostWornWear.percentage, 100))}%
                 {" · "}
@@ -95,7 +101,7 @@ export function ComponentGroup({
 
           {/* Expanded contents */}
           {expanded && (
-            <div className="px-4 pb-4 space-y-3 border-t pt-3">
+            <div className="px-4 pb-4 border-t pt-3 space-y-3">
               {group.canBatchReplace && (
                 <Button
                   variant="ghost"
@@ -108,14 +114,17 @@ export function ComponentGroup({
                 </Button>
               )}
 
-              {components.map((component) => (
-                <ComponentCard
-                  key={component.id}
-                  component={component}
-                  hasHistory={typesWithHistory.has(component.type)}
-                  lastSync={lastSync}
-                />
-              ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {components.map((component) => (
+                  <ComponentCard
+                    key={component.id}
+                    component={component}
+                    hasHistory={typesWithHistory.has(component.type)}
+                    lastSync={lastSync}
+                    displayName={shortName(component.name)}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
