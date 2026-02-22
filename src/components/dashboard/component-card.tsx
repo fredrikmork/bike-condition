@@ -119,7 +119,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
               <h4 className="text-sm font-medium truncate">{component.name}</h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
@@ -184,7 +184,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
               {isUnedited && (
                 <button
                   onClick={() => setEditOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                   aria-label="Add component details"
                 >
                   <Pencil className="h-3 w-3" />
@@ -232,7 +232,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
               <span>
                 {needsSync ? (
                   <span className="flex items-center gap-1 text-muted-foreground/70">
-                    <RefreshCw className="h-3 w-3" />
+                    <RefreshCw aria-hidden="true" className="h-3 w-3" />
                     Sync to update
                   </span>
                 ) : wear.isOverdue ? (

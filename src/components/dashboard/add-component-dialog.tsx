@@ -60,7 +60,7 @@ export function AddComponentDialog({ bikeId }: AddComponentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" title="Add custom component">
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Add custom component">
           <Plus className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -104,13 +104,14 @@ export function AddComponentDialog({ bikeId }: AddComponentDialogProps) {
                   key={key}
                   type="button"
                   onClick={() => setSelectedIcon(key)}
+                  aria-label={`Select ${key} icon`}
+                  aria-pressed={selectedIcon === key}
                   className={cn(
-                    "flex items-center justify-center h-8 w-8 rounded-md transition-colors",
+                    "flex cursor-pointer items-center justify-center h-8 w-8 rounded-md transition-colors",
                     selectedIcon === key
                       ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
                       : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
-                  title={key}
                 >
                   <IconComp className="h-4 w-4" />
                 </button>

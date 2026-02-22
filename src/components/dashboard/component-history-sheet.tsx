@@ -67,8 +67,8 @@ export function ComponentHistorySheet({
 
         <div className="mt-6">
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div role="status" aria-label="Loading history" className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
             </div>
           ) : history.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -98,7 +98,7 @@ function HistoryEntry({ entry }: { entry: Component }) {
   return (
     <li className="relative">
       {/* Timeline dot */}
-      <span className="absolute -left-[1.35rem] top-1 h-2.5 w-2.5 rounded-full border-2 border-border bg-background" />
+      <span aria-hidden="true" className="absolute -left-[1.35rem] top-1 h-2.5 w-2.5 rounded-full border-2 border-border bg-background" />
 
       <div className="grid gap-1">
         {/* Date range */}

@@ -43,7 +43,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
                 size="icon"
                 className="h-7 w-7"
                 onClick={() => setConfigOpen(true)}
-                title={bike.config_complete ? "Re-configure bike" : "Configure bike"}
+                aria-label={bike.config_complete ? "Re-configure bike" : "Configure bike"}
               >
                 <Settings2 className="h-4 w-4" />
               </Button>

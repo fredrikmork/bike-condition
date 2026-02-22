@@ -118,9 +118,12 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
               {SPEEDS.map((s) => (
                 <button
                   key={s}
+                  type="button"
                   onClick={() => setSpeed(s)}
+                  aria-pressed={speed === s}
+                  aria-label={`${s}-speed`}
                   className={cn(
-                    "h-9 w-12 rounded-md border text-sm font-medium transition-colors",
+                    "h-9 w-12 cursor-pointer rounded-md border text-sm font-medium transition-colors",
                     speed === s
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -192,9 +195,11 @@ function OptionCard({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={cn(
-        "flex flex-col gap-0.5 rounded-lg border p-3 text-left transition-colors",
+        "flex cursor-pointer flex-col gap-0.5 rounded-lg border p-3 text-left transition-colors",
         selected
           ? "border-primary bg-primary/10 text-foreground"
           : "border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
