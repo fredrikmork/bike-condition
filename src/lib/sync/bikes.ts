@@ -42,12 +42,17 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       existingBikes?.map((b) => [b.strava_gear_id, b]) || []
     );
 
-    // Pre-fetch pause_wheels_on_virtual for existing bikes
-    const { data: bikeFlags } = await supabaseAdmin
-      .from("bikes")
-      .select("id, pause_wheels_on_virtual")
+    // Pre-fetch all virtual (trainer) periods for this user's bikes
+    const { data: allPeriods } = await supabaseAdmin
+      .from("virtual_periods")
+      .select("bike_id, start_date, end_date")
       .eq("user_id", userId);
-    const bikeFlagMap = new Map(bikeFlags?.map((b) => [b.id, b.pause_wheels_on_virtual]) ?? []);
+
+    const periodsByBike = new Map<string, { start_date: string; end_date: string | null }[]>();
+    for (const p of allPeriods ?? []) {
+      if (!periodsByBike.has(p.bike_id)) periodsByBike.set(p.bike_id, []);
+      periodsByBike.get(p.bike_id)!.push({ start_date: p.start_date, end_date: p.end_date });
+    }
 
     // Process each bike from Strava
     for (const stravaBike of athlete.bikes) {
@@ -74,8 +79,8 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             .eq("id", existingBike.id);
 
           // Update component distances using activity data + gear fallback
-          const pauseWheels = bikeFlagMap.get(existingBike.id) ?? true;
-          await updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance, pauseWheels);
+          const trainerPeriods = periodsByBike.get(existingBike.id) ?? [];
+          await updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance, trainerPeriods);
 
           // Add any missing default component types
           await addMissingDefaultComponents(existingBike.id, gearDetails.distance);
@@ -150,21 +155,32 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
   }
 }
 
+type TrainerPeriod = { start_date: string; end_date: string | null };
+
+/** Returns true if the activity date falls within any trainer period */
+function isDuringTrainerPeriod(activityDate: string, periods: TrainerPeriod[]): boolean {
+  const d = activityDate.slice(0, 10); // compare as "YYYY-MM-DD"
+  const today = new Date().toISOString().slice(0, 10);
+  return periods.some((p) => {
+    const end = p.end_date ?? today;
+    return d >= p.start_date && d <= end;
+  });
+}
+
 /**
  * Update all active component distances using the higher of:
  * 1. Activity-based: SUM(activities.distance) WHERE bike_id AND start_date >= installed_at
  * 2. Gear-based:     bike.total_distance - component.bike_distance_at_install
  *
- * Taking MAX ensures we never under-report: if the gear API is stale, activity
- * data wins; if activities are incomplete, gear data wins.
- *
- * When pauseWheelsOnVirtual is true, wheel components only count non-VirtualRide
- * activities (no gear fallback, since that total includes virtual distance).
+ * For wheel components (tires, pads, rotors), VirtualRide activities that fall
+ * within a configured trainer period are excluded — the wheel stays on the real
+ * bike, not the trainer. In that case the gear-based fallback is also skipped
+ * (since bike.total_distance includes virtual distance).
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
   bikeTotalDistance: number,
-  pauseWheelsOnVirtual: boolean,
+  trainerPeriods: TrainerPeriod[],
 ): Promise<void> {
   const { data: components } = await supabaseAdmin
     .from("components")
@@ -174,27 +190,42 @@ async function updateComponentDistancesFromActivities(
 
   if (!components || components.length === 0) return;
 
+  // Fetch activities once for the whole bike (with type and date for filtering)
+  const { data: allActivities } = await supabaseAdmin
+    .from("activities")
+    .select("distance, activity_type, start_date")
+    .eq("bike_id", bikeId);
+
   await Promise.all(
     components.map(async (component) => {
       const isWheel = WHEEL_TYPES.has(component.type);
-      const useVirtualPause = pauseWheelsOnVirtual && isWheel;
+      const hasTrainerPeriods = trainerPeriods.length > 0;
 
-      let query = supabaseAdmin
-        .from("activities")
-        .select("distance")
-        .eq("bike_id", bikeId)
-        .gte("start_date", component.installed_at);
+      const relevantActivities = (allActivities ?? []).filter(
+        (a) => a.start_date >= component.installed_at
+      );
 
-      if (useVirtualPause) {
-        query = query.neq("activity_type", "VirtualRide");
+      let activityDistance: number;
+      let current_distance: number;
+
+      if (isWheel && hasTrainerPeriods) {
+        // Exclude VirtualRide activities that fall within a trainer period
+        activityDistance = relevantActivities.reduce((sum, a) => {
+          if (
+            a.activity_type === "VirtualRide" &&
+            isDuringTrainerPeriod(a.start_date, trainerPeriods)
+          ) {
+            return sum;
+          }
+          return sum + a.distance;
+        }, 0);
+        // Skip gear-based fallback — it includes virtual distance
+        current_distance = activityDistance;
+      } else {
+        activityDistance = relevantActivities.reduce((sum, a) => sum + a.distance, 0);
+        const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
+        current_distance = Math.max(activityDistance, gearDistance);
       }
-
-      const { data: activitySum } = await query;
-      const activityDistance = activitySum?.reduce((sum, a) => sum + a.distance, 0) ?? 0;
-
-      const current_distance = useVirtualPause
-        ? activityDistance
-        : Math.max(activityDistance, bikeTotalDistance - component.bike_distance_at_install);
 
       await supabaseAdmin
         .from("components")
