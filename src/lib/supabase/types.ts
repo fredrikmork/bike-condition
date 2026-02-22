@@ -285,6 +285,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      virtual_periods: {
+        Row: {
+          id: string;
+          bike_id: string;
+          user_id: string;
+          start_date: string;
+          end_date: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          bike_id: string;
+          user_id: string;
+          start_date: string;
+          end_date?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          bike_id?: string;
+          user_id?: string;
+          start_date?: string;
+          end_date?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -314,14 +341,7 @@ export type Activity = Database["public"]["Tables"]["activities"]["Row"];
 export type ActivityInsert = Database["public"]["Tables"]["activities"]["Insert"];
 export type SyncStatus = Database["public"]["Tables"]["sync_status"]["Row"];
 
-export interface VirtualPeriod {
-  id: string;
-  bike_id: string;
-  user_id: string;
-  start_date: string; // DATE string "YYYY-MM-DD"
-  end_date: string | null;
-  created_at: string;
-}
+export type VirtualPeriod = Database["public"]["Tables"]["virtual_periods"]["Row"];
 
 // Extended types with relations
 export type BikeWithComponents = Bike & {
