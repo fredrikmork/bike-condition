@@ -39,7 +39,7 @@ Clickable SVG components showing detailed wear information.
 - shadcn/ui component library (New York style, CSS variables)
 - Dashboard layout with bike selector and component detail view
 - Component cards with color-coded wear progress bars (green → yellow → red)
-- Component icons (Lucide) and category grouping (drivetrain, wheels, braking, contact points)
+- Component category grouping (Drivetrain / Wheels / Brakes / Other)
 - Dark theme
 
 ### Core Features
@@ -48,9 +48,14 @@ Clickable SVG components showing detailed wear information.
 - Bike sync with automatic component distance updates
 - Component wear tracking using `MAX(activity-based, gear-based)` distance calculation
 - Default components auto-created for new bikes
-- Custom component support (add/delete)
+- Add Component dialog with type dropdown (grouped by category, pre-filtered to missing types, distance auto-fill)
+- Custom component support (add/delete) with icon picker
 - Component replacement with date picker and history tracking
 - Full re-sync capability to rebuild activity data from scratch
+
+### Recent changes (2026-02-22)
+- Add Component dialog replaced free-text input with a category-grouped type dropdown; only non-installed types shown; recommended distance auto-fills for standard types
+- Decorative icons removed from component card headers
 
 ### Recent Fixes (2026-02-16)
 - Fixed activity sync gap that missed rides from Oct 2025 – Feb 2026 (page limit removed)
