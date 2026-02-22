@@ -89,7 +89,7 @@ export function createConfiguredComponents(
 
   if (config.shifting_type === "mechanical") {
     components.push(
-      { name: "Gear Cables", type: "shift_cables", recommended_distance: 5_000_000 }
+      { name: "Shifter Cables", type: "shift_cables", recommended_distance: 5_000_000 }
     );
   }
   // Electronic shifting → no cables
@@ -143,7 +143,7 @@ export function getAvailableComponentTypes(
   }
 
   if (config.shifting_type === "mechanical") {
-    all.push({ name: "Gear Cables", type: "shift_cables", recommended_distance: 5_000_000 });
+    all.push({ name: "Shifter Cables", type: "shift_cables", recommended_distance: 5_000_000 });
   }
 
   if (config.tire_system !== "tubeless") {
