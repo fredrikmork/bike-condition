@@ -90,6 +90,7 @@ export interface Database {
           config_complete: boolean;
           electronic_system: ElectronicSystem | null;
           last_charge_distance: number | null;
+          last_charge_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -113,6 +114,7 @@ export interface Database {
           config_complete?: boolean;
           electronic_system?: ElectronicSystem | null;
           last_charge_distance?: number | null;
+          last_charge_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -136,6 +138,7 @@ export interface Database {
           config_complete?: boolean;
           electronic_system?: ElectronicSystem | null;
           last_charge_distance?: number | null;
+          last_charge_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };

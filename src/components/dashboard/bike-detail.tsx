@@ -1,20 +1,22 @@
 "use client";
 
 import { useState, useOptimistic, startTransition } from "react";
-import { Settings2, Zap } from "lucide-react";
+import { format } from "date-fns";
+import { Settings2, Zap, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -45,7 +47,9 @@ interface BikeDetailProps {
 
 export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
-  const [chargeConfirmOpen, setChargeConfirmOpen] = useState(false);
+  const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
+  const [chargeDate, setChargeDate] = useState<Date>(new Date());
+  const [charging, setCharging] = useState(false);
 
   const subtitle = [bike.brand_name, bike.model_name].filter(Boolean).join(" ");
   const config = getBikeConfig(bike);
@@ -67,10 +71,12 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
   );
 
   function handleConfirmCharge() {
-    setChargeConfirmOpen(false);
+    setChargeDialogOpen(false);
+    setCharging(true);
     startTransition(async () => {
       setOptimisticKm(0);
-      await markChargedAction(bike.id);
+      await markChargedAction(bike.id, chargeDate.toISOString());
+      setCharging(false);
     });
   }
 
@@ -88,6 +94,10 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
         : "border-border hover:bg-muted"
   );
 
+  const lastChargeLabel = bike.last_charge_date
+    ? `Last charged: ${format(new Date(bike.last_charge_date), "d MMM yyyy")}`
+    : null;
+
   // Tooltip body text
   const tooltipDetails = (() => {
     const range = batteryHealth.effectiveRange;
@@ -100,7 +110,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
     if (batteryHealth.remainingKm != null) {
       return `${batteryHealth.remainingKm} km until next charge recommended (range: ${range} km)`;
     }
-    return `Recommended range: ${range} km per charge. Tap to mark battery charged.`;
+    return `Recommended range: ${range} km per charge.`;
   })();
 
   return (
@@ -123,8 +133,9 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setChargeConfirmOpen(true)}
-                      aria-label="Mark battery charged — resets km counter"
+                      onClick={() => { setChargeDate(new Date()); setChargeDialogOpen(true); }}
+                      disabled={charging}
+                      aria-label="Mark battery charged"
                       className={chipClass}
                     >
                       <Zap className="h-3 w-3" />
@@ -145,6 +156,9 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
                     <p className="max-w-xs">{tooltipDetails}</p>
+                    {lastChargeLabel && (
+                      <p className="text-muted-foreground mt-0.5">{lastChargeLabel}</p>
+                    )}
                     <p className="text-muted-foreground mt-0.5">
                       Tap to mark battery charged
                     </p>
@@ -202,24 +216,52 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
         onOpenChange={setConfigOpen}
       />
 
-      {/* Charge confirmation */}
-      <AlertDialog open={chargeConfirmOpen} onOpenChange={setChargeConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Mark battery as charged?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This resets the km counter to 0. Only confirm if you have actually
-              plugged in and charged the battery.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmCharge}>
+      {/* Charge dialog */}
+      <Dialog open={chargeDialogOpen} onOpenChange={setChargeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark battery as charged</DialogTitle>
+            <DialogDescription>
+              Pick the date you charged the battery. The km counter resets to 0
+              from the current distance.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-2 py-2">
+            <Label htmlFor="charge-date">Charge date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="charge-date"
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(chargeDate, "PPP")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={chargeDate}
+                  onSelect={(d) => d && setChargeDate(d)}
+                  disabled={{ after: new Date() }}
+                  defaultMonth={chargeDate}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChargeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmCharge}>
               Mark charged
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

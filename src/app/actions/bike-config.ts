@@ -103,10 +103,16 @@ export async function saveElectronicSystemAction(
 }
 
 export async function markChargedAction(
-  bikeId: string
+  bikeId: string,
+  chargedAt: string
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  const chargedDate = new Date(chargedAt);
+  if (isNaN(chargedDate.getTime())) {
+    return { success: false, error: "Invalid date" };
+  }
 
   // Fetch current total_distance for this bike
   const { data: bike } = await supabaseAdmin
@@ -120,7 +126,10 @@ export async function markChargedAction(
 
   const { error } = await supabaseAdmin
     .from("bikes")
-    .update({ last_charge_distance: bike.total_distance })
+    .update({
+      last_charge_distance: bike.total_distance,
+      last_charge_date: chargedDate.toISOString(),
+    })
     .eq("id", bikeId)
     .eq("user_id", session.userId);
 
