@@ -58,6 +58,7 @@ Clickable SVG components showing detailed wear information.
 - Electronic groupset tracker: km-since-charge chip for Di2/AXS/EPS bikes with per-system battery wear model (3 %/year degradation) and warning states
 
 ### Recent changes (2026-02-22)
+- **Trainer periods**: Users can define date ranges when a bike was on an indoor trainer. Virtual ride distance is excluded from wheel components (tires, inner tubes, brake pads, rotors) during those periods. Replaces the previous global pause toggle with precise date-range control. Managed in the bike config dialog.
 - **Bike header metadata**: Frame type (Road/Mountain/Cross/Time Trial), dominant sport type (Ride/Virtual/MTB derived from activity history), and weight chips shown in the bike header. Outer Card wrapper removed for a flatter layout. Initial bike selection prefers Ride bikes over virtual-only bikes.
 - **Mute components**: Components can be muted to hide them from the dashboard and suppress wear warnings. Accessible via a "X hidden components" link at the bottom of the component list.
 - Sidebar redesign: StatsCards removed from dashboard; stats moved to sidebar (bike count, total distance, Needs Attention)

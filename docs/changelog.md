@@ -2,6 +2,20 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-22: Trainer period date ranges for wheel wear
+
+### New feature
+- **Trainer periods**: Users can define date ranges when a bike was on an indoor trainer. During those periods, VirtualRide activities are excluded from wheel component distance (tires, inner tubes, brake pads, rotors) — since the physical wheels stay on the real bike, not the trainer. The gear-based distance fallback is also skipped for wheel components when periods are configured (Strava's `total_distance` includes virtual distance). Periods are managed in the bike config dialog with native date inputs; end date is optional (leave empty for an ongoing period).
+- Replaces the previous global "pause wheels on virtual rides" toggle with precise date-range control, so bikes used both outdoors and on a trainer are handled correctly.
+
+### Files changed
+- `src/app/actions/virtual-periods.ts` — new: `getVirtualPeriodsAction`, `addVirtualPeriodAction`, `removeVirtualPeriodAction`
+- `src/lib/sync/bikes.ts` — per-activity filtering against trainer periods; no gear fallback for wheel components when periods exist
+- `src/components/dashboard/bike-config-dialog.tsx` — trainer periods section with date inputs and list
+- `src/lib/supabase/types.ts` — `VirtualPeriod` type
+- `src/app/actions/bike-config.ts` — removed `setPauseWheelsOnVirtualAction`
+- DB migration: `add_virtual_periods`
+
 ## 2026-02-22: Bike header metadata — sport type, frame type, weight
 
 ### New features
