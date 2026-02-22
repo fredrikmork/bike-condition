@@ -19,9 +19,9 @@ export function StatusIndicator({ status, isOverdue }: StatusIndicatorProps) {
     <span className="inline-flex rounded-md p-px" style={{ background: gradients[status] }}>
       <Badge
         className={cn(
-          "text-xs font-medium border-0 rounded-[5px]",
+          "text-xs font-medium border-0 rounded-[5px] hover:bg-card",
           status === "warning" && "bg-card text-status-warning",
-          status === "critical" && "bg-card text-status-critical"
+          status === "critical" && "bg-card text-status-critical dark:text-red-400"
         )}
       >
         {isOverdue ? "Overdue" : "Due soon"}
