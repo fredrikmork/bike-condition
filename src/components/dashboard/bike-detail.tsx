@@ -70,7 +70,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
 
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium">Components</h3>
-            <AddComponentDialog bikeId={bike.id} />
+            <AddComponentDialog bike={bike} />
           </div>
           <ComponentList
             components={bike.components}

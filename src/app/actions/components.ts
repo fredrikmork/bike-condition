@@ -60,6 +60,40 @@ export async function addCustomComponentAction(
   return { success: true };
 }
 
+export async function addComponentAction(
+  bikeId: string,
+  data: {
+    type: string;
+    name: string;
+    recommendedDistanceKm: number;
+    icon?: string | null;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  if (!data.name.trim()) return { success: false, error: "Name is required" };
+  if (data.recommendedDistanceKm <= 0) return { success: false, error: "Distance must be greater than 0" };
+
+  const bike = await getBikeById(bikeId);
+  if (!bike) return { success: false, error: "Bike not found" };
+
+  const result = await addComponent({
+    bike_id: bikeId,
+    name: data.name.trim(),
+    type: data.type,
+    icon: data.icon ?? null,
+    recommended_distance: data.recommendedDistanceKm * 1000,
+    current_distance: 0,
+    bike_distance_at_install: bike.total_distance,
+  });
+
+  if (!result) return { success: false, error: "Failed to add component" };
+
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function updateComponentAction(
   componentId: string,
   data: {

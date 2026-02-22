@@ -108,6 +108,50 @@ export function createConfiguredComponents(
 }
 
 /**
+ * Returns the component types available to add for a given bike config,
+ * excluding types that are already installed.
+ */
+export function getAvailableComponentTypes(
+  config: BikeConfig | null,
+  existingComponents: { type: string }[]
+): DefaultComponent[] {
+  if (!config) return [];
+
+  const existingTypes = new Set(existingComponents.map((c) => c.type));
+  const all: DefaultComponent[] = [...UNIVERSAL_COMPONENTS];
+
+  const padDistance = BRAKE_PAD_DISTANCE[config.brake_type];
+  all.push(
+    { name: "Brake Pads (Front)", type: "brake_pads_front", recommended_distance: padDistance },
+    { name: "Brake Pads (Rear)",  type: "brake_pads_rear",  recommended_distance: padDistance }
+  );
+
+  if (config.brake_type === "disc") {
+    all.push(
+      { name: "Brake Rotor (Front)", type: "brake_rotor_front", recommended_distance: 20_000_000 },
+      { name: "Brake Rotor (Rear)",  type: "brake_rotor_rear",  recommended_distance: 20_000_000 }
+    );
+  }
+
+  if (config.brake_type === "rim") {
+    all.push({ name: "Brake Cables & Housing", type: "brake_cables", recommended_distance: 5_000_000 });
+  }
+
+  if (config.shifting_type === "mechanical") {
+    all.push({ name: "Shift Cables & Housing", type: "shift_cables", recommended_distance: 5_000_000 });
+  }
+
+  if (config.tire_system !== "tubeless") {
+    all.push(
+      { name: "Inner Tube (Front)", type: "inner_tube_front", recommended_distance: 3_000_000 },
+      { name: "Inner Tube (Rear)",  type: "inner_tube_rear",  recommended_distance: 2_000_000 }
+    );
+  }
+
+  return all.filter((c) => !existingTypes.has(c.type));
+}
+
+/**
  * Legacy default list — used for unconfigured bikes only.
  * Kept for backwards compatibility with existing data.
  */

@@ -38,7 +38,6 @@ import { ReplaceDialog } from "./replace-dialog";
 import { EditComponentDialog } from "./edit-component-dialog";
 import { ComponentHistorySheet } from "./component-history-sheet";
 import { deleteComponentAction } from "@/app/actions/components";
-import { getComponentIcon } from "@/lib/components/icons";
 import {
   calculateComponentWear,
   formatDistance,
@@ -64,7 +63,6 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
   const wear = calculateComponentWear(component);
   const cappedPercentage = Math.min(wear.percentage, 100);
   const isCustom = component.type === "custom";
-  const Icon = getComponentIcon(component.type, component.icon);
 
   const installed = new Date(component.installed_at).getTime();
   const created = new Date(component.created_at).getTime();
@@ -119,7 +117,6 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
               <h4 className="text-sm font-medium truncate">{component.name}</h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
