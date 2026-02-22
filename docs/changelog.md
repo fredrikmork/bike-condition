@@ -2,6 +2,22 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-22: Sidebar redesign — stats, n+1 joke & Needs Attention
+
+### Changes
+- **StatsCards removed**: The four stat cards (bikes, distance, attention, last sync) are removed from the main dashboard content area.
+- **Sidebar — Bikes**: Label now shows `Bikes (n)` with the count. A description line below reads "The correct number of bikes is n+1. You currently have n = X." — hidden when the sidebar is collapsed. Total distance across all bikes shown below the list.
+- **Sidebar — Needs Attention**: Components with warning or critical wear status appear under a dedicated "Needs Attention" group in the sidebar. Only the first 3 are shown; a "X more" toggle expands the rest. Clicking any item selects the relevant bike. Respects visibility rules (e.g. no cables shown for electronic shifting). Bike name shown as subtitle when user has multiple bikes.
+- **Scrollbar layout fix**: `overflow-y: scroll` on the `html` element prevents layout shift when expanding cards causes a scrollbar to appear.
+
+### Files changed
+- `src/components/layout/app-sidebar.tsx` — bike count label, n+1 description, total distance, attention section
+- `src/components/layout/sidebar-attention-items.tsx` — new: collapsible Needs Attention list
+- `src/components/dashboard/dashboard.tsx` — removed StatsCards; simplified props to `lastSync`
+- `src/components/dashboard/stats-cards.tsx` — deleted
+- `src/app/page.tsx` — pass `lastSync` directly to Dashboard
+- `src/app/globals.css` — `overflow-y: scroll` on `html`
+
 ## 2026-02-22: Component groups, batch replace & electronic groupset tracker
 
 ### New features

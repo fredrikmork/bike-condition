@@ -41,6 +41,7 @@ Clickable SVG components showing detailed wear information.
 - Component cards with color-coded wear progress bars (green → yellow → red)
 - Collapsible component groups (Front Wheel, Rear Wheel, Drivetrain) with worst-status summary
 - Two-column component grid at wider screen widths
+- Sidebar: bike count with n+1 joke, total distance, collapsible Needs Attention section
 - Dark theme
 
 ### Core Features
@@ -57,6 +58,9 @@ Clickable SVG components showing detailed wear information.
 - Electronic groupset tracker: km-since-charge chip for Di2/AXS/EPS bikes with per-system battery wear model (3 %/year degradation) and warning states
 
 ### Recent changes (2026-02-22)
+- Sidebar redesign: StatsCards removed from dashboard; stats moved to sidebar (bike count, total distance, Needs Attention)
+- Needs Attention list in sidebar: first 3 items shown, expandable, click navigates to bike
+- n+1 bike joke as description text in sidebar Bikes section
 - Component groups (Front Wheel, Rear Wheel, Drivetrain) as collapsible cards with worst-status summary
 - Two-column grid inside groups and for ungrouped components at sm+ breakpoints
 - Front/Rear prefix stripped from component names inside wheel group cards
