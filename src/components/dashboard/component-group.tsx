@@ -10,7 +10,7 @@ import { ComponentCard } from "./component-card";
 import { BatchReplaceDialog } from "./batch-replace-dialog";
 import { StatusIndicator } from "./status-indicator";
 import { calculateComponentWear, formatDistance } from "@/lib/wear/calculator";
-import type { ComponentGroupDef } from "@/lib/components/groups";
+import { TRAINER_PAUSE_TYPES, type ComponentGroupDef } from "@/lib/components/groups";
 import type { Component } from "@/lib/supabase/types";
 
 interface ComponentGroupProps {
@@ -134,7 +134,7 @@ export function ComponentGroup({
                     hasHistory={typesWithHistory.has(component.type)}
                     lastSync={lastSync}
                     displayName={shortName(component.name)}
-                    trainerActive={trainerActive}
+                    trainerActive={trainerActive && TRAINER_PAUSE_TYPES.has(component.type)}
                   />
                 ))}
               </div>

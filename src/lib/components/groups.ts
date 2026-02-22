@@ -36,3 +36,6 @@ export const WHEEL_TYPES = new Set(
     .filter((g) => g.id === "front_wheel" || g.id === "rear_wheel")
     .flatMap((g) => g.types)
 );
+
+/** Component types that pause distance accumulation during trainer periods (wheels + gear cables) */
+export const TRAINER_PAUSE_TYPES = new Set([...WHEEL_TYPES, "shift_cables"]);

@@ -1,7 +1,7 @@
 import { ComponentCard } from "./component-card";
 import { ComponentGroup } from "./component-group";
 import { isComponentVisible } from "@/lib/components/visibility";
-import { COMPONENT_GROUPS, GROUPED_TYPES } from "@/lib/components/groups";
+import { COMPONENT_GROUPS, GROUPED_TYPES, TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
 import type { Component, BikeConfig } from "@/lib/supabase/types";
 
 interface ComponentListProps {
@@ -46,7 +46,7 @@ export function ComponentList({
 
         if (groupComponents.length === 0) return null;
 
-        const isWheelGroup = group.id === "front_wheel" || group.id === "rear_wheel";
+        const groupHasPausedTypes = groupComponents.some((c) => TRAINER_PAUSE_TYPES.has(c.type));
 
         return (
           <ComponentGroup
@@ -56,7 +56,7 @@ export function ComponentList({
             typesWithHistory={typesWithHistory}
             lastSync={lastSync}
             bikeId={bikeId}
-            trainerActive={isWheelGroup && hasActiveTrainerPeriod}
+            trainerActive={groupHasPausedTypes && hasActiveTrainerPeriod}
           />
         );
       })}

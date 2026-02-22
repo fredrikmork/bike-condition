@@ -82,14 +82,14 @@ export function createConfiguredComponents(
 
   if (config.brake_type === "rim") {
     components.push(
-      { name: "Brake Cables & Housing", type: "brake_cables", recommended_distance: 5_000_000 }
+      { name: "Brake Cables", type: "brake_cables", recommended_distance: 5_000_000 }
     );
     // No rotors for rim brakes
   }
 
   if (config.shifting_type === "mechanical") {
     components.push(
-      { name: "Shift Cables & Housing", type: "shift_cables", recommended_distance: 5_000_000 }
+      { name: "Gear Cables", type: "shift_cables", recommended_distance: 5_000_000 }
     );
   }
   // Electronic shifting → no cables
@@ -139,11 +139,11 @@ export function getAvailableComponentTypes(
   }
 
   if (config.brake_type === "rim") {
-    all.push({ name: "Brake Cables & Housing", type: "brake_cables", recommended_distance: 5_000_000 });
+    all.push({ name: "Brake Cables", type: "brake_cables", recommended_distance: 5_000_000 });
   }
 
   if (config.shifting_type === "mechanical") {
-    all.push({ name: "Shift Cables & Housing", type: "shift_cables", recommended_distance: 5_000_000 });
+    all.push({ name: "Gear Cables", type: "shift_cables", recommended_distance: 5_000_000 });
   }
 
   if (config.tire_system !== "tubeless") {

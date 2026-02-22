@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
-import { WHEEL_TYPES } from "@/lib/components/groups";
+import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
 import type { Bike, BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -172,10 +172,10 @@ function isDuringTrainerPeriod(activityDate: string, periods: TrainerPeriod[]): 
  * 1. Activity-based: SUM(activities.distance) WHERE bike_id AND start_date >= installed_at
  * 2. Gear-based:     bike.total_distance - component.bike_distance_at_install
  *
- * For wheel components (tires, pads, rotors), VirtualRide activities that fall
- * within a configured trainer period are excluded — the wheel stays on the real
- * bike, not the trainer. In that case the gear-based fallback is also skipped
- * (since bike.total_distance includes virtual distance).
+ * For wheel components (tires, pads, rotors) and gear cables, VirtualRide activities
+ * that fall within a configured trainer period are excluded — these components stay
+ * on the real bike, not the trainer. In that case the gear-based fallback is also
+ * skipped (since bike.total_distance includes virtual distance).
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
@@ -198,7 +198,7 @@ async function updateComponentDistancesFromActivities(
 
   await Promise.all(
     components.map(async (component) => {
-      const isWheel = WHEEL_TYPES.has(component.type);
+      const isWheel = TRAINER_PAUSE_TYPES.has(component.type);
       const hasTrainerPeriods = trainerPeriods.length > 0;
 
       const relevantActivities = (allActivities ?? []).filter(
