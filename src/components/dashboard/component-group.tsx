@@ -56,8 +56,12 @@ export function ComponentGroup({
   const Icon = group.id === "drivetrain" ? Cog : CircleDot;
 
   function shortName(name: string) {
-    if (group.id === "front_wheel") return name.replace(/^front\s+/i, "");
-    if (group.id === "rear_wheel") return name.replace(/^rear\s+/i, "");
+    if (group.id === "front_wheel") {
+      return name.replace(/^front\s+/i, "").replace(/\s*\(front\)/i, "");
+    }
+    if (group.id === "rear_wheel") {
+      return name.replace(/^rear\s+/i, "").replace(/\s*\(rear\)/i, "");
+    }
     return name;
   }
 
