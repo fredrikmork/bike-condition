@@ -32,7 +32,6 @@ export const StravaGearSchema = z.object({
   frame_type: z.number().nullable().optional(),
   description: z.string().nullable().optional(),
   weight: z.number().nullable().optional(), // kg
-  default_sport_type: z.string().nullable().optional(),
 });
 
 export const StravaActivitySchema = z.object({

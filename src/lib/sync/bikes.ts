@@ -61,7 +61,6 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
               description: gearDetails.description ?? null,
               total_distance: gearDetails.distance,
               is_primary: gearDetails.primary,
-              default_sport_type: gearDetails.default_sport_type ?? null,
               weight: gearDetails.weight ?? null,
             })
             .eq("id", existingBike.id);
@@ -85,7 +84,6 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             description: gearDetails.description ?? null,
             total_distance: gearDetails.distance,
             is_primary: gearDetails.primary,
-            default_sport_type: gearDetails.default_sport_type ?? null,
             weight: gearDetails.weight ?? null,
           };
 
@@ -119,6 +117,9 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
         );
       }
     }
+
+    // Compute dominant sport type per bike from activity history
+    await updateDominantSportTypes(userId);
 
     // Update sync status
     await supabaseAdmin
@@ -240,6 +241,41 @@ async function addMissingDefaultComponents(
 
     await supabaseAdmin.from("components").insert(inserts);
   }
+}
+
+/**
+ * Compute the dominant activity sport type for each bike from the user's activity
+ * history and update default_sport_type accordingly.
+ */
+async function updateDominantSportTypes(userId: string): Promise<void> {
+  const { data: activities } = await supabaseAdmin
+    .from("activities")
+    .select("bike_id, activity_type")
+    .eq("user_id", userId)
+    .not("bike_id", "is", null)
+    .not("activity_type", "is", null);
+
+  if (!activities || activities.length === 0) return;
+
+  // Count occurrences of each sport type per bike
+  const counts = new Map<string, Map<string, number>>();
+  for (const a of activities) {
+    if (!a.bike_id || !a.activity_type) continue;
+    if (!counts.has(a.bike_id)) counts.set(a.bike_id, new Map());
+    const m = counts.get(a.bike_id)!;
+    m.set(a.activity_type, (m.get(a.activity_type) ?? 0) + 1);
+  }
+
+  await Promise.all(
+    Array.from(counts.entries()).map(([bikeId, typeCounts]) => {
+      const dominant = [...typeCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      return supabaseAdmin
+        .from("bikes")
+        .update({ default_sport_type: dominant })
+        .eq("id", bikeId)
+        .eq("user_id", userId);
+    })
+  );
 }
 
 export async function getBikeByStravaId(
