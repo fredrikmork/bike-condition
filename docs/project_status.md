@@ -39,7 +39,8 @@ Clickable SVG components showing detailed wear information.
 - shadcn/ui component library (New York style, CSS variables)
 - Dashboard layout with bike selector and component detail view
 - Component cards with color-coded wear progress bars (green → yellow → red)
-- Component category grouping (Drivetrain / Wheels / Brakes / Other)
+- Collapsible component groups (Front Wheel, Rear Wheel, Drivetrain) with worst-status summary
+- Two-column component grid at wider screen widths
 - Dark theme
 
 ### Core Features
@@ -51,9 +52,16 @@ Clickable SVG components showing detailed wear information.
 - Add Component dialog with type dropdown (grouped by category, pre-filtered to missing types, distance auto-fill)
 - Custom component support (add/delete) with icon picker
 - Component replacement with date picker and history tracking
+- Batch wheel replace: replace all wheel-mounted components at once from within the wheel group
 - Full re-sync capability to rebuild activity data from scratch
+- Electronic groupset tracker: km-since-charge chip for Di2/AXS/EPS bikes with per-system battery wear model (3 %/year degradation) and warning states
 
 ### Recent changes (2026-02-22)
+- Component groups (Front Wheel, Rear Wheel, Drivetrain) as collapsible cards with worst-status summary
+- Two-column grid inside groups and for ungrouped components at sm+ breakpoints
+- Front/Rear prefix stripped from component names inside wheel group cards
+- Batch "Replace whole wheel" dialog with checklist and shared date picker
+- Electronic groupset charge chip with date dialog, battery health warnings, and tooltip
 - Add Component dialog replaced free-text input with a category-grouped type dropdown; only non-installed types shown; recommended distance auto-fills for standard types
 - Decorative icons removed from component card headers
 

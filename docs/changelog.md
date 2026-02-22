@@ -2,6 +2,32 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-22: Component groups, batch replace & electronic groupset tracker
+
+### New features
+- **Component groups**: Front Wheel, Rear Wheel, and Drivetrain are now collapsible parent cards. Each group shows worst wear status and most-worn component in the collapsed state. Clicking expands to show all sub-components.
+- **Two-column grid**: Components inside groups and ungrouped components display side-by-side at wider screen widths (`sm` breakpoint and above).
+- **Front/Rear prefix stripping**: Component names inside wheel groups drop the redundant "Front"/"Rear" prefix and "(Front)"/"(Rear)" suffix from card headers.
+- **Batch wheel replace**: Wheel groups have a "Replace whole wheel" button that opens a dialog to replace all wheel-mounted components at once (tire, inner tube, brake pads, rotor) with a shared date picker. Components can be unchecked to exclude from the batch.
+- **Electronic groupset tracker**: For bikes configured with electronic shifting, a chip in the bike header shows the system type (Di2 / AXS / EPS) and km since last charge. Status colors turn amber ("Charge soon") at 80 % of the effective range and red ("Charge now") at 100 %.
+- **Battery wear model**: Per-system recommended charging ranges (Di2 1 000 km, AXS 700 km, EPS 500 km) with 3 %/year Li-ion capacity degradation, floored at 50 % of rated range.
+- **Charge dialog**: Tapping the charge chip opens a dialog with a date picker (defaults to today, can be back-dated). Charge date is stored and shown in the tooltip. The km counter resets optimistically to 0 on confirm.
+- **Scrollbar layout fix**: `overflow-y: scroll` on the `html` element prevents layout shift when a scrollbar appears.
+
+### Files changed
+- `src/lib/components/groups.ts` — new: group definitions (`COMPONENT_GROUPS`, `GROUPED_TYPES`)
+- `src/lib/wear/battery.ts` — new: battery health logic (per-system ranges, degradation, warning thresholds)
+- `src/components/dashboard/component-group.tsx` — new: collapsible group card
+- `src/components/dashboard/batch-replace-dialog.tsx` — new: batch wheel replace dialog
+- `src/components/dashboard/component-list.tsx` — rewritten: group + ungrouped 2-col grid rendering
+- `src/components/dashboard/component-card.tsx` — added optional `displayName` prop
+- `src/components/dashboard/bike-detail.tsx` — charge chip, charge dialog with date picker, tooltip
+- `src/app/actions/bike-config.ts` — added `markChargedAction(bikeId, chargedAt)`, `saveElectronicSystemAction`
+- `src/components/dashboard/bike-config-dialog.tsx` — electronic system sub-selector (Di2/AXS/EPS/Other)
+- `src/lib/supabase/types.ts` — new `ElectronicSystem` type; `electronic_system`, `last_charge_distance`, `last_charge_date` fields on Bike
+- `src/app/globals.css` — `overflow-y: scroll` on `html`
+- DB migrations: `add_electronic_groupset_fields`, `add_last_charge_date`
+
 ## 2026-02-22: Component type dropdown & remove card icons
 
 ### Enhancement
