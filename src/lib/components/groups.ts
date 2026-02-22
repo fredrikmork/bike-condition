@@ -10,7 +10,7 @@ export const COMPONENT_GROUPS: ComponentGroupDef[] = [
   {
     id: "drivetrain",
     label: "Drivetrain",
-    types: ["chain", "cassette", "chainrings", "bottom_bracket", "pulley_wheels", "shift_cables"],
+    types: ["chain", "cassette", "chainrings", "bottom_bracket", "pulley_wheels"],
     canBatchReplace: false,
   },
   {

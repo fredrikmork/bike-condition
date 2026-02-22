@@ -61,7 +61,7 @@ export function ComponentList({
         );
       })}
 
-      {/* Ungrouped leftovers: bar_tape, cleats, brake_cables, custom, legacy */}
+      {/* Ungrouped leftovers: shift_cables, brake_cables, bar_tape, cleats, custom, legacy */}
       {(() => {
         const ungrouped = visible.filter((c) => !GROUPED_TYPES.has(c.type));
         if (ungrouped.length === 0) return null;
@@ -73,6 +73,7 @@ export function ComponentList({
                 component={component}
                 hasHistory={typesWithHistory.has(component.type)}
                 lastSync={lastSync}
+                trainerActive={TRAINER_PAUSE_TYPES.has(component.type) && hasActiveTrainerPeriod}
               />
             ))}
           </div>
