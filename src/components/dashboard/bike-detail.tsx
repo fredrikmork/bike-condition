@@ -164,13 +164,19 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
             {(frameLabel || sportLabel || weightLabel) && (
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 {frameLabel && (
-                  <Badge className="text-xs font-normal" style={{ background: "var(--background) padding-box, linear-gradient(135deg, var(--chip-frame-from), var(--chip-frame-to)) border-box", border: "1px solid transparent", color: "var(--chip-frame-text)" }}>{frameLabel}</Badge>
+                  <span className="inline-flex rounded-md p-px" style={{ background: "linear-gradient(135deg, var(--chip-frame-from), var(--chip-frame-to))" }}>
+                    <Badge className="text-xs font-normal border-0 rounded-[5px]" style={{ backgroundColor: "var(--card)", color: "var(--chip-frame-text)" }}>{frameLabel}</Badge>
+                  </span>
                 )}
                 {sportLabel && (
-                  <Badge className="text-xs font-normal" style={{ background: "var(--background) padding-box, linear-gradient(135deg, var(--chip-sport-from), var(--chip-sport-to)) border-box", border: "1px solid transparent", color: "var(--chip-sport-text)" }}>{sportLabel}</Badge>
+                  <span className="inline-flex rounded-md p-px" style={{ background: "linear-gradient(135deg, var(--chip-sport-from), var(--chip-sport-to))" }}>
+                    <Badge className="text-xs font-normal border-0 rounded-[5px]" style={{ backgroundColor: "var(--card)", color: "var(--chip-sport-text)" }}>{sportLabel}</Badge>
+                  </span>
                 )}
                 {weightLabel && (
-                  <Badge className="text-xs font-normal" style={{ background: "var(--background) padding-box, linear-gradient(135deg, var(--chip-weight-from), var(--chip-weight-to)) border-box", border: "1px solid transparent", color: "var(--chip-weight-text)" }}>{weightLabel}</Badge>
+                  <span className="inline-flex rounded-md p-px" style={{ background: "linear-gradient(135deg, var(--chip-weight-from), var(--chip-weight-to))" }}>
+                    <Badge className="text-xs font-normal border-0 rounded-[5px]" style={{ backgroundColor: "var(--card)", color: "var(--chip-weight-text)" }}>{weightLabel}</Badge>
+                  </span>
                 )}
               </div>
             )}
