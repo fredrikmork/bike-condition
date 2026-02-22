@@ -2,6 +2,17 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-22: Trainer badge on affected wheel components
+
+### Enhancement
+- **Visual trainer indicator**: When a bike has an active trainer period (today falls within a configured date range), wheel component groups (Front Wheel / Rear Wheel) show a "Trainer" badge with a pause icon in the group header. Each individual wheel component card also shows the same badge next to the component name. Components remain fully editable.
+
+### Files changed
+- `src/components/dashboard/bike-detail.tsx` — fetch trainer periods on mount; compute `hasActiveTrainerPeriod`; pass to ComponentList
+- `src/components/dashboard/component-list.tsx` — accept + forward `hasActiveTrainerPeriod` to wheel groups
+- `src/components/dashboard/component-group.tsx` — accept `trainerActive`; show badge in group header; pass to ComponentCard
+- `src/components/dashboard/component-card.tsx` — accept `trainerActive`; show badge next to component name
+
 ## 2026-02-22: Trainer period date ranges for wheel wear
 
 ### New feature
