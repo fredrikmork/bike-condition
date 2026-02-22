@@ -14,11 +14,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { SidebarBikeList } from "./sidebar-bike-list";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import { SidebarAttentionItems } from "./sidebar-attention-items";
@@ -58,21 +53,13 @@ export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-1.5">
-            Bikes
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="cursor-default text-[10px] text-muted-foreground/40">
-                  n+1
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                The correct number of bikes is n+1.
-                <br />
-                You currently have n&nbsp;=&nbsp;{bikes.length}.
-              </TooltipContent>
-            </Tooltip>
+          <SidebarGroupLabel>
+            Bikes ({bikes.length})
           </SidebarGroupLabel>
+          <p className="px-2 pb-2 text-xs text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
+            The correct number of bikes is n+1.
+            You currently have n&nbsp;=&nbsp;{bikes.length}.
+          </p>
           <SidebarGroupContent>
             <SidebarBikeList bikes={bikes} />
             <p className="px-2 pt-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
