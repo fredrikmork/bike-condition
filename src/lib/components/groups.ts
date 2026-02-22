@@ -8,6 +8,12 @@ export interface ComponentGroupDef {
 
 export const COMPONENT_GROUPS: ComponentGroupDef[] = [
   {
+    id: "drivetrain",
+    label: "Drivetrain",
+    types: ["chain", "cassette", "chainrings", "bottom_bracket", "pulley_wheels", "shift_cables"],
+    canBatchReplace: false,
+  },
+  {
     id: "front_wheel",
     label: "Front Wheel",
     types: ["tire_front", "inner_tube_front", "brake_pads_front", "brake_rotor_front"],
@@ -18,12 +24,6 @@ export const COMPONENT_GROUPS: ComponentGroupDef[] = [
     label: "Rear Wheel",
     types: ["tire_rear", "inner_tube_rear", "brake_pads_rear", "brake_rotor_rear"],
     canBatchReplace: true,
-  },
-  {
-    id: "drivetrain",
-    label: "Drivetrain",
-    types: ["chain", "cassette", "chainrings", "bottom_bracket", "pulley_wheels", "shift_cables"],
-    canBatchReplace: false,
   },
 ];
 

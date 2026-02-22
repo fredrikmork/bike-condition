@@ -167,8 +167,6 @@ export const DEFAULT_COMPONENTS: DefaultComponent[] = [
   { name: "Rear Tire",            type: "tire_rear",         recommended_distance: 4_000_000  },
   { name: "Brake Pads (Front)",   type: "brake_pads_front",  recommended_distance: 1_500_000  },
   { name: "Brake Pads (Rear)",    type: "brake_pads_rear",   recommended_distance: 1_500_000  },
-  { name: "Brake Rotors",         type: "brake_rotors",      recommended_distance: 15_000_000 },
-  { name: "Cables & Housing",     type: "cables",            recommended_distance: 5_000_000  },
   { name: "Bottom Bracket",       type: "bottom_bracket",    recommended_distance: 10_000_000 },
   { name: "Chainring(s)",         type: "chainrings",        recommended_distance: 15_000_000 },
 ];
