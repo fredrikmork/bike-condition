@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
-import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault, getComponentHistory, updateComponent } from "@/lib/db/queries";
+import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault, getComponentHistory, updateComponent, removeDeletedDefault } from "@/lib/db/queries";
 import { revalidatePath } from "next/cache";
 import type { LubeType, Component } from "@/lib/supabase/types";
 
@@ -57,6 +57,51 @@ export async function addCustomComponentAction(
 
   revalidatePath("/");
 
+  return { success: true };
+}
+
+export async function addTypedComponentAction(
+  bikeId: string,
+  componentType: string,
+  data: {
+    name: string;
+    recommendedDistanceKm: number;
+    brand?: string | null;
+    model?: string | null;
+    spec?: string | null;
+    lube_type?: string | null;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  if (!data.name.trim()) return { success: false, error: "Name is required" };
+  if (data.recommendedDistanceKm <= 0) return { success: false, error: "Distance must be greater than 0" };
+
+  const bike = await getBikeById(bikeId);
+  if (!bike) return { success: false, error: "Bike not found" };
+
+  const result = await addComponent({
+    bike_id: bikeId,
+    name: data.name.trim(),
+    type: componentType,
+    brand: data.brand ?? null,
+    model: data.model ?? null,
+    spec: data.spec ?? null,
+    lube_type: (data.lube_type as import("@/lib/supabase/types").LubeType) ?? null,
+    recommended_distance: data.recommendedDistanceKm * 1000,
+    current_distance: 0,
+    bike_distance_at_install: bike.total_distance,
+  });
+
+  if (!result) return { success: false, error: "Failed to add component" };
+
+  // If this type was previously deleted as a default, restore it from deleted_defaults
+  if (componentType !== 'custom') {
+    await removeDeletedDefault(bikeId, componentType);
+  }
+
+  revalidatePath("/");
   return { success: true };
 }
 

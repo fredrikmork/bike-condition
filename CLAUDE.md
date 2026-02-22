@@ -210,6 +210,7 @@ Specialized agents for delegating complex tasks (see `.claude/agents/`):
 | performance-optimizer | Analyze and fix performance bottlenecks |
 | security-auditor | Review code for vulnerabilities, audit auth flows |
 | qa-engineer | Test strategies, coverage planning, acceptance criteria |
+| svg-specialist | SVG design/structure, D3.js interactivity, bike diagram hotspots |
 
 ## Documentation
 

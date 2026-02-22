@@ -45,6 +45,7 @@ import {
   LUBE_LABELS,
 } from "@/lib/wear/calculator";
 import { cn } from "@/lib/utils";
+import { useHoverStore } from "@/stores/hover-store";
 import type { Component, LubeType } from "@/lib/supabase/types";
 
 interface ComponentCardProps {
@@ -54,6 +55,8 @@ interface ComponentCardProps {
 }
 
 export function ComponentCard({ component, hasHistory = false, lastSync }: ComponentCardProps) {
+  const { hoveredType, setHoveredType } = useHoverStore();
+  const isHighlighted = hoveredType === component.type;
   const [expanded, setExpanded] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -114,7 +117,11 @@ export function ComponentCard({ component, hasHistory = false, lastSync }: Compo
 
   return (
     <>
-      <Card>
+      <Card
+        className={cn(isHighlighted && "ring-2 ring-primary/40 bg-primary/5")}
+        onMouseEnter={() => setHoveredType(component.type)}
+        onMouseLeave={() => setHoveredType(null)}
+      >
         <CardContent className="p-4">
           {/* Header row */}
           <div className="flex items-center justify-between">

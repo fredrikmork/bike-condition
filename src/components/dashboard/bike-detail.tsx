@@ -16,10 +16,23 @@ interface BikeDetailProps {
   bike: BikeWithComponents;
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
+  onOpenConfig?: () => void;
+  configOpen?: boolean;
+  onConfigOpenChange?: (open: boolean) => void;
 }
 
-export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: BikeDetailProps) {
-  const [configOpen, setConfigOpen] = useState(false);
+export function BikeDetail({
+  bike,
+  typesWithHistory = new Set(),
+  lastSync,
+  onOpenConfig,
+  configOpen: configOpenProp,
+  onConfigOpenChange,
+}: BikeDetailProps) {
+  const [configOpenLocal, setConfigOpenLocal] = useState(false);
+  const configOpen = configOpenProp ?? configOpenLocal;
+  const setConfigOpen = onConfigOpenChange ?? setConfigOpenLocal;
+  const handleOpenConfig = onOpenConfig ?? (() => setConfigOpen(true));
 
   const subtitle = [bike.brand_name, bike.model_name].filter(Boolean).join(" ");
   const config = getBikeConfig(bike);
@@ -42,7 +55,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                onClick={() => setConfigOpen(true)}
+                onClick={handleOpenConfig}
                 title={bike.config_complete ? "Re-configure bike" : "Configure bike"}
               >
                 <Settings2 className="h-4 w-4" />
@@ -54,7 +67,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
           {/* Config prompt — shown only when not yet configured */}
           {!bike.config_complete && (
             <button
-              onClick={() => setConfigOpen(true)}
+              onClick={handleOpenConfig}
               className="w-full mb-4 flex items-start gap-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-left transition-colors hover:border-muted-foreground/50 hover:bg-muted/50"
             >
               <Settings2 className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
@@ -70,7 +83,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
 
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium">Components</h3>
-            <AddComponentDialog bikeId={bike.id} />
+            <AddComponentDialog bikeId={bike.id} bike={bike} />
           </div>
           <ComponentList
             components={bike.components}

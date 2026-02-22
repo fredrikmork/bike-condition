@@ -253,6 +253,24 @@ export async function addDeletedDefault(bikeId: string, componentType: string): 
     .eq("id", bikeId);
 }
 
+export async function removeDeletedDefault(bikeId: string, componentType: string): Promise<void> {
+  const { data: bike } = await supabaseAdmin
+    .from("bikes")
+    .select("deleted_defaults")
+    .eq("id", bikeId)
+    .single();
+
+  if (!bike) return;
+
+  const current = bike.deleted_defaults ?? [];
+  if (!current.includes(componentType)) return;
+
+  await supabaseAdmin
+    .from("bikes")
+    .update({ deleted_defaults: current.filter((t) => t !== componentType) })
+    .eq("id", bikeId);
+}
+
 export async function getBikeById(bikeId: string): Promise<Bike | null> {
   const { data } = await supabaseAdmin
     .from("bikes")

@@ -1,3 +1,5 @@
+import type { BikeType } from "@/lib/bikes/types";
+
 export type Json =
   | string
   | number
@@ -87,6 +89,7 @@ export interface Database {
           brake_type: BrakeType | null;
           drivetrain_speed: number | null;
           tire_system: TireSystem | null;
+          bike_type: BikeType | null;
           config_complete: boolean;
           created_at: string;
           updated_at: string;
@@ -108,6 +111,7 @@ export interface Database {
           brake_type?: BrakeType | null;
           drivetrain_speed?: number | null;
           tire_system?: TireSystem | null;
+          bike_type?: BikeType | null;
           config_complete?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -129,6 +133,7 @@ export interface Database {
           brake_type?: BrakeType | null;
           drivetrain_speed?: number | null;
           tire_system?: TireSystem | null;
+          bike_type?: BikeType | null;
           config_complete?: boolean;
           created_at?: string;
           updated_at?: string;
