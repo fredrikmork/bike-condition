@@ -93,6 +93,7 @@ export interface Database {
           last_charge_date: string | null;
           default_sport_type: string | null;
           weight: number | null;
+          pause_wheels_on_virtual: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -119,6 +120,7 @@ export interface Database {
           last_charge_date?: string | null;
           default_sport_type?: string | null;
           weight?: number | null;
+          pause_wheels_on_virtual?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -145,6 +147,7 @@ export interface Database {
           last_charge_date?: string | null;
           default_sport_type?: string | null;
           weight?: number | null;
+          pause_wheels_on_virtual?: boolean;
           created_at?: string;
           updated_at?: string;
         };

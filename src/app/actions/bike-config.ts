@@ -102,6 +102,25 @@ export async function saveElectronicSystemAction(
   return { success: true };
 }
 
+export async function setPauseWheelsOnVirtualAction(
+  bikeId: string,
+  pause: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  const { error } = await supabaseAdmin
+    .from("bikes")
+    .update({ pause_wheels_on_virtual: pause })
+    .eq("id", bikeId)
+    .eq("user_id", session.userId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function markChargedAction(
   bikeId: string,
   chargedAt: string

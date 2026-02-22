@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, CircleDot, Cog, RotateCw } from "lucide-react";
+import { ChevronDown, CircleDot, Cog, PauseCircle, RotateCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface ComponentGroupProps {
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
   bikeId: string;
+  paused?: boolean;
 }
 
 export function ComponentGroup({
@@ -27,6 +28,7 @@ export function ComponentGroup({
   typesWithHistory = new Set(),
   lastSync,
   bikeId,
+  paused = false,
 }: ComponentGroupProps) {
   const [expanded, setExpanded] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -79,12 +81,18 @@ export function ComponentGroup({
             <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium">{group.label}</span>
                 <Badge variant="secondary" className="text-[10px]">
                   {components.length}
                 </Badge>
                 <StatusIndicator status={worstStatus} isOverdue={worstIsOverdue} />
+                {paused && group.id !== "drivetrain" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <PauseCircle className="h-3 w-3" />
+                    Virtual paused
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 {shortName(mostWorn.name)}

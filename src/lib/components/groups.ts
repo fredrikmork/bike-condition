@@ -29,3 +29,10 @@ export const COMPONENT_GROUPS: ComponentGroupDef[] = [
 
 /** All component types claimed by a group — used to compute ungrouped leftovers */
 export const GROUPED_TYPES = new Set(COMPONENT_GROUPS.flatMap((g) => g.types));
+
+/** Component types that are physically on the wheels (excluded during virtual rides when paused) */
+export const WHEEL_TYPES = new Set(
+  COMPONENT_GROUPS
+    .filter((g) => g.id === "front_wheel" || g.id === "rear_wheel")
+    .flatMap((g) => g.types)
+);

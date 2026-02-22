@@ -11,8 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { PauseCircle, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { saveBikeConfigAction } from "@/app/actions/bike-config";
+import { saveBikeConfigAction, setPauseWheelsOnVirtualAction } from "@/app/actions/bike-config";
 import type { Bike, BikeConfig, ShiftingType, BrakeType, TireSystem, ElectronicSystem } from "@/lib/supabase/types";
 
 interface BikeConfigDialogProps {
@@ -44,9 +45,17 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
   const [tires, setTires] = useState<TireSystem | null>(
     (bike.tire_system as TireSystem) ?? null
   );
+  const [pauseWheels, setPauseWheels] = useState(bike.pause_wheels_on_virtual);
   const [saving, setSaving] = useState(false);
 
+  const isVirtualBike = bike.default_sport_type === "VirtualRide";
   const isComplete = shifting !== null && brakes !== null && speed !== null && tires !== null;
+
+  async function handleTogglePauseWheels() {
+    const next = !pauseWheels;
+    setPauseWheels(next);
+    await setPauseWheelsOnVirtualAction(bike.id, next);
+  }
 
   async function handleSave() {
     if (!isComplete) return;
@@ -192,6 +201,37 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
               />
             </div>
           </Section>
+
+          {/* Virtual ride wheel pause — only shown for predominantly virtual bikes */}
+          {isVirtualBike && (
+            <Section label="Virtual rides">
+              <button
+                type="button"
+                onClick={handleTogglePauseWheels}
+                className={cn(
+                  "flex items-start gap-3 rounded-lg border p-3 text-left transition-colors cursor-pointer w-full",
+                  pauseWheels
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                )}
+              >
+                {pauseWheels
+                  ? <PauseCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  : <PlayCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                }
+                <div>
+                  <p className="text-sm font-medium leading-tight">
+                    {pauseWheels ? "Wheel wear paused on virtual rides" : "Wheel wear active on virtual rides"}
+                  </p>
+                  <p className="text-xs opacity-70 mt-0.5">
+                    {pauseWheels
+                      ? "Tires, inner tubes, brake pads and rotors don't accumulate distance during VirtualRide activities — they stay on the real bike, not the trainer."
+                      : "All components including wheels accumulate distance from virtual rides."}
+                  </p>
+                </div>
+              </button>
+            </Section>
+          )}
         </div>
 
         <DialogFooter>

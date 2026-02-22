@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
+import { WHEEL_TYPES } from "@/lib/components/groups";
 import type { Bike, BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -41,6 +42,13 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       existingBikes?.map((b) => [b.strava_gear_id, b]) || []
     );
 
+    // Pre-fetch pause_wheels_on_virtual for existing bikes
+    const { data: bikeFlags } = await supabaseAdmin
+      .from("bikes")
+      .select("id, pause_wheels_on_virtual")
+      .eq("user_id", userId);
+    const bikeFlagMap = new Map(bikeFlags?.map((b) => [b.id, b.pause_wheels_on_virtual]) ?? []);
+
     // Process each bike from Strava
     for (const stravaBike of athlete.bikes) {
       try {
@@ -66,7 +74,8 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             .eq("id", existingBike.id);
 
           // Update component distances using activity data + gear fallback
-          await updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance);
+          const pauseWheels = bikeFlagMap.get(existingBike.id) ?? true;
+          await updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance, pauseWheels);
 
           // Add any missing default component types
           await addMissingDefaultComponents(existingBike.id, gearDetails.distance);
@@ -148,14 +157,18 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
  *
  * Taking MAX ensures we never under-report: if the gear API is stale, activity
  * data wins; if activities are incomplete, gear data wins.
+ *
+ * When pauseWheelsOnVirtual is true, wheel components only count non-VirtualRide
+ * activities (no gear fallback, since that total includes virtual distance).
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
-  bikeTotalDistance: number
+  bikeTotalDistance: number,
+  pauseWheelsOnVirtual: boolean,
 ): Promise<void> {
   const { data: components } = await supabaseAdmin
     .from("components")
-    .select("id, bike_distance_at_install, installed_at")
+    .select("id, type, bike_distance_at_install, installed_at")
     .eq("bike_id", bikeId)
     .is("replaced_at", null);
 
@@ -163,22 +176,29 @@ async function updateComponentDistancesFromActivities(
 
   await Promise.all(
     components.map(async (component) => {
-      const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
+      const isWheel = WHEEL_TYPES.has(component.type);
+      const useVirtualPause = pauseWheelsOnVirtual && isWheel;
 
-      // Sum activity distances for this bike since the component was installed
-      const { data: activitySum } = await supabaseAdmin
+      let query = supabaseAdmin
         .from("activities")
         .select("distance")
         .eq("bike_id", bikeId)
         .gte("start_date", component.installed_at);
 
+      if (useVirtualPause) {
+        query = query.neq("activity_type", "VirtualRide");
+      }
+
+      const { data: activitySum } = await query;
       const activityDistance = activitySum?.reduce((sum, a) => sum + a.distance, 0) ?? 0;
+
+      const current_distance = useVirtualPause
+        ? activityDistance
+        : Math.max(activityDistance, bikeTotalDistance - component.bike_distance_at_install);
 
       await supabaseAdmin
         .from("components")
-        .update({
-          current_distance: Math.max(activityDistance, gearDistance),
-        })
+        .update({ current_distance })
         .eq("id", component.id);
     })
   );

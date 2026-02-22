@@ -10,6 +10,7 @@ interface ComponentListProps {
   bikeConfig?: BikeConfig | null;
   lastSync?: string | null;
   bikeId: string;
+  pauseWheels?: boolean;
 }
 
 export function ComponentList({
@@ -18,6 +19,7 @@ export function ComponentList({
   bikeConfig = null,
   lastSync,
   bikeId,
+  pauseWheels = false,
 }: ComponentListProps) {
   // Filter by visibility rules and mute state
   const visible = components.filter(
@@ -52,6 +54,7 @@ export function ComponentList({
             typesWithHistory={typesWithHistory}
             lastSync={lastSync}
             bikeId={bikeId}
+            paused={pauseWheels && group.id !== "drivetrain"}
           />
         );
       })}

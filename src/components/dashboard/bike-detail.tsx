@@ -242,6 +242,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
           bikeConfig={config}
           lastSync={lastSync}
           bikeId={bike.id}
+          pauseWheels={bike.pause_wheels_on_virtual}
         />
 
         {mutedComponents.length > 0 && (
