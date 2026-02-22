@@ -89,6 +89,17 @@
   --status-warning: hsl(38 92% 50%);
   --status-critical: hsl(0 84% 60%);
   --strava-orange: hsl(24 98% 49%);
+
+  /* Bike metadata chip colors — light mode */
+  --chip-frame-from: #4338ca;
+  --chip-frame-to: #7c3aed;
+  --chip-frame-text: #4338ca;
+  --chip-sport-from: #be185d;
+  --chip-sport-to: #a21caf;
+  --chip-sport-text: #be185d;
+  --chip-weight-from: #0369a1;
+  --chip-weight-to: #0e7490;
+  --chip-weight-text: #0369a1;
 }
 
 .dark {
@@ -130,6 +141,17 @@
   --status-warning: hsl(38 92% 50%);
   --status-critical: hsl(0 62.8% 30.6%);
   --strava-orange: hsl(24 98% 49%);
+
+  /* Bike metadata chip colors — dark mode */
+  --chip-frame-from: #667eea;
+  --chip-frame-to: #764ba2;
+  --chip-frame-text: #a5b4fc;
+  --chip-sport-from: #f093fb;
+  --chip-sport-to: #f5576c;
+  --chip-sport-text: #f9a8d4;
+  --chip-weight-from: #4facfe;
+  --chip-weight-to: #00f2fe;
+  --chip-weight-text: #7dd3fc;
 }
 
 * {

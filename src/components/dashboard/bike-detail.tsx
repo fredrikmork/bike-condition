@@ -164,13 +164,13 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
             {(frameLabel || sportLabel || weightLabel) && (
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 {frameLabel && (
-                  <Badge variant="outline" className="text-xs font-normal">{frameLabel}</Badge>
+                  <Badge className="text-xs font-normal" style={{ background: "var(--background) padding-box, linear-gradient(135deg, var(--chip-frame-from), var(--chip-frame-to)) border-box", border: "1px solid transparent", color: "var(--chip-frame-text)" }}>{frameLabel}</Badge>
                 )}
                 {sportLabel && (
-                  <Badge variant="outline" className="text-xs font-normal">{sportLabel}</Badge>
+                  <Badge className="text-xs font-normal" style={{ background: "var(--background) padding-box, linear-gradient(135deg, var(--chip-sport-from), var(--chip-sport-to)) border-box", border: "1px solid transparent", color: "var(--chip-sport-text)" }}>{sportLabel}</Badge>
                 )}
                 {weightLabel && (
-                  <Badge variant="outline" className="text-xs font-normal">{weightLabel}</Badge>
+                  <Badge className="text-xs font-normal" style={{ background: "var(--background) padding-box, linear-gradient(135deg, var(--chip-weight-from), var(--chip-weight-to)) border-box", border: "1px solid transparent", color: "var(--chip-weight-text)" }}>{weightLabel}</Badge>
                 )}
               </div>
             )}
