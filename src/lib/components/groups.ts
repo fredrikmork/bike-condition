@@ -38,4 +38,4 @@ export const WHEEL_TYPES = new Set(
 );
 
 /** Component types that pause distance accumulation during trainer periods (wheels + gear cables) */
-export const TRAINER_PAUSE_TYPES = new Set([...WHEEL_TYPES, "shift_cables"]);
+export const TRAINER_PAUSE_TYPES = new Set([...WHEEL_TYPES, "shifter_cables"]);

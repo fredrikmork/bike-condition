@@ -61,7 +61,7 @@ export function ComponentList({
         );
       })}
 
-      {/* Ungrouped leftovers: shift_cables, brake_cables, bar_tape, cleats, custom, legacy */}
+      {/* Ungrouped leftovers: shifter_cables, brake_cables, bar_tape, cleats, custom, legacy */}
       {(() => {
         const ungrouped = visible.filter((c) => !GROUPED_TYPES.has(c.type));
         if (ungrouped.length === 0) return null;

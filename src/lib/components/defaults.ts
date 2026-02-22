@@ -18,7 +18,7 @@ export type ComponentType =
   | "brake_rotor_front"
   | "brake_rotor_rear"
   // Cables
-  | "shift_cables"
+  | "shifter_cables"
   | "brake_cables"
   // Contact points
   | "bar_tape"
@@ -89,7 +89,7 @@ export function createConfiguredComponents(
 
   if (config.shifting_type === "mechanical") {
     components.push(
-      { name: "Shifter Cables", type: "shift_cables", recommended_distance: 5_000_000 }
+      { name: "Shifter Cables", type: "shifter_cables", recommended_distance: 5_000_000 }
     );
   }
   // Electronic shifting → no cables
@@ -143,7 +143,7 @@ export function getAvailableComponentTypes(
   }
 
   if (config.shifting_type === "mechanical") {
-    all.push({ name: "Shifter Cables", type: "shift_cables", recommended_distance: 5_000_000 });
+    all.push({ name: "Shifter Cables", type: "shifter_cables", recommended_distance: 5_000_000 });
   }
 
   if (config.tire_system !== "tubeless") {

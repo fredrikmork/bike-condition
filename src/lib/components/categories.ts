@@ -20,7 +20,7 @@ const CATEGORY_MAP: Record<string, ComponentCategory> = {
   // Legacy
   brake_rotors: "Brakes",
   // Other / cables / contact points
-  shift_cables: "Other",
+  shifter_cables: "Other",
   brake_cables: "Other",
   cables:       "Other",
   bar_tape:     "Other",

@@ -12,7 +12,7 @@ export function isComponentVisible(
 
   // Electronic shifting → no cables
   if (config.shifting_type === "electronic") {
-    if (type === "shift_cables" || type === "cables") return false;
+    if (type === "shifter_cables" || type === "cables") return false;
   }
 
   // Disc brakes → no brake cables (hydraulic), no rim-specific types
