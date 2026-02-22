@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useOptimistic, startTransition } from "react";
+import { useState, useEffect, useOptimistic, startTransition } from "react";
 import { format } from "date-fns";
 import { Settings2, Zap, CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import { formatDistance } from "@/lib/wear/calculator";
 import { getBikeConfig } from "@/lib/components/visibility";
 import { getBatteryHealth } from "@/lib/wear/battery";
 import { markChargedAction } from "@/app/actions/bike-config";
+import { getVirtualPeriodsAction } from "@/app/actions/virtual-periods";
 import { cn } from "@/lib/utils";
 import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
 
@@ -66,6 +67,19 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
   const [configOpen, setConfigOpen] = useState(false);
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
   const [mutedSheetOpen, setMutedSheetOpen] = useState(false);
+  const [hasActiveTrainerPeriod, setHasActiveTrainerPeriod] = useState(false);
+
+  useEffect(() => {
+    getVirtualPeriodsAction(bike.id).then((r) => {
+      if (!r.success || !r.data) return;
+      const today = new Date().toISOString().slice(0, 10);
+      const active = r.data.some((p) => {
+        const end = p.end_date ?? today;
+        return today >= p.start_date && today <= end;
+      });
+      setHasActiveTrainerPeriod(active);
+    });
+  }, [bike.id]);
 
   const mutedComponents = bike.components.filter((c) => c.muted);
   const [chargeDate, setChargeDate] = useState<Date>(new Date());
@@ -242,6 +256,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
           bikeConfig={config}
           lastSync={lastSync}
           bikeId={bike.id}
+          hasActiveTrainerPeriod={hasActiveTrainerPeriod}
         />
 
         {mutedComponents.length > 0 && (

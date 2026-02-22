@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
+  PauseCircle,
   Pencil,
   RotateCw,
   Trash2,
@@ -53,9 +54,11 @@ interface ComponentCardProps {
   lastSync?: string | null;
   /** Override the name shown on the card face (dialogs still use component.name) */
   displayName?: string;
+  /** True when the bike is currently in a trainer period — distance from virtual rides is paused */
+  trainerActive?: boolean;
 }
 
-export function ComponentCard({ component, hasHistory = false, lastSync, displayName }: ComponentCardProps) {
+export function ComponentCard({ component, hasHistory = false, lastSync, displayName, trainerActive = false }: ComponentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -139,6 +142,12 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   Custom
+                </Badge>
+              )}
+              {trainerActive && (
+                <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground gap-1 shrink-0">
+                  <PauseCircle className="h-2.5 w-2.5" />
+                  Trainer
                 </Badge>
               )}
             </div>
