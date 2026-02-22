@@ -5,12 +5,29 @@ import { Settings2, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ComponentList } from "./component-list";
 import { AddComponentDialog } from "./add-component-dialog";
 import { BikeConfigDialog } from "./bike-config-dialog";
 import { formatDistance } from "@/lib/wear/calculator";
 import { getBikeConfig } from "@/lib/components/visibility";
+import { getBatteryHealth } from "@/lib/wear/battery";
 import { markChargedAction } from "@/app/actions/bike-config";
+import { cn } from "@/lib/utils";
 import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
 
 const ELECTRONIC_LABELS: Record<ElectronicSystem, string> = {
@@ -28,13 +45,14 @@ interface BikeDetailProps {
 
 export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
+  const [chargeConfirmOpen, setChargeConfirmOpen] = useState(false);
 
   const subtitle = [bike.brand_name, bike.model_name].filter(Boolean).join(" ");
   const config = getBikeConfig(bike);
 
   const isElectronic = bike.shifting_type === "electronic";
 
-  // km since last charge
+  // km since last charge (meters → km)
   const kmSinceCharge =
     bike.last_charge_distance != null
       ? Math.round((bike.total_distance - bike.last_charge_distance) / 1000)
@@ -42,7 +60,14 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
 
   const [optimisticKm, setOptimisticKm] = useOptimistic<number | null>(kmSinceCharge);
 
-  function handleChargeTap() {
+  const batteryHealth = getBatteryHealth(
+    optimisticKm,
+    bike.electronic_system,
+    bike.created_at
+  );
+
+  function handleConfirmCharge() {
+    setChargeConfirmOpen(false);
     startTransition(async () => {
       setOptimisticKm(0);
       await markChargedAction(bike.id);
@@ -52,6 +77,31 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
   const systemLabel = bike.electronic_system
     ? ELECTRONIC_LABELS[bike.electronic_system as ElectronicSystem]
     : "Electronic";
+
+  const chipClass = cn(
+    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    batteryHealth.status === "critical"
+      ? "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/20"
+      : batteryHealth.status === "warning"
+        ? "border-amber-500/50 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
+        : "border-border hover:bg-muted"
+  );
+
+  // Tooltip body text
+  const tooltipDetails = (() => {
+    const range = batteryHealth.effectiveRange;
+    if (batteryHealth.status === "critical") {
+      return `Charge recommended — ${Math.abs(batteryHealth.remainingKm ?? 0)} km overdue (range: ${range} km)`;
+    }
+    if (batteryHealth.status === "warning") {
+      return `Charge soon — ${batteryHealth.remainingKm} km remaining (range: ${range} km)`;
+    }
+    if (batteryHealth.remainingKm != null) {
+      return `${batteryHealth.remainingKm} km until next charge recommended (range: ${range} km)`;
+    }
+    return `Recommended range: ${range} km per charge. Tap to mark battery charged.`;
+  })();
 
   return (
     <>
@@ -70,21 +120,36 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
 
               {/* Electronic charge chip */}
               {isElectronic && (
-                <button
-                  onClick={handleChargeTap}
-                  title="Tap to mark battery charged"
-                  aria-label="Mark battery charged — resets km counter"
-                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <Zap className="h-3 w-3 text-yellow-500" />
-                  <span>{systemLabel}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span>
-                    {optimisticKm != null
-                      ? `${optimisticKm.toLocaleString()} km`
-                      : "— km"}
-                  </span>
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setChargeConfirmOpen(true)}
+                      aria-label="Mark battery charged — resets km counter"
+                      className={chipClass}
+                    >
+                      <Zap className="h-3 w-3" />
+                      <span>{systemLabel}</span>
+                      <span className="opacity-50">·</span>
+                      <span>
+                        {optimisticKm != null
+                          ? `${optimisticKm.toLocaleString()} km`
+                          : "— km"}
+                      </span>
+                      {batteryHealth.status === "critical" && (
+                        <span className="font-semibold">· Charge now</span>
+                      )}
+                      {batteryHealth.status === "warning" && (
+                        <span className="opacity-80">· Charge soon</span>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="max-w-xs">{tooltipDetails}</p>
+                    <p className="text-muted-foreground mt-0.5">
+                      Tap to mark battery charged
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               )}
 
               <Button
@@ -136,6 +201,25 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
         open={configOpen}
         onOpenChange={setConfigOpen}
       />
+
+      {/* Charge confirmation */}
+      <AlertDialog open={chargeConfirmOpen} onOpenChange={setChargeConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark battery as charged?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This resets the km counter to 0. Only confirm if you have actually
+              plugged in and charged the battery.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCharge}>
+              Mark charged
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
