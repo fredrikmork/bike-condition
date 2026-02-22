@@ -2,6 +2,19 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-22: Component type dropdown & remove card icons
+
+### Enhancement
+- **Add Component dialog**: replaced free-text name input with a `<Select>` dropdown showing only component types not already installed on the bike, grouped by category (Drivetrain / Wheels / Brakes / Other). Selecting a standard type auto-fills the recommended replacement distance. Name input and icon picker appear only when "Custom component" is chosen. Unconfigured bikes see only the custom option with a nudge to configure first.
+- **Component cards**: removed the decorative icon from the card header for a cleaner layout.
+
+### Files changed
+- `src/lib/components/defaults.ts` — added `getAvailableComponentTypes(config, existingComponents)`
+- `src/app/actions/components.ts` — added `addComponentAction` (unified action for standard + custom types)
+- `src/components/dashboard/add-component-dialog.tsx` — full rewrite with type dropdown; accepts `bike` prop
+- `src/components/dashboard/bike-detail.tsx` — pass `bike` instead of `bikeId` to `AddComponentDialog`
+- `src/components/dashboard/component-card.tsx` — removed `Icon` render and `getComponentIcon` import
+
 ## 2026-02-16: Fix activity sync gap & activity-based component distances
 
 ### Bug fix
