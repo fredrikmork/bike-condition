@@ -55,16 +55,22 @@ export function ComponentList({
       })}
 
       {/* Ungrouped leftovers: bar_tape, cleats, brake_cables, custom, legacy */}
-      {visible
-        .filter((c) => !GROUPED_TYPES.has(c.type))
-        .map((component) => (
-          <ComponentCard
-            key={component.id}
-            component={component}
-            hasHistory={typesWithHistory.has(component.type)}
-            lastSync={lastSync}
-          />
-        ))}
+      {(() => {
+        const ungrouped = visible.filter((c) => !GROUPED_TYPES.has(c.type));
+        if (ungrouped.length === 0) return null;
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {ungrouped.map((component) => (
+              <ComponentCard
+                key={component.id}
+                component={component}
+                hasHistory={typesWithHistory.has(component.type)}
+                lastSync={lastSync}
+              />
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
