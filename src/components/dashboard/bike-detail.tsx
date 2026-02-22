@@ -70,6 +70,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
   const [hasActiveTrainerPeriod, setHasActiveTrainerPeriod] = useState(false);
 
   useEffect(() => {
+    setHasActiveTrainerPeriod(false);
     getVirtualPeriodsAction(bike.id).then((r) => {
       if (!r.success || !r.data) return;
       const today = new Date().toISOString().slice(0, 10);
