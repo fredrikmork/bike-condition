@@ -2,6 +2,38 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-22: Bike header metadata — sport type, frame type, weight
+
+### New features
+- **Frame type chip**: Road / Mountain / Cross / Time Trial label derived from Strava's `frame_type` field and shown as a chip below the bike title.
+- **Sport type chip**: Most-used activity type per bike (e.g. "Ride", "Virtual", "MTB") derived from activity history and shown as a chip. Computed from the user's activity records and refreshed on every sync — not dependent on an undocumented Strava API field.
+- **Weight chip**: Bike weight in kg shown as a chip when available from Strava's gear API.
+- **Flat bike header**: Outer `<Card>` wrapper removed from `BikeDetail`; the content is now flush with the page for a cleaner layout.
+- **Ride-first selection**: Initial bike selection now prefers bikes with `default_sport_type = "Ride"` over virtual-ride bikes, before falling back to the primary or most-ridden bike.
+
+### Files changed
+- `src/lib/sync/bikes.ts` — save `weight` from gear details; compute `default_sport_type` from activity history via `updateDominantSportTypes()`
+- `src/lib/strava/schemas.ts` — `weight` field in `StravaGearSchema`
+- `src/lib/supabase/types.ts` — `default_sport_type`, `weight` fields on Bike
+- `src/components/dashboard/bike-detail.tsx` — remove outer Card; add frame/sport/weight chips
+- `src/components/dashboard/dashboard.tsx` — prefer Ride bike in initial selection
+- DB migration: `add_bike_sport_and_weight`
+
+## 2026-02-22: Mute components
+
+### New feature
+- **Mute/unmute components**: Components can be muted to hide them from the dashboard and suppress wear warnings. A "X hidden components" link at the bottom of a bike's component list opens a slide-over sheet listing all muted components with individual Unmute buttons.
+
+### Files changed
+- `src/app/actions/components.ts` — added `muteComponentAction(componentId, muted)`
+- `src/components/dashboard/component-card.tsx` — Mute option in the component actions menu
+- `src/components/dashboard/muted-components-sheet.tsx` — new: sheet listing muted components
+- `src/components/dashboard/bike-detail.tsx` — "X hidden components" button and `MutedComponentsSheet`
+- `src/components/layout/sidebar-attention-items.tsx` — muted components excluded from Needs Attention
+- `src/components/dashboard/component-list.tsx` — muted components filtered out
+- `src/lib/supabase/types.ts` — `muted: boolean` on Component
+- DB migration: `add_component_muted`
+
 ## 2026-02-22: Sidebar redesign — stats, n+1 joke & Needs Attention
 
 ### Changes
