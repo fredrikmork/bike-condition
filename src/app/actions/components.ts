@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
 import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault, getComponentHistory, updateComponent } from "@/lib/db/queries";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { LubeType, Component } from "@/lib/supabase/types";
 
@@ -133,6 +134,27 @@ export async function getComponentHistoryAction(
 
   const history = await getComponentHistory(bikeId, componentType);
   return { success: true, history };
+}
+
+export async function muteComponentAction(
+  componentId: string,
+  muted: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Not authenticated" };
+
+  const component = await getComponentById(componentId);
+  if (!component) return { success: false, error: "Component not found" };
+
+  const { error } = await supabaseAdmin
+    .from("components")
+    .update({ muted })
+    .eq("id", componentId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/");
+  return { success: true };
 }
 
 export async function deleteComponentAction(

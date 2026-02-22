@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ComponentList } from "./component-list";
+import { MutedComponentsSheet } from "./muted-components-sheet";
 import { AddComponentDialog } from "./add-component-dialog";
 import { BikeConfigDialog } from "./bike-config-dialog";
 import { formatDistance } from "@/lib/wear/calculator";
@@ -48,6 +49,9 @@ interface BikeDetailProps {
 export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
+  const [mutedSheetOpen, setMutedSheetOpen] = useState(false);
+
+  const mutedComponents = bike.components.filter((c) => c.muted);
   const [chargeDate, setChargeDate] = useState<Date>(new Date());
   const [charging, setCharging] = useState(false);
 
@@ -207,6 +211,15 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
             lastSync={lastSync}
             bikeId={bike.id}
           />
+
+          {mutedComponents.length > 0 && (
+            <button
+              onClick={() => setMutedSheetOpen(true)}
+              className="mt-3 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            >
+              {mutedComponents.length} hidden component{mutedComponents.length !== 1 ? "s" : ""}
+            </button>
+          )}
         </CardContent>
       </Card>
 
@@ -214,6 +227,12 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
         bike={bike}
         open={configOpen}
         onOpenChange={setConfigOpen}
+      />
+
+      <MutedComponentsSheet
+        components={mutedComponents}
+        open={mutedSheetOpen}
+        onOpenChange={setMutedSheetOpen}
       />
 
       {/* Charge dialog */}

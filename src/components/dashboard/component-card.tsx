@@ -10,6 +10,7 @@ import {
   History,
   ChevronDown,
   RefreshCw,
+  BellOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +38,7 @@ import { StatusIndicator } from "./status-indicator";
 import { ReplaceDialog } from "./replace-dialog";
 import { EditComponentDialog } from "./edit-component-dialog";
 import { ComponentHistorySheet } from "./component-history-sheet";
-import { deleteComponentAction } from "@/app/actions/components";
+import { deleteComponentAction, muteComponentAction } from "@/app/actions/components";
 import {
   calculateComponentWear,
   formatDistance,
@@ -61,6 +62,21 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [muting, setMuting] = useState(false);
+
+  async function handleMute() {
+    setMuting(true);
+    try {
+      const result = await muteComponentAction(component.id, true);
+      if (!result.success) {
+        toast.error("Failed to mute component", { description: result.error });
+      }
+    } catch {
+      toast.error("Failed to mute component");
+    } finally {
+      setMuting(false);
+    }
+  }
 
   const wear = calculateComponentWear(component);
   const cappedPercentage = Math.min(wear.percentage, 100);
@@ -147,6 +163,10 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
                     <RotateCw className="mr-2 h-3.5 w-3.5" />
                     Replace
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleMute} disabled={muting}>
+                    <BellOff className="mr-2 h-3.5 w-3.5" />
+                    Mute
                   </DropdownMenuItem>
                   {hasHistory && (
                     <DropdownMenuItem onClick={() => setHistoryOpen(true)}>

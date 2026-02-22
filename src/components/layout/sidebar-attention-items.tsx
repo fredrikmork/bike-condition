@@ -37,7 +37,7 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
   const items: AttentionItem[] = bikes.flatMap((bike) => {
     const config = getBikeConfig(bike);
     return bike.components
-      .filter((c) => isComponentVisible(c.type, config))
+      .filter((c) => !c.muted && isComponentVisible(c.type, config))
       .flatMap((c) => {
         const wear = calculateComponentWear(c);
         if (wear.status !== "warning" && wear.status !== "critical") return [];

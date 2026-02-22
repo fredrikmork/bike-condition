@@ -161,6 +161,7 @@ export interface Database {
           installed_at: string;
           replaced_at: string | null;
           notes: string | null;
+          muted: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -180,6 +181,7 @@ export interface Database {
           installed_at?: string;
           replaced_at?: string | null;
           notes?: string | null;
+          muted?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -199,6 +201,7 @@ export interface Database {
           installed_at?: string;
           replaced_at?: string | null;
           notes?: string | null;
+          muted?: boolean;
           created_at?: string;
           updated_at?: string;
         };

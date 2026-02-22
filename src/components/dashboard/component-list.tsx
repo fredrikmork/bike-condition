@@ -19,8 +19,10 @@ export function ComponentList({
   lastSync,
   bikeId,
 }: ComponentListProps) {
-  // Filter by visibility rules
-  const visible = components.filter((c) => isComponentVisible(c.type, bikeConfig));
+  // Filter by visibility rules and mute state
+  const visible = components.filter(
+    (c) => !c.muted && isComponentVisible(c.type, bikeConfig)
+  );
 
   if (visible.length === 0) {
     return (
