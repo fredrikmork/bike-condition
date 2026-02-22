@@ -23,6 +23,7 @@ export type ComponentType =
   // Legacy (kept for existing data, not generated for new bikes)
   | "brake_rotors"
   | "cables"
+  // Custom
   | "custom";
 
 export interface DefaultComponent {
