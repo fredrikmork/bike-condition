@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import {
   SidebarGroup,
@@ -12,7 +13,10 @@ import {
 } from "@/components/ui/sidebar";
 import { calculateComponentWear } from "@/lib/wear/calculator";
 import { getBikeConfig, isComponentVisible } from "@/lib/components/visibility";
+import { cn } from "@/lib/utils";
 import type { BikeWithComponents } from "@/lib/supabase/types";
+
+const INITIAL_VISIBLE = 3;
 
 interface AttentionItem {
   bikeId: string;
@@ -28,6 +32,7 @@ interface SidebarAttentionItemsProps {
 
 export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
   const { setSelectedBikeId } = useBikeStore();
+  const [expanded, setExpanded] = useState(false);
 
   const items: AttentionItem[] = bikes.flatMap((bike) => {
     const config = getBikeConfig(bike);
@@ -51,13 +56,15 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
   if (items.length === 0) return null;
 
   const multipleBikes = bikes.length > 1;
+  const hidden = items.length - INITIAL_VISIBLE;
+  const visible = expanded ? items : items.slice(0, INITIAL_VISIBLE);
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Needs Attention</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {visible.map((item) => (
             <SidebarMenuItem key={item.componentId}>
               <SidebarMenuButton
                 onClick={() => setSelectedBikeId(item.bikeId)}
@@ -86,6 +93,26 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+
+          {hidden > 0 && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => setExpanded((v) => !v)}
+                className="text-muted-foreground hover:text-foreground group-data-[collapsible=icon]:hidden"
+                tooltip={expanded ? "Show less" : `${hidden} more`}
+              >
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform duration-200",
+                    expanded && "rotate-180"
+                  )}
+                />
+                <span className="text-xs">
+                  {expanded ? "Show less" : `${hidden} more`}
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
