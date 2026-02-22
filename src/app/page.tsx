@@ -29,7 +29,7 @@ export default async function Home() {
 
   return (
     <AppShell bikes={bikes} lastSynced={stats.lastSync}>
-      <Dashboard bikes={bikes} stats={stats} historyByBike={historyByBike} />
+      <Dashboard bikes={bikes} lastSync={stats.lastSync} historyByBike={historyByBike} />
     </AppShell>
   );
 }
