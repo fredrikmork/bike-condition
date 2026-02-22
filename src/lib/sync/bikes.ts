@@ -61,6 +61,8 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
               description: gearDetails.description ?? null,
               total_distance: gearDetails.distance,
               is_primary: gearDetails.primary,
+              default_sport_type: stravaBike.default_sport_type ?? null,
+              weight: gearDetails.weight ?? null,
             })
             .eq("id", existingBike.id);
 
@@ -83,6 +85,8 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             description: gearDetails.description ?? null,
             total_distance: gearDetails.distance,
             is_primary: gearDetails.primary,
+            default_sport_type: stravaBike.default_sport_type ?? null,
+            weight: gearDetails.weight ?? null,
           };
 
           const { data: newBike, error: insertError } = await supabaseAdmin

@@ -19,9 +19,11 @@ export function Dashboard({ bikes, lastSync, historyByBike }: DashboardProps) {
     if (selectedBikeId && bikes.some((b) => b.id === selectedBikeId)) return;
     if (bikes.length === 0) return;
 
+    // Prefer a real-ride bike over virtual-only bikes
+    const rideBike = bikes.find((b) => b.default_sport_type === "Ride");
     const primary = bikes.find((b) => b.is_primary);
     const fallback = bikes[0]; // Already sorted by distance desc from query
-    setSelectedBikeId((primary ?? fallback).id);
+    setSelectedBikeId((rideBike ?? primary ?? fallback).id);
   }, [bikes, selectedBikeId, setSelectedBikeId]);
 
   const selectedBike = bikes.find((b) => b.id === selectedBikeId);
