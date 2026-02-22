@@ -20,6 +20,9 @@ export type ComponentType =
   // Cables
   | "shift_cables"
   | "brake_cables"
+  // Contact points
+  | "bar_tape"
+  | "cleats"
   // Legacy (kept for existing data, not generated for new bikes)
   | "brake_rotors"
   | "cables"
@@ -42,11 +45,13 @@ const BRAKE_PAD_DISTANCE: Record<BrakeType, number> = {
 const UNIVERSAL_COMPONENTS: DefaultComponent[] = [
   { name: "Chain",          type: "chain",          recommended_distance: 3_000_000  },
   { name: "Cassette",       type: "cassette",        recommended_distance: 10_000_000 },
-  { name: "Chainring(s)",   type: "chainrings",      recommended_distance: 15_000_000 },
+  { name: "Chainrings",     type: "chainrings",      recommended_distance: 15_000_000 },
   { name: "Bottom Bracket", type: "bottom_bracket",  recommended_distance: 10_000_000 },
   { name: "Pulley Wheels",  type: "pulley_wheels",   recommended_distance: 20_000_000 },
   { name: "Front Tire",     type: "tire_front",      recommended_distance: 5_000_000  },
   { name: "Rear Tire",      type: "tire_rear",       recommended_distance: 4_000_000  },
+  { name: "Bar Tape",       type: "bar_tape",        recommended_distance: 5_000_000  },
+  { name: "Cleats",         type: "cleats",          recommended_distance: 10_000_000 },
 ];
 
 /**

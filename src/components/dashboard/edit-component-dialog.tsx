@@ -29,7 +29,7 @@ import { getSuggestedDistance, LUBE_LABELS, formatDistance } from "@/lib/wear/ca
 import type { Component, LubeType } from "@/lib/supabase/types";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
+  name: z.string().min(1, "Name is required").max(100).optional(),
   brand: z.string().max(100).optional(),
   model: z.string().max(100).optional(),
   spec: z.string().max(200).optional(),
@@ -91,6 +91,7 @@ export function EditComponentDialog({
 
   const lubeType = watch("lube_type");
   const isChain = component.type === "chain";
+  const isCustom = component.type === "custom";
   const suggestedM = getSuggestedDistance(component.type, lubeType ?? null);
   const suggestedKm = suggestedM ? Math.round(suggestedM / 1000) : null;
 
@@ -98,7 +99,7 @@ export function EditComponentDialog({
     setLoading(true);
     try {
       const result = await updateComponentAction(component.id, {
-        name: values.name,
+        name: isCustom ? (values.name ?? component.name) : component.name,
         brand: values.brand || null,
         model: values.model || null,
         spec: values.spec || null,
@@ -134,14 +135,16 @@ export function EditComponentDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-2">
-          {/* Name */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="ec-name">Name</Label>
-            <Input id="ec-name" {...register("name")} />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
-          </div>
+          {/* Name — custom components only */}
+          {isCustom && (
+            <div className="grid gap-1.5">
+              <Label htmlFor="ec-name">Name</Label>
+              <Input id="ec-name" {...register("name")} />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+          )}
 
           {/* Brand + Model */}
           <div className="grid grid-cols-2 gap-3">

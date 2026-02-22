@@ -42,6 +42,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   // Cables
   shift_cables: Cable,
   brake_cables: Cable,
+  // Contact points
+  bar_tape: Grip,
+  cleats:   Bolt,
   // Legacy
   brake_rotors: Disc,
   cables:       Cable,

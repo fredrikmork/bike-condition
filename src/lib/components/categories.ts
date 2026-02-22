@@ -19,10 +19,12 @@ const CATEGORY_MAP: Record<string, ComponentCategory> = {
   brake_rotor_rear:  "Brakes",
   // Legacy
   brake_rotors: "Brakes",
-  // Other / cables
+  // Other / cables / contact points
   shift_cables: "Other",
   brake_cables: "Other",
   cables:       "Other",
+  bar_tape:     "Other",
+  cleats:       "Other",
 };
 
 export const CATEGORY_ORDER: ComponentCategory[] = [
