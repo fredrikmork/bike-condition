@@ -1,7 +1,7 @@
 import { ComponentCard } from "./component-card";
-import { getComponentCategory, CATEGORY_ORDER } from "@/lib/components/categories";
-import { COMPONENT_FAMILIES, FAMILY_TYPES } from "@/lib/components/families";
+import { ComponentGroup } from "./component-group";
 import { isComponentVisible } from "@/lib/components/visibility";
+import { COMPONENT_GROUPS, GROUPED_TYPES } from "@/lib/components/groups";
 import type { Component, BikeConfig } from "@/lib/supabase/types";
 
 interface ComponentListProps {
@@ -9,6 +9,7 @@ interface ComponentListProps {
   typesWithHistory?: Set<string>;
   bikeConfig?: BikeConfig | null;
   lastSync?: string | null;
+  bikeId: string;
 }
 
 export function ComponentList({
@@ -16,6 +17,7 @@ export function ComponentList({
   typesWithHistory = new Set(),
   bikeConfig = null,
   lastSync,
+  bikeId,
 }: ComponentListProps) {
   // Filter by visibility rules
   const visible = components.filter((c) => isComponentVisible(c.type, bikeConfig));
@@ -28,89 +30,34 @@ export function ComponentList({
     );
   }
 
-  // Group by category
-  const grouped = new Map<string, Component[]>();
-  for (const component of visible) {
-    const category = getComponentCategory(component.type);
-    const list = grouped.get(category) || [];
-    list.push(component);
-    grouped.set(category, list);
-  }
+  const byType = new Map(visible.map((c) => [c.type, c]));
 
   return (
-    <div className="space-y-5">
-      {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => {
-        const categoryComponents = grouped.get(category)!;
-        const rendered = renderWithFamilies(categoryComponents, typesWithHistory, lastSync);
+    <div className="space-y-3">
+      {/* Grouped sections: Front Wheel, Rear Wheel, Drivetrain */}
+      {COMPONENT_GROUPS.map((group) => {
+        const groupComponents = group.types
+          .map((t) => byType.get(t))
+          .filter((c): c is Component => c !== undefined);
+
+        if (groupComponents.length === 0) return null;
 
         return (
-          <div key={category}>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-              {category}
-            </h3>
-            <div className="space-y-3">{rendered}</div>
-          </div>
+          <ComponentGroup
+            key={group.id}
+            group={group}
+            components={groupComponents}
+            typesWithHistory={typesWithHistory}
+            lastSync={lastSync}
+            bikeId={bikeId}
+          />
         );
       })}
-    </div>
-  );
-}
 
-/**
- * Renders a category's components, pairing front/rear family members,
- * and rendering the rest as a solo grid.
- */
-function renderWithFamilies(
-  components: Component[],
-  typesWithHistory: Set<string>,
-  lastSync?: string | null,
-) {
-  const byType = new Map(components.map((c) => [c.type, c]));
-  const rendered: React.ReactNode[] = [];
-  const usedIds = new Set<string>();
-
-  // Render paired families first
-  for (const family of COMPONENT_FAMILIES) {
-    const front = byType.get(family.frontType);
-    const rear = byType.get(family.rearType);
-
-    if (front && rear) {
-      usedIds.add(front.id);
-      usedIds.add(rear.id);
-      rendered.push(
-        <div key={`family-${family.frontType}`}>
-          <p className="text-xs text-muted-foreground/70 mb-1.5 ml-0.5">
-            {family.label}
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <ComponentCard
-              component={front}
-              hasHistory={typesWithHistory.has(front.type)}
-              lastSync={lastSync}
-            />
-            <ComponentCard
-              component={rear}
-              hasHistory={typesWithHistory.has(rear.type)}
-              lastSync={lastSync}
-            />
-          </div>
-        </div>
-      );
-    }
-  }
-
-  // Render solo components (not part of a complete pair)
-  const solos = components.filter((c) => !usedIds.has(c.id));
-
-  // Family singles (one half of a pair is missing) render individually
-  const familySingles = solos.filter((c) => FAMILY_TYPES.has(c.type));
-  const nonFamily = solos.filter((c) => !FAMILY_TYPES.has(c.type));
-
-  const grid = [...familySingles, ...nonFamily];
-  if (grid.length > 0) {
-    rendered.push(
-      <div key="solo-grid" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {grid.map((component) => (
+      {/* Ungrouped leftovers: bar_tape, cleats, brake_cables, custom, legacy */}
+      {visible
+        .filter((c) => !GROUPED_TYPES.has(c.type))
+        .map((component) => (
           <ComponentCard
             key={component.id}
             component={component}
@@ -118,9 +65,6 @@ function renderWithFamilies(
             lastSync={lastSync}
           />
         ))}
-      </div>
-    );
-  }
-
-  return rendered;
+    </div>
+  );
 }

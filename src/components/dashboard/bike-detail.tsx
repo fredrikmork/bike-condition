@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Settings2 } from "lucide-react";
+import { useState, useOptimistic, startTransition } from "react";
+import { Settings2, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,15 @@ import { AddComponentDialog } from "./add-component-dialog";
 import { BikeConfigDialog } from "./bike-config-dialog";
 import { formatDistance } from "@/lib/wear/calculator";
 import { getBikeConfig } from "@/lib/components/visibility";
-import type { BikeWithComponents } from "@/lib/supabase/types";
+import { markChargedAction } from "@/app/actions/bike-config";
+import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
+
+const ELECTRONIC_LABELS: Record<ElectronicSystem, string> = {
+  di2: "Di2",
+  axs: "AXS",
+  eps: "EPS",
+  other: "Electronic",
+};
 
 interface BikeDetailProps {
   bike: BikeWithComponents;
@@ -24,6 +32,27 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
   const subtitle = [bike.brand_name, bike.model_name].filter(Boolean).join(" ");
   const config = getBikeConfig(bike);
 
+  const isElectronic = bike.shifting_type === "electronic";
+
+  // km since last charge
+  const kmSinceCharge =
+    bike.last_charge_distance != null
+      ? Math.round((bike.total_distance - bike.last_charge_distance) / 1000)
+      : null;
+
+  const [optimisticKm, setOptimisticKm] = useOptimistic<number | null>(kmSinceCharge);
+
+  function handleChargeTap() {
+    startTransition(async () => {
+      setOptimisticKm(0);
+      await markChargedAction(bike.id);
+    });
+  }
+
+  const systemLabel = bike.electronic_system
+    ? ELECTRONIC_LABELS[bike.electronic_system as ElectronicSystem]
+    : "Electronic";
+
   return (
     <>
       <Card>
@@ -35,9 +64,29 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
                 <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               {bike.is_primary && <Badge variant="secondary">Primary</Badge>}
               <Badge variant="outline">{formatDistance(bike.total_distance)}</Badge>
+
+              {/* Electronic charge chip */}
+              {isElectronic && (
+                <button
+                  onClick={handleChargeTap}
+                  title="Tap to mark battery charged"
+                  aria-label="Mark battery charged — resets km counter"
+                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Zap className="h-3 w-3 text-yellow-500" />
+                  <span>{systemLabel}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span>
+                    {optimisticKm != null
+                      ? `${optimisticKm.toLocaleString()} km`
+                      : "— km"}
+                  </span>
+                </button>
+              )}
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -77,6 +126,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
             typesWithHistory={typesWithHistory}
             bikeConfig={config}
             lastSync={lastSync}
+            bikeId={bike.id}
           />
         </CardContent>
       </Card>

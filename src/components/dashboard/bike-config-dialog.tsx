@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { saveBikeConfigAction } from "@/app/actions/bike-config";
-import type { Bike, BikeConfig, ShiftingType, BrakeType, TireSystem } from "@/lib/supabase/types";
+import type { Bike, BikeConfig, ShiftingType, BrakeType, TireSystem, ElectronicSystem } from "@/lib/supabase/types";
 
 interface BikeConfigDialogProps {
   bike: Bike;
@@ -23,9 +23,19 @@ interface BikeConfigDialogProps {
 
 const SPEEDS = [8, 9, 10, 11, 12, 13] as const;
 
+const ELECTRONIC_SYSTEMS: { value: ElectronicSystem; label: string; description: string }[] = [
+  { value: "di2", label: "Shimano Di2", description: "Electronic shifting" },
+  { value: "axs", label: "SRAM AXS", description: "Wireless electronic" },
+  { value: "eps", label: "Campagnolo EPS", description: "Electronic Power Shift" },
+  { value: "other", label: "Other", description: "Other electronic system" },
+];
+
 export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogProps) {
   const [shifting, setShifting] = useState<ShiftingType | null>(
     (bike.shifting_type as ShiftingType) ?? null
+  );
+  const [electronicSystem, setElectronicSystem] = useState<ElectronicSystem | null>(
+    (bike.electronic_system as ElectronicSystem) ?? null
   );
   const [brakes, setBrakes] = useState<BrakeType | null>(
     (bike.brake_type as BrakeType) ?? null
@@ -47,6 +57,7 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
         brake_type: brakes,
         drivetrain_speed: speed,
         tire_system: tires,
+        ...(shifting === "electronic" && electronicSystem ? { electronic_system: electronicSystem } : {}),
       };
       const result = await saveBikeConfigAction(bike.id, config);
       if (result.success) {
@@ -92,6 +103,29 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
                 description="Di2 / AXS / EPS"
               />
             </div>
+
+            {/* Electronic system sub-selector */}
+            {shifting === "electronic" && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {ELECTRONIC_SYSTEMS.map((sys) => (
+                  <button
+                    key={sys.value}
+                    type="button"
+                    onClick={() => setElectronicSystem(sys.value)}
+                    aria-pressed={electronicSystem === sys.value}
+                    className={cn(
+                      "flex flex-col gap-0.5 rounded-lg border p-2.5 text-left text-xs transition-colors cursor-pointer",
+                      electronicSystem === sys.value
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                    )}
+                  >
+                    <span className="font-medium">{sys.label}</span>
+                    <span className="opacity-70">{sys.description}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </Section>
 
           {/* Brakes */}

@@ -88,6 +88,8 @@ export interface Database {
           drivetrain_speed: number | null;
           tire_system: TireSystem | null;
           config_complete: boolean;
+          electronic_system: ElectronicSystem | null;
+          last_charge_distance: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -109,6 +111,8 @@ export interface Database {
           drivetrain_speed?: number | null;
           tire_system?: TireSystem | null;
           config_complete?: boolean;
+          electronic_system?: ElectronicSystem | null;
+          last_charge_distance?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -130,6 +134,8 @@ export interface Database {
           drivetrain_speed?: number | null;
           tire_system?: TireSystem | null;
           config_complete?: boolean;
+          electronic_system?: ElectronicSystem | null;
+          last_charge_distance?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -303,10 +309,12 @@ export type LubeType = 'wet_lube' | 'dry_lube' | 'drip_wax' | 'hot_wax';
 export type ShiftingType = 'mechanical' | 'electronic';
 export type BrakeType = 'disc' | 'rim';
 export type TireSystem = 'tubeless' | 'clincher' | 'tubular';
+export type ElectronicSystem = 'di2' | 'axs' | 'eps' | 'other';
 
 export interface BikeConfig {
   shifting_type: ShiftingType;
   brake_type: BrakeType;
   drivetrain_speed: number;
   tire_system: TireSystem;
+  electronic_system?: ElectronicSystem | null;
 }
