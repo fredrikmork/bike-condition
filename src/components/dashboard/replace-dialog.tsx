@@ -21,12 +21,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { replaceComponentAction } from "@/app/actions/replace";
 
 interface ReplaceDialogProps {
@@ -111,28 +105,16 @@ export function ReplaceDialog({
         </div>
 
         <DialogFooter>
-          <TooltipProvider delayDuration={400}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Close without replacing</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button onClick={handleReplace} disabled={loading}>
-                  {loading ? "Replacing..." : "Replace"}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Reset wear and log replacement</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleReplace} disabled={loading}>
+            {loading ? "Replacing..." : "Replace"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

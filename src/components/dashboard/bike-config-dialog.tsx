@@ -16,12 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { saveBikeConfigAction } from "@/app/actions/bike-config";
 import {
   getVirtualPeriodsAction,
@@ -312,26 +306,12 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
         </div>
 
         <DialogFooter>
-          <TooltipProvider delayDuration={400}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-                  Cancel
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Close without saving</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button onClick={handleSave} disabled={!isComplete || saving}>
-                    {saving ? "Saving…" : "Save configuration"}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>Apply bike configuration</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={!isComplete || saving}>
+            {saving ? "Saving…" : "Save configuration"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
