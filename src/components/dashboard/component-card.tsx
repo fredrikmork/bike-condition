@@ -192,7 +192,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   <TooltipProvider delayDuration={400}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <DropdownMenuItem className="cursor-pointer" onClick={() => setEditOpen(true)}>
+                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
                           <Pencil className="mr-2 h-3.5 w-3.5" />
                           Edit
                         </DropdownMenuItem>
@@ -201,7 +201,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <DropdownMenuItem className="cursor-pointer" onClick={() => setReplaceOpen(true)}>
+                        <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
                           <RotateCw className="mr-2 h-3.5 w-3.5" />
                           Replace
                         </DropdownMenuItem>
@@ -210,7 +210,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <DropdownMenuItem className="cursor-pointer" onClick={handleMute} disabled={muting}>
+                        <DropdownMenuItem onClick={handleMute} disabled={muting}>
                           <BellOff className="mr-2 h-3.5 w-3.5" />
                           Mute
                         </DropdownMenuItem>
@@ -220,7 +220,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                     {hasHistory && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => setHistoryOpen(true)}>
+                          <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
                             <History className="mr-2 h-3.5 w-3.5" />
                             View history
                           </DropdownMenuItem>
@@ -232,7 +232,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuItem
-                          className="cursor-pointer text-destructive focus:text-destructive"
+                          className="text-destructive focus:text-destructive"
                           onClick={() => setDeleteDialogOpen(true)}
                         >
                           <Trash2 className="mr-2 h-3.5 w-3.5" />

@@ -21,6 +21,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { replaceComponentAction } from "@/app/actions/replace";
 import type { ComponentGroupDef } from "@/lib/components/groups";
 import type { Component } from "@/lib/supabase/types";
@@ -158,21 +164,35 @@ export function BatchReplaceDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleReplace}
-            disabled={loading || checked.size === 0}
-          >
-            {loading
-              ? "Replacing…"
-              : `Replace ${checked.size} component${checked.size !== 1 ? "s" : ""}`}
-          </Button>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Close without replacing</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={handleReplace}
+                    disabled={loading || checked.size === 0}
+                  >
+                    {loading
+                      ? "Replacing…"
+                      : `Replace ${checked.size} component${checked.size !== 1 ? "s" : ""}`}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Reset wear on selected components</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </DialogFooter>
       </DialogContent>
     </Dialog>
