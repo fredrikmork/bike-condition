@@ -114,8 +114,9 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     ? new Date(component.installed_at) > new Date(lastSync)
     : false;
 
-  const indicatorColor =
-    wear.status === "critical"
+  const indicatorColor = trainerActive
+    ? "bg-muted-foreground/40"
+    : wear.status === "critical"
       ? "bg-status-critical"
       : wear.status === "warning"
         ? "bg-status-warning"
