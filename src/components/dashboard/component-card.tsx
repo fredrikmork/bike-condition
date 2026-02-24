@@ -26,6 +26,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -183,32 +189,59 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                    <Pencil className="mr-2 h-3.5 w-3.5" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
-                    <RotateCw className="mr-2 h-3.5 w-3.5" />
-                    Replace
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleMute} disabled={muting}>
-                    <BellOff className="mr-2 h-3.5 w-3.5" />
-                    Mute
-                  </DropdownMenuItem>
-                  {hasHistory && (
-                    <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
-                      <History className="mr-2 h-3.5 w-3.5" />
-                      View history
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    Delete
-                  </DropdownMenuItem>
+                  <TooltipProvider delayDuration={400}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => setEditOpen(true)}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" />
+                          Edit
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Update brand, model and notes</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => setReplaceOpen(true)}>
+                          <RotateCw className="mr-2 h-3.5 w-3.5" />
+                          Replace
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Log a replacement and reset wear</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem className="cursor-pointer" onClick={handleMute} disabled={muting}>
+                          <BellOff className="mr-2 h-3.5 w-3.5" />
+                          Mute
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Hide wear alerts for this component</TooltipContent>
+                    </Tooltip>
+                    {hasHistory && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => setHistoryOpen(true)}>
+                            <History className="mr-2 h-3.5 w-3.5" />
+                            View history
+                          </DropdownMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">See past replacements</TooltipContent>
+                      </Tooltip>
+                    )}
+                    <DropdownMenuSeparator />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive focus:text-destructive"
+                          onClick={() => setDeleteDialogOpen(true)}
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" />
+                          Delete
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Remove this component from tracking</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
