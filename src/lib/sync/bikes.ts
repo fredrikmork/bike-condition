@@ -2,7 +2,6 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
-import { WHEEL_TYPES } from "@/lib/components/groups";
 import type { Bike, BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -155,32 +154,18 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
   }
 }
 
-type TrainerPeriod = { start_date: string; end_date: string | null };
-
-/** Returns true if the activity date falls within any trainer period */
-function isDuringTrainerPeriod(activityDate: string, periods: TrainerPeriod[]): boolean {
-  const d = activityDate.slice(0, 10); // compare as "YYYY-MM-DD"
-  const today = new Date().toISOString().slice(0, 10);
-  return periods.some((p) => {
-    const end = p.end_date ?? today;
-    return d >= p.start_date && d <= end;
-  });
-}
-
 /**
  * Update all active component distances using the higher of:
- * 1. Activity-based: SUM(activities.distance) WHERE bike_id AND start_date >= installed_at
+ * 1. Activity-based: SUM(activities.distance) WHERE start_date >= installed_at
  * 2. Gear-based:     bike.total_distance - component.bike_distance_at_install
  *
- * For wheel components (tires, pads, rotors) and gear cables, VirtualRide activities
- * that fall within a configured trainer period are excluded — these components stay
- * on the real bike, not the trainer. In that case the gear-based fallback is also
- * skipped (since bike.total_distance includes virtual distance).
+ * Trainer periods affect only the visual display (badge, muted bar) — all
+ * components accumulate distance from every activity regardless of type.
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
   bikeTotalDistance: number,
-  trainerPeriods: TrainerPeriod[],
+  _trainerPeriods: unknown[],
 ): Promise<void> {
   const { data: components } = await supabaseAdmin
     .from("components")
@@ -198,34 +183,13 @@ async function updateComponentDistancesFromActivities(
 
   await Promise.all(
     components.map(async (component) => {
-      const isWheel = WHEEL_TYPES.has(component.type);
-      const hasTrainerPeriods = trainerPeriods.length > 0;
-
       const relevantActivities = (allActivities ?? []).filter(
         (a) => a.start_date >= component.installed_at
       );
 
-      let activityDistance: number;
-      let current_distance: number;
-
-      if (isWheel && hasTrainerPeriods) {
-        // Exclude VirtualRide activities that fall within a trainer period
-        activityDistance = relevantActivities.reduce((sum, a) => {
-          if (
-            a.activity_type === "VirtualRide" &&
-            isDuringTrainerPeriod(a.start_date, trainerPeriods)
-          ) {
-            return sum;
-          }
-          return sum + a.distance;
-        }, 0);
-        // Skip gear-based fallback — it includes virtual distance
-        current_distance = activityDistance;
-      } else {
-        activityDistance = relevantActivities.reduce((sum, a) => sum + a.distance, 0);
-        const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
-        current_distance = Math.max(activityDistance, gearDistance);
-      }
+      const activityDistance = relevantActivities.reduce((sum, a) => sum + a.distance, 0);
+      const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
+      const current_distance = Math.max(activityDistance, gearDistance);
 
       await supabaseAdmin
         .from("components")
