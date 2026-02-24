@@ -57,8 +57,16 @@ Clickable SVG components showing detailed wear information.
 - Full re-sync capability to rebuild activity data from scratch
 - Electronic groupset tracker: km-since-charge chip for Di2/AXS/EPS bikes with per-system battery wear model (3 %/year degradation) and warning states
 
+### Recent changes (2026-02-24)
+- **Needs Attention → focus component**: Clicking a Needs Attention sidebar item scrolls to and highlights the corresponding ComponentCard with a status-coloured ring. Groups auto-expand if needed. Focus clears after 3 s.
+- **"Tracking since" label**: Components without a replacement date show "Tracking since [date]" instead of "Installed [date]".
+- **Pointer cursor + tooltips on component action menu**: All dropdown items have pointer cursor (changed in the shadcn primitive). Edit, Replace, Mute, View history and Delete each have a descriptive tooltip.
+- **Muted progress bar for paused components**: Trainer-paused components show a neutral grey progress bar instead of the status colour.
+- **`brake_cables` now paused during trainer periods** (visual only — badge + muted bar).
+- **Trainer period sync decoupled from visual display**: `TRAINER_PAUSE_TYPES` now only controls the Trainer badge and muted bar. All components accumulate distance from every activity using the standard `MAX(activity_sum, gear_distance)` formula — no virtual-ride exclusion in sync.
+
 ### Recent changes (2026-02-22)
-- **Trainer periods**: Users can define date ranges when a bike was on an indoor trainer. Virtual ride distance is excluded from wheel components (tires, inner tubes, brake pads, rotors) during those periods. Replaces the previous global pause toggle with precise date-range control. Managed in the bike config dialog. When a period is currently active, wheel component groups and cards show a "Trainer" badge.
+- **Trainer periods**: Users can define date ranges when a bike was on an indoor trainer. Managed in the bike config dialog. When a period is currently active, affected component groups and cards show a "Trainer" badge.
 - **Bike header metadata**: Frame type (Road/Mountain/Cross/Time Trial), dominant sport type (Ride/Virtual/MTB derived from activity history), and weight chips shown in the bike header. Outer Card wrapper removed for a flatter layout. Initial bike selection prefers Ride bikes over virtual-only bikes.
 - **Mute components**: Components can be muted to hide them from the dashboard and suppress wear warnings. Accessible via a "X hidden components" link at the bottom of the component list.
 - Sidebar redesign: StatsCards removed from dashboard; stats moved to sidebar (bike count, total distance, Needs Attention)

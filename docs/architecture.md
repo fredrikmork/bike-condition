@@ -134,7 +134,11 @@ Component wear distance uses the higher of two methods:
 
 `current_distance = MAX(activity_based, gear_based)`
 
-This ensures wear is never under-reported — if the gear API is stale, activity data wins; if activities are incomplete, gear data wins.
+This ensures wear is never under-reported — if the gear API is stale, activity data wins; if activities are incomplete, gear data wins. This formula applies to **all** component types equally, including wheel and cable components.
+
+### 4.3 Trainer Periods (visual only)
+
+Users can configure date ranges when a bike was on an indoor trainer (`virtual_periods` table). These periods drive **only the visual display**: components in `TRAINER_PAUSE_TYPES` (currently wheel components + brake cables) receive a "Trainer" badge and a muted grey progress bar when a period is active today. Distance accumulation in the sync is unaffected — all activities count regardless of activity type.
 
 ## 5. External Integrations
 
@@ -234,7 +238,7 @@ User clicks "Replace" → Create history entry
 **Repository:** github.com/fredrikmork/bike-condition
 **Hosting:** Vercel
 **Database:** Supabase
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-24
 
 ## 11. Glossary
 

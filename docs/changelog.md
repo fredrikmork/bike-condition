@@ -2,6 +2,30 @@
 
 All notable changes for this project in this file.
 
+## 2026-02-24: UX polish & trainer display fixes
+
+### Enhancements
+
+- **Needs Attention → focus component**: Clicking a Needs Attention sidebar item now scrolls to and highlights the corresponding ComponentCard with a status-coloured ring (`ring-status-warning` / `ring-status-critical`). Component groups auto-expand if the focused component is inside them. Focus clears automatically after 3 seconds. Implemented via `focusedComponentId` in the bike Zustand store.
+- **"Tracking since" label**: Components without a replacement date now show "Tracking since [date]" instead of "Installed [date]", reflecting that the date is when tracking started in the app, not necessarily when the part was physically fitted.
+- **Pointer cursor on dropdown items**: `cursor-default` changed to `cursor-pointer` in the `DropdownMenuItem` shadcn primitive — applies to all dropdown menus globally without per-item overrides.
+- **Tooltips on component action menu**: Edit, Replace, Mute, View history and Delete each have a descriptive tooltip appearing to the right of the menu item.
+- **Muted progress bar for paused components**: When a component is in an active trainer period (`trainerActive`), its wear progress bar renders in a neutral `bg-muted-foreground/40` instead of the status colour — wear percentage still shown correctly.
+- **`brake_cables` replaces `shifter_cables` in `TRAINER_PAUSE_TYPES`**: Brake cables now receive the Trainer badge and muted bar; shifter cables no longer do.
+
+### Bug fix
+
+- **Paused components showing 0 km**: `TRAINER_PAUSE_TYPES` previously drove both the visual trainer indicator AND a sync-time exclusion of virtual-ride distance. This caused any component in the set to show 0 km if all rides since installation were virtual. The two concerns are now decoupled: `TRAINER_PAUSE_TYPES` controls only the visual display; all components accumulate distance from every activity using the standard `MAX(activity_sum, gear_distance)` formula. The `isDuringTrainerPeriod` helper and the conditional sync branch have been removed.
+
+### Files changed
+- `src/lib/stores/bike-store.ts` — added `focusedComponentId` + `setFocusedComponentId`
+- `src/components/layout/sidebar-attention-items.tsx` — click sets both `selectedBikeId` and `focusedComponentId`
+- `src/components/dashboard/component-card.tsx` — scroll-into-view + ring styling on focus; "Tracking since" label; muted indicator colour when `trainerActive`; tooltips on action menu items
+- `src/components/dashboard/component-group.tsx` — auto-expand when focused component is a child
+- `src/components/ui/dropdown-menu.tsx` — `cursor-default` → `cursor-pointer` in `DropdownMenuItem`
+- `src/lib/components/groups.ts` — `brake_cables` replaces `shifter_cables` in `TRAINER_PAUSE_TYPES`
+- `src/lib/sync/bikes.ts` — removed virtual-ride exclusion branch; all components use uniform `MAX(activity, gear)` distance calculation
+
 ## 2026-02-22: Trainer badge on affected wheel components
 
 ### Enhancement
