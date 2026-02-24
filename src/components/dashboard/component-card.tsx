@@ -100,7 +100,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
   const installed = new Date(component.installed_at).getTime();
   const created = new Date(component.created_at).getTime();
   const wasReplaced = Math.abs(installed - created) >= 60_000;
-  const installedLabel = wasReplaced ? "Replaced" : "Installed";
+  const installedLabel = wasReplaced ? "Replaced" : "Tracking since";
   const installedDate = format(new Date(component.installed_at), "d MMM yyyy");
 
   // True when the component was installed after the last sync — distances are stale
