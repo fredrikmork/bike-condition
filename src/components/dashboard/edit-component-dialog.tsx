@@ -26,6 +26,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { updateComponentAction } from "@/app/actions/components";
 import { getSuggestedDistance, LUBE_LABELS, formatDistance } from "@/lib/wear/calculator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Component, LubeType } from "@/lib/supabase/types";
 
 const schema = z.object({
@@ -258,17 +264,29 @@ export function EditComponentDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving…" : "Save"}
-            </Button>
+            <TooltipProvider delayDuration={400}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Discard changes</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Saving…" : "Save"}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Save component details</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -31,6 +31,12 @@ import { getBikeConfig } from "@/lib/components/visibility";
 import { getAvailableComponentTypes } from "@/lib/components/defaults";
 import { getComponentCategory, CATEGORY_ORDER } from "@/lib/components/categories";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
 interface AddComponentDialogProps {
@@ -219,12 +225,26 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={loading}>
-            Cancel
-          </Button>
-          <Button onClick={handleAdd} disabled={loading || !canSubmit}>
-            {loading ? "Adding..." : "Add Component"}
-          </Button>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={loading}>
+                  Cancel
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Close without adding</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button onClick={handleAdd} disabled={loading || !canSubmit}>
+                    {loading ? "Adding..." : "Add Component"}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Start tracking this component</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </DialogFooter>
       </DialogContent>
     </Dialog>

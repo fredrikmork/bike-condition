@@ -385,10 +385,22 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-              Remove
-            </AlertDialogAction>
+            <TooltipProvider delayDuration={400}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                </TooltipTrigger>
+                <TooltipContent>Keep this component</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+                    Remove
+                  </AlertDialogAction>
+                </TooltipTrigger>
+                <TooltipContent>Stop tracking this component</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
