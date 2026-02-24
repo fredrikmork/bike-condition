@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -46,6 +46,7 @@ import {
   LUBE_LABELS,
 } from "@/lib/wear/calculator";
 import { cn } from "@/lib/utils";
+import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component, LubeType } from "@/lib/supabase/types";
 
 interface ComponentCardProps {
@@ -59,6 +60,17 @@ interface ComponentCardProps {
 }
 
 export function ComponentCard({ component, hasHistory = false, lastSync, displayName, trainerActive = false }: ComponentCardProps) {
+  const { focusedComponentId, setFocusedComponentId } = useBikeStore();
+  const focused = focusedComponentId === component.id;
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!focused) return;
+    cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = setTimeout(() => setFocusedComponentId(null), 3000);
+    return () => clearTimeout(timer);
+  }, [focused, setFocusedComponentId]);
+
   const [expanded, setExpanded] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -131,9 +143,15 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     }
   }
 
+  const focusRingClass = focused
+    ? wear.status === "critical"
+      ? "ring-2 ring-status-critical ring-offset-2 ring-offset-background"
+      : "ring-2 ring-status-warning ring-offset-2 ring-offset-background"
+    : "";
+
   return (
     <>
-      <Card>
+      <Card ref={cardRef} className={cn("transition-shadow duration-300", focusRingClass)}>
         <CardContent className="p-4">
           {/* Header row */}
           <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, CircleDot, Cog, PauseCircle, RotateCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { BatchReplaceDialog } from "./batch-replace-dialog";
 import { StatusIndicator } from "./status-indicator";
 import { calculateComponentWear, formatDistance } from "@/lib/wear/calculator";
 import { TRAINER_PAUSE_TYPES, type ComponentGroupDef } from "@/lib/components/groups";
+import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component } from "@/lib/supabase/types";
 
 interface ComponentGroupProps {
@@ -32,6 +33,13 @@ export function ComponentGroup({
 }: ComponentGroupProps) {
   const [expanded, setExpanded] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
+  const { focusedComponentId } = useBikeStore();
+
+  useEffect(() => {
+    if (components.some((c) => c.id === focusedComponentId)) {
+      setExpanded(true);
+    }
+  }, [focusedComponentId, components]);
 
   if (components.length === 0) return null;
 

@@ -31,7 +31,7 @@ interface SidebarAttentionItemsProps {
 }
 
 export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
-  const { setSelectedBikeId } = useBikeStore();
+  const { setSelectedBikeId, setFocusedComponentId } = useBikeStore();
   const [expanded, setExpanded] = useState(false);
 
   const items: AttentionItem[] = bikes.flatMap((bike) => {
@@ -67,7 +67,10 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
           {visible.map((item) => (
             <SidebarMenuItem key={item.componentId}>
               <SidebarMenuButton
-                onClick={() => setSelectedBikeId(item.bikeId)}
+                onClick={() => {
+                  setSelectedBikeId(item.bikeId);
+                  setFocusedComponentId(item.componentId);
+                }}
                 tooltip={
                   multipleBikes
                     ? `${item.componentName} — ${item.bikeName}`
