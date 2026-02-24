@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike } from "lucide-react";
+import { Bike, Github } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -79,6 +79,24 @@ export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Report a bug or suggest something"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <a
+                href="https://github.com/fredrikmork/bike-condition/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Github className="h-4 w-4 shrink-0" />
+                <span>Something off? Let us know!</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <SidebarUserMenu />
       </SidebarFooter>
 
