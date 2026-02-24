@@ -1,5 +1,6 @@
 import { ComponentCard } from "./component-card";
 import { ComponentGroup } from "./component-group";
+import { SyncNudge } from "./sync-nudge";
 import { isComponentVisible } from "@/lib/components/visibility";
 import { COMPONENT_GROUPS, GROUPED_TYPES, TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
 import type { Component, BikeConfig } from "@/lib/supabase/types";
@@ -36,8 +37,13 @@ export function ComponentList({
 
   const byType = new Map(visible.map((c) => [c.type, c]));
 
+  const needsSyncCount = lastSync
+    ? visible.filter((c) => new Date(c.installed_at) > new Date(lastSync)).length
+    : 0;
+
   return (
     <div className="space-y-3">
+      {needsSyncCount > 0 && <SyncNudge count={needsSyncCount} />}
       {/* Grouped sections: Front Wheel, Rear Wheel, Drivetrain */}
       {COMPONENT_GROUPS.map((group) => {
         const groupComponents = group.types
