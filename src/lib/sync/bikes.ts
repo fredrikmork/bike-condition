@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
-import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
+import { WHEEL_TYPES } from "@/lib/components/groups";
 import type { Bike, BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -198,7 +198,7 @@ async function updateComponentDistancesFromActivities(
 
   await Promise.all(
     components.map(async (component) => {
-      const isWheel = TRAINER_PAUSE_TYPES.has(component.type);
+      const isWheel = WHEEL_TYPES.has(component.type);
       const hasTrainerPeriods = trainerPeriods.length > 0;
 
       const relevantActivities = (allActivities ?? []).filter(
