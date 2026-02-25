@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth/config";
-import { getBikesWithComponents, getDashboardStats, getTypesWithHistoryForBikes } from "@/lib/db/queries";
+import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes } from "@/lib/db/queries";
 import { LoginPage } from "@/components/shared/login-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -16,14 +16,16 @@ export default async function Home() {
     return <LoginPage />;
   }
 
-  const [bikes, stats] = await Promise.all([
+  const [bikes, syncStatus] = await Promise.all([
     getBikesWithComponents(session.userId),
-    getDashboardStats(session.userId),
+    getSyncStatus(session.userId),
   ]);
+
+  const lastSync = syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null;
 
   if (bikes.length === 0) {
     return (
-      <AppShell bikes={[]} lastSynced={stats.lastSync}>
+      <AppShell bikes={[]} lastSynced={lastSync}>
         <EmptyState />
       </AppShell>
     );
@@ -32,8 +34,8 @@ export default async function Home() {
   const historyByBike = await getTypesWithHistoryForBikes(bikes.map((b) => b.id));
 
   return (
-    <AppShell bikes={bikes} lastSynced={stats.lastSync}>
-      <Dashboard bikes={bikes} lastSync={stats.lastSync} historyByBike={historyByBike} />
+    <AppShell bikes={bikes} lastSynced={lastSync}>
+      <Dashboard bikes={bikes} lastSync={lastSync} historyByBike={historyByBike} />
     </AppShell>
   );
 }

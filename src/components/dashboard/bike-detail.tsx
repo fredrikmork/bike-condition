@@ -94,7 +94,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
   // km since last charge (meters → km)
   const kmSinceCharge =
     bike.last_charge_distance != null
-      ? Math.round((bike.total_distance - bike.last_charge_distance) / 1000)
+      ? Math.round(((bike.total_distance ?? 0) - bike.last_charge_distance) / 1000)
       : null;
 
   const [optimisticKm, setOptimisticKm] = useOptimistic<number | null>(kmSinceCharge);
@@ -110,8 +110,11 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
     setCharging(true);
     startTransition(async () => {
       setOptimisticKm(0);
-      await markChargedAction(bike.id, chargeDate.toISOString());
-      setCharging(false);
+      try {
+        await markChargedAction(bike.id, chargeDate.toISOString());
+      } finally {
+        setCharging(false);
+      }
     });
   }
 
@@ -184,7 +187,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {bike.is_primary && <Badge variant="secondary">Primary</Badge>}
-            <Badge variant="outline">{formatDistance(bike.total_distance)}</Badge>
+            <Badge variant="outline">{formatDistance(bike.total_distance ?? 0)}</Badge>
 
             {/* Electronic charge chip */}
             {isElectronic && (

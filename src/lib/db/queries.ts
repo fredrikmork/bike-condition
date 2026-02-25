@@ -1,26 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import type { Bike, Component, ComponentInsert, User, SyncStatus, BikeWithComponents, LubeType } from "@/lib/supabase/types";
-
-// User queries
-export async function getUserById(userId: string): Promise<User | null> {
-  const { data } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("id", userId)
-    .single();
-
-  return data;
-}
-
-export async function getUserByStravaId(stravaId: number): Promise<User | null> {
-  const { data } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("strava_id", stravaId)
-    .single();
-
-  return data;
-}
+import type { Bike, Component, ComponentInsert, SyncStatus, BikeWithComponents, LubeType } from "@/lib/supabase/types";
 
 // Bike queries
 export async function getBikesForUser(userId: string): Promise<Bike[]> {
@@ -33,28 +12,6 @@ export async function getBikesForUser(userId: string): Promise<Bike[]> {
     .order("total_distance", { ascending: false });
 
   return data || [];
-}
-
-export async function getBikeWithComponents(bikeId: string): Promise<BikeWithComponents | null> {
-  const { data: bike } = await supabaseAdmin
-    .from("bikes")
-    .select("*")
-    .eq("id", bikeId)
-    .single();
-
-  if (!bike) return null;
-
-  const { data: components } = await supabaseAdmin
-    .from("components")
-    .select("*")
-    .eq("bike_id", bikeId)
-    .is("replaced_at", null)
-    .order("type");
-
-  return {
-    ...bike,
-    components: components || [],
-  };
 }
 
 export async function getBikesWithComponents(userId: string): Promise<BikeWithComponents[]> {
@@ -83,42 +40,7 @@ export async function getBikesWithComponents(userId: string): Promise<BikeWithCo
   }));
 }
 
-export async function getPrimaryBike(userId: string): Promise<BikeWithComponents | null> {
-  const { data: bike } = await supabaseAdmin
-    .from("bikes")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("is_primary", true)
-    .eq("retired", false)
-    .single();
-
-  if (!bike) return null;
-
-  const { data: components } = await supabaseAdmin
-    .from("components")
-    .select("*")
-    .eq("bike_id", bike.id)
-    .is("replaced_at", null)
-    .order("type");
-
-  return {
-    ...bike,
-    components: components || [],
-  };
-}
-
 // Component queries
-export async function getComponentsForBike(bikeId: string): Promise<Component[]> {
-  const { data } = await supabaseAdmin
-    .from("components")
-    .select("*")
-    .eq("bike_id", bikeId)
-    .is("replaced_at", null)
-    .order("type");
-
-  return data || [];
-}
-
 export async function getComponentById(componentId: string): Promise<Component | null> {
   const { data } = await supabaseAdmin
     .from("components")
@@ -142,13 +64,15 @@ export async function replaceComponent(
   const replacedIso = replacedDate.toISOString();
 
   // Mark old component as replaced
-  await supabaseAdmin
+  const { error: retireErr } = await supabaseAdmin
     .from("components")
     .update({
       replaced_at: replacedIso,
-      notes: notes || existing.notes,
+      notes: notes !== undefined ? notes : existing.notes,
     })
     .eq("id", componentId);
+
+  if (retireErr) throw new Error(`Failed to retire component: ${retireErr.message}`);
 
   // Create new component — distance = bike.total_distance - bike_distance_at_install
   const { data: newComponent } = await supabaseAdmin
@@ -253,13 +177,17 @@ export async function addDeletedDefault(bikeId: string, componentType: string): 
     .eq("id", bikeId);
 }
 
-export async function getBikeById(bikeId: string): Promise<Bike | null> {
-  const { data } = await supabaseAdmin
+export async function getBikeById(bikeId: string, userId?: string): Promise<Bike | null> {
+  let query = supabaseAdmin
     .from("bikes")
     .select("*")
-    .eq("id", bikeId)
-    .single();
+    .eq("id", bikeId);
 
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data } = await query.single();
   return data;
 }
 
@@ -297,40 +225,3 @@ export async function getSyncStatus(userId: string): Promise<SyncStatus | null> 
   return data;
 }
 
-// Summary stats
-export async function getDashboardStats(userId: string): Promise<{
-  totalBikes: number;
-  totalDistance: number;
-  componentsNeedingAttention: number;
-  lastSync: string | null;
-}> {
-  const bikes = await getBikesForUser(userId);
-  const totalDistance = bikes.reduce((sum, b) => sum + b.total_distance, 0);
-
-  // Count components with wear >= 80%
-  const bikeIds = bikes.map((b) => b.id);
-  let componentsNeedingAttention = 0;
-
-  if (bikeIds.length > 0) {
-    const { data: components } = await supabaseAdmin
-      .from("components")
-      .select("current_distance, recommended_distance")
-      .in("bike_id", bikeIds)
-      .is("replaced_at", null);
-
-    if (components) {
-      componentsNeedingAttention = components.filter(
-        (c) => c.current_distance / c.recommended_distance >= 0.8
-      ).length;
-    }
-  }
-
-  const syncStatus = await getSyncStatus(userId);
-
-  return {
-    totalBikes: bikes.length,
-    totalDistance,
-    componentsNeedingAttention,
-    lastSync: syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null,
-  };
-}

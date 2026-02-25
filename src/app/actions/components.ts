@@ -17,50 +17,6 @@ const UpdateComponentSchema = z.object({
   notes: z.string().max(500).nullable().optional(),
 });
 
-export async function addCustomComponentAction(
-  bikeId: string,
-  name: string,
-  recommendedDistanceKm: number,
-  icon?: string
-): Promise<{ success: boolean; error?: string }> {
-  const session = await auth();
-
-  if (!session?.userId) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  if (!name.trim()) {
-    return { success: false, error: "Name is required" };
-  }
-
-  if (recommendedDistanceKm <= 0) {
-    return { success: false, error: "Distance must be greater than 0" };
-  }
-
-  const bike = await getBikeById(bikeId);
-  if (!bike) {
-    return { success: false, error: "Bike not found" };
-  }
-
-  const result = await addComponent({
-    bike_id: bikeId,
-    name: name.trim(),
-    type: "custom",
-    icon: icon || null,
-    recommended_distance: recommendedDistanceKm * 1000, // km to meters
-    current_distance: 0,
-    bike_distance_at_install: bike.total_distance,
-  });
-
-  if (!result) {
-    return { success: false, error: "Failed to add component" };
-  }
-
-  revalidatePath("/");
-
-  return { success: true };
-}
-
 export async function addComponentAction(
   bikeId: string,
   data: {
@@ -76,7 +32,7 @@ export async function addComponentAction(
   if (!data.name.trim()) return { success: false, error: "Name is required" };
   if (data.recommendedDistanceKm <= 0) return { success: false, error: "Distance must be greater than 0" };
 
-  const bike = await getBikeById(bikeId);
+  const bike = await getBikeById(bikeId, session.userId);
   if (!bike) return { success: false, error: "Bike not found" };
 
   const result = await addComponent({
@@ -86,7 +42,7 @@ export async function addComponentAction(
     icon: data.icon ?? null,
     recommended_distance: data.recommendedDistanceKm * 1000,
     current_distance: 0,
-    bike_distance_at_install: bike.total_distance,
+    bike_distance_at_install: bike.total_distance ?? 0,
   });
 
   if (!result) return { success: false, error: "Failed to add component" };
@@ -118,6 +74,9 @@ export async function updateComponentAction(
   const component = await getComponentById(componentId);
   if (!component) return { success: false, error: "Component not found" };
 
+  const ownerBike = await getBikeById(component.bike_id, session.userId);
+  if (!ownerBike) return { success: false, error: "Not authorized" };
+
   const updated = await updateComponent(componentId, parsed.data);
   if (!updated) return { success: false, error: "Failed to update component" };
 
@@ -146,6 +105,9 @@ export async function muteComponentAction(
   const component = await getComponentById(componentId);
   if (!component) return { success: false, error: "Component not found" };
 
+  const ownerBike = await getBikeById(component.bike_id, session.userId);
+  if (!ownerBike) return { success: false, error: "Not authorized" };
+
   const { error } = await supabaseAdmin
     .from("components")
     .update({ muted })
@@ -170,6 +132,9 @@ export async function deleteComponentAction(
   if (!component) {
     return { success: false, error: "Component not found" };
   }
+
+  const ownerBike = await getBikeById(component.bike_id, session.userId);
+  if (!ownerBike) return { success: false, error: "Not authorized" };
 
   // For default components, record the type so sync won't re-add it
   if (component.type !== "custom") {

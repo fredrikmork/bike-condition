@@ -16,7 +16,7 @@ export class StravaClient {
     this.accessToken = accessToken;
   }
 
-  private async fetch<T>(endpoint: string, schema: { parse: (data: unknown) => T }): Promise<T> {
+  private async request(endpoint: string): Promise<unknown> {
     const response = await fetch(`${STRAVA_API_BASE}${endpoint}`, {
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
@@ -31,31 +31,18 @@ export class StravaClient {
       throw new Error(`Strava API request failed (${status})`);
     }
 
-    const data = await response.json();
-    return schema.parse(data);
+    return response.json();
+  }
+
+  private async fetch<T>(endpoint: string, schema: { parse: (data: unknown) => T }): Promise<T> {
+    return schema.parse(await this.request(endpoint));
   }
 
   private async fetchArray<T>(endpoint: string, schema: { parse: (data: unknown) => T }): Promise<T[]> {
-    const response = await fetch(`${STRAVA_API_BASE}${endpoint}`, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
-        throw new Error("Strava rate limit exceeded. Please try again later.");
-      }
-      throw new Error(`Strava API request failed (${status})`);
-    }
-
-    const data = await response.json();
-
+    const data = await this.request(endpoint);
     if (!Array.isArray(data)) {
       throw new Error("Expected array response from Strava API");
     }
-
     return data.map((item) => schema.parse(item));
   }
 

@@ -55,15 +55,10 @@ const UNIVERSAL_COMPONENTS: DefaultComponent[] = [
 ];
 
 /**
- * Generate the correct default component list for a configured bike.
- * Called when a user completes bike setup or when a new bike is created
- * after configuration is saved.
+ * Builds the full list of default components for a given bike config.
+ * Used by both createConfiguredComponents and getAvailableComponentTypes.
  */
-export function createConfiguredComponents(
-  bikeId: string,
-  bikeDistance: number,
-  config: BikeConfig
-): ComponentInsert[] {
+function buildConfiguredComponentList(config: BikeConfig): DefaultComponent[] {
   const components: DefaultComponent[] = [...UNIVERSAL_COMPONENTS];
 
   const padDistance = BRAKE_PAD_DISTANCE[config.brake_type];
@@ -102,7 +97,20 @@ export function createConfiguredComponents(
   }
   // Tubeless → no inner tubes
 
-  return components.map((c) => ({
+  return components;
+}
+
+/**
+ * Generate the correct default component list for a configured bike.
+ * Called when a user completes bike setup or when a new bike is created
+ * after configuration is saved.
+ */
+export function createConfiguredComponents(
+  bikeId: string,
+  bikeDistance: number,
+  config: BikeConfig
+): ComponentInsert[] {
+  return buildConfiguredComponentList(config).map((c) => ({
     bike_id: bikeId,
     name: c.name,
     type: c.type,
@@ -121,39 +129,8 @@ export function getAvailableComponentTypes(
   existingComponents: { type: string }[]
 ): DefaultComponent[] {
   if (!config) return [];
-
   const existingTypes = new Set(existingComponents.map((c) => c.type));
-  const all: DefaultComponent[] = [...UNIVERSAL_COMPONENTS];
-
-  const padDistance = BRAKE_PAD_DISTANCE[config.brake_type];
-  all.push(
-    { name: "Brake Pads (Front)", type: "brake_pads_front", recommended_distance: padDistance },
-    { name: "Brake Pads (Rear)",  type: "brake_pads_rear",  recommended_distance: padDistance }
-  );
-
-  if (config.brake_type === "disc") {
-    all.push(
-      { name: "Brake Rotor (Front)", type: "brake_rotor_front", recommended_distance: 20_000_000 },
-      { name: "Brake Rotor (Rear)",  type: "brake_rotor_rear",  recommended_distance: 20_000_000 }
-    );
-  }
-
-  if (config.brake_type === "rim") {
-    all.push({ name: "Brake Cables", type: "brake_cables", recommended_distance: 5_000_000 });
-  }
-
-  if (config.shifting_type === "mechanical") {
-    all.push({ name: "Shifter Cables", type: "shifter_cables", recommended_distance: 5_000_000 });
-  }
-
-  if (config.tire_system !== "tubeless") {
-    all.push(
-      { name: "Inner Tube (Front)", type: "inner_tube_front", recommended_distance: 3_000_000 },
-      { name: "Inner Tube (Rear)",  type: "inner_tube_rear",  recommended_distance: 2_000_000 }
-    );
-  }
-
-  return all.filter((c) => !existingTypes.has(c.type));
+  return buildConfiguredComponentList(config).filter((c) => !existingTypes.has(c.type));
 }
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +38,10 @@ export function ReplaceDialog({
 }: ReplaceDialogProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) setDate(new Date());
+  }, [open]);
 
   async function handleReplace() {
     setLoading(true);

@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
-import type { Bike, BikeInsert } from "@/lib/supabase/types";
+import type { BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
   synced: number;
@@ -31,27 +31,15 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       return result;
     }
 
-    // Fetch existing bikes and virtual periods in parallel
-    const [{ data: existingBikes }, { data: allPeriods }] = await Promise.all([
-      supabaseAdmin
-        .from("bikes")
-        .select("id, strava_gear_id, total_distance")
-        .eq("user_id", userId),
-      supabaseAdmin
-        .from("virtual_periods")
-        .select("bike_id, start_date, end_date")
-        .eq("user_id", userId),
-    ]);
+    // Fetch existing bikes
+    const { data: existingBikes } = await supabaseAdmin
+      .from("bikes")
+      .select("id, strava_gear_id, total_distance")
+      .eq("user_id", userId);
 
     const existingBikeMap = new Map(
       existingBikes?.map((b) => [b.strava_gear_id, b]) || []
     );
-
-    const periodsByBike = new Map<string, { start_date: string; end_date: string | null }[]>();
-    for (const p of allPeriods ?? []) {
-      if (!periodsByBike.has(p.bike_id)) periodsByBike.set(p.bike_id, []);
-      periodsByBike.get(p.bike_id)!.push({ start_date: p.start_date, end_date: p.end_date });
-    }
 
     // Fetch all gear details in parallel instead of sequentially
     const gearResults = await Promise.allSettled(
@@ -71,7 +59,6 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
         const existingBike = existingBikeMap.get(stravaBike.id);
 
         if (existingBike) {
-          const trainerPeriods = periodsByBike.get(existingBike.id) ?? [];
           // Run bike update and component operations in parallel
           await Promise.all([
             supabaseAdmin
@@ -87,7 +74,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
                 weight: gearDetails.weight ?? null,
               })
               .eq("id", existingBike.id),
-            updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance, trainerPeriods),
+            updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance),
             addMissingDefaultComponents(existingBike.id, gearDetails.distance),
           ]);
           return "updated" as const;
@@ -169,7 +156,6 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
 async function updateComponentDistancesFromActivities(
   bikeId: string,
   bikeTotalDistance: number,
-  _trainerPeriods: unknown[],
 ): Promise<void> {
   const { data: components } = await supabaseAdmin
     .from("components")
@@ -188,7 +174,7 @@ async function updateComponentDistancesFromActivities(
   await Promise.all(
     components.map(async (component) => {
       const relevantActivities = (allActivities ?? []).filter(
-        (a) => a.start_date >= component.installed_at
+        (a) => new Date(a.start_date).getTime() >= new Date(component.installed_at).getTime()
       );
 
       const activityDistance = relevantActivities.reduce((sum, a) => sum + a.distance, 0);
@@ -228,12 +214,11 @@ async function addMissingDefaultComponents(
     .single();
 
   const deletedDefaults = new Set(bike?.deleted_defaults ?? []);
-  const existingTypes = new Set(existingComponents.map((c) => c.type));
 
   // Remove obsolete component types
-  const obsoleteTypes = ["bar_tape", "brake_pads"];
+  const obsoleteTypes = new Set(["bar_tape", "brake_pads"]);
   const obsoleteIds = existingComponents
-    .filter((c) => obsoleteTypes.includes(c.type))
+    .filter((c) => obsoleteTypes.has(c.type))
     .map((c) => c.id);
 
   if (obsoleteIds.length > 0) {
@@ -242,6 +227,11 @@ async function addMissingDefaultComponents(
       .delete()
       .in("id", obsoleteIds);
   }
+
+  // Build existingTypes after filtering out deleted obsolete entries
+  const existingTypes = new Set(
+    existingComponents.filter((c) => !obsoleteTypes.has(c.type)).map((c) => c.type)
+  );
 
   // Add missing default component types (skip user-deleted ones)
   const missingDefaults = DEFAULT_COMPONENTS.filter(
@@ -297,16 +287,3 @@ async function updateDominantSportTypes(userId: string): Promise<void> {
   );
 }
 
-export async function getBikeByStravaId(
-  userId: string,
-  stravaGearId: string
-): Promise<Bike | null> {
-  const { data } = await supabaseAdmin
-    .from("bikes")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("strava_gear_id", stravaGearId)
-    .single();
-
-  return data;
-}

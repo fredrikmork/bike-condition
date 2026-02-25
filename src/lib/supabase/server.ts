@@ -14,11 +14,3 @@ export const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseService
     persistSession: false,
   },
 });
-
-// Helper to check if Supabase is properly configured
-export function isSupabaseConfigured(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-}

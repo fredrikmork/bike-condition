@@ -25,15 +25,15 @@ export async function replaceComponentAction(
     return { success: false, error: "Invalid date" };
   }
 
-  // Fetch the bike to get its current total_distance
-  const bike = await getBikeById(component.bike_id);
+  // Fetch the bike (also verifies ownership)
+  const bike = await getBikeById(component.bike_id, session.userId);
   if (!bike) {
     return { success: false, error: "Bike not found" };
   }
 
   const newComponent = await replaceComponent(
     componentId,
-    bike.total_distance,
+    bike.total_distance ?? 0,
     replacedDate
   );
   if (!newComponent) {

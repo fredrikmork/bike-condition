@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { syncStravaData } from "@/app/actions/sync";
+import { useSyncStrava } from "@/hooks/use-sync-strava";
 import { cn } from "@/lib/utils";
 
 interface SyncNudgeProps {
@@ -12,27 +10,7 @@ interface SyncNudgeProps {
 }
 
 export function SyncNudge({ count }: SyncNudgeProps) {
-  const [syncing, setSyncing] = useState(false);
-
-  async function handleSync() {
-    setSyncing(true);
-    try {
-      const result = await syncStravaData();
-      if (result.success) {
-        toast.success("Sync complete", {
-          description: `${result.bikes?.synced ?? 0} bikes, ${result.activities?.synced ?? 0} activities`,
-        });
-      } else {
-        toast.error("Sync failed", {
-          description: result.errors?.[0] ?? "Unknown error",
-        });
-      }
-    } catch {
-      toast.error("Sync failed");
-    } finally {
-      setSyncing(false);
-    }
-  }
+  const { syncing, handleSync } = useSyncStrava();
 
   const label =
     count === 1

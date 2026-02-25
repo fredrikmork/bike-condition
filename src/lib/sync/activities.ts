@@ -64,7 +64,7 @@ export async function syncActivities(
 
     // Cap pages: explicit full sync = 200; everything else = 10 (incremental
     // and first-time both stay well within 10 s on Hobby plan)
-    const maxPages = options.fullSync ? undefined : 10;
+    const maxPages = options.fullSync ? 200 : 10;
     const activities = await client.getAllActivitiesSince(lastSync, maxPages);
 
     if (activities.length === 0) {
@@ -158,33 +158,3 @@ export async function syncActivities(
   }
 }
 
-export async function getActivityStats(userId: string): Promise<{
-  totalActivities: number;
-  totalDistance: number;
-  last30Days: {
-    activities: number;
-    distance: number;
-  };
-}> {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-  const { data: allActivities } = await supabaseAdmin
-    .from("activities")
-    .select("distance")
-    .eq("user_id", userId);
-
-  const { data: recentActivities } = await supabaseAdmin
-    .from("activities")
-    .select("distance")
-    .eq("user_id", userId)
-    .gte("start_date", thirtyDaysAgo);
-
-  return {
-    totalActivities: allActivities?.length || 0,
-    totalDistance: allActivities?.reduce((sum, a) => sum + a.distance, 0) || 0,
-    last30Days: {
-      activities: recentActivities?.length || 0,
-      distance: recentActivities?.reduce((sum, a) => sum + a.distance, 0) || 0,
-    },
-  };
-}

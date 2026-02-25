@@ -40,6 +40,14 @@ export async function addVirtualPeriodAction(
 
   if (!bike) return { success: false, error: "Bike not found" };
 
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!datePattern.test(startDate)) {
+    return { success: false, error: "Start date must be in YYYY-MM-DD format" };
+  }
+  if (endDate && !datePattern.test(endDate)) {
+    return { success: false, error: "End date must be in YYYY-MM-DD format" };
+  }
+
   if (endDate && endDate <= startDate) {
     return { success: false, error: "End date must be after start date" };
   }

@@ -59,4 +59,3 @@ export const StravaTokenResponseSchema = z.object({
 export type StravaAthlete = z.infer<typeof StravaAthleteSchema>;
 export type StravaGear = z.infer<typeof StravaGearSchema>;
 export type StravaActivity = z.infer<typeof StravaActivitySchema>;
-export type StravaTokenResponse = z.infer<typeof StravaTokenResponseSchema>;

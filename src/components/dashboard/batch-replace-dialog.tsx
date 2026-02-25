@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -43,6 +43,10 @@ export function BatchReplaceDialog({
     new Set(components.map((c) => c.id))
   );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setChecked(new Set(components.map((c) => c.id)));
+  }, [components]);
 
   function toggleComponent(id: string) {
     setChecked((prev) => {

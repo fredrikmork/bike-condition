@@ -27,7 +27,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
-  const totalDistance = bikes.reduce((sum, b) => sum + b.total_distance, 0);
+  const totalDistance = bikes.reduce((sum, b) => sum + (b.total_distance ?? 0), 0);
 
   return (
     <Sidebar collapsible="icon">

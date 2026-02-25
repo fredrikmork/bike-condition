@@ -117,7 +117,7 @@ function HistoryEntry({ entry }: { entry: Component }) {
 
         {/* Distance at retirement */}
         <p className="text-xs text-muted-foreground">
-          {formatDistance(entry.current_distance)} ridden
+          {formatDistance(entry.current_distance ?? 0)} ridden
         </p>
 
         {/* Badges */}

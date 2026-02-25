@@ -35,7 +35,7 @@ export function calculateWear(
 }
 
 export function calculateComponentWear(component: Component): WearInfo {
-  return calculateWear(component.current_distance, component.recommended_distance);
+  return calculateWear(component.current_distance ?? 0, component.recommended_distance);
 }
 
 // Format distance for display

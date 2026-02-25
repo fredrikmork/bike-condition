@@ -28,7 +28,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
@@ -153,7 +152,9 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
   const focusRingClass = focused
     ? wear.status === "critical"
       ? "ring-2 ring-status-critical ring-offset-2 ring-offset-background"
-      : "ring-2 ring-status-warning ring-offset-2 ring-offset-background"
+      : wear.status === "warning"
+        ? "ring-2 ring-status-warning ring-offset-2 ring-offset-background"
+        : "ring-2 ring-primary ring-offset-2 ring-offset-background"
     : "";
 
   return (
@@ -190,59 +191,57 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <TooltipProvider delayDuration={400}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                        <Pencil className="mr-2 h-3.5 w-3.5" />
+                        Edit
+                      </DropdownMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Update brand, model and notes</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
+                        <RotateCw className="mr-2 h-3.5 w-3.5" />
+                        Replace
+                      </DropdownMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Log a replacement and reset wear</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuItem onClick={handleMute} disabled={muting}>
+                        <BellOff className="mr-2 h-3.5 w-3.5" />
+                        Mute
+                      </DropdownMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Hide wear alerts for this component</TooltipContent>
+                  </Tooltip>
+                  {hasHistory && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                          <Pencil className="mr-2 h-3.5 w-3.5" />
-                          Edit
+                        <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
+                          <History className="mr-2 h-3.5 w-3.5" />
+                          View history
                         </DropdownMenuItem>
                       </TooltipTrigger>
-                      <TooltipContent side="right">Update brand, model and notes</TooltipContent>
+                      <TooltipContent side="right">See past replacements</TooltipContent>
                     </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
-                          <RotateCw className="mr-2 h-3.5 w-3.5" />
-                          Replace
-                        </DropdownMenuItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Log a replacement and reset wear</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuItem onClick={handleMute} disabled={muting}>
-                          <BellOff className="mr-2 h-3.5 w-3.5" />
-                          Mute
-                        </DropdownMenuItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Hide wear alerts for this component</TooltipContent>
-                    </Tooltip>
-                    {hasHistory && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
-                            <History className="mr-2 h-3.5 w-3.5" />
-                            View history
-                          </DropdownMenuItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">See past replacements</TooltipContent>
-                      </Tooltip>
-                    )}
-                    <DropdownMenuSeparator />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => setDeleteDialogOpen(true)}
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" />
-                          Delete
-                        </DropdownMenuItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Remove this component from tracking</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  )}
+                  <DropdownMenuSeparator />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => setDeleteDialogOpen(true)}
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5" />
+                        Delete
+                      </DropdownMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Remove this component from tracking</TooltipContent>
+                  </Tooltip>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -305,7 +304,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
             onKeyDown={canExpand ? (e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); } : undefined}
           >
             <span>
-              {formatDistance(component.current_distance)} /{" "}
+              {formatDistance(component.current_distance ?? 0)} /{" "}
               {formatDistance(component.recommended_distance)}
             </span>
             <div className="flex items-center gap-2">

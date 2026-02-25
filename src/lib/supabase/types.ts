@@ -79,10 +79,11 @@ export interface Database {
           model_name: string | null;
           frame_type: number | null;
           description: string | null;
-          total_distance: number;
+          total_distance: number | null;
           is_primary: boolean;
           retired: boolean;
           deleted_defaults: string[];
+          bike_type: 'road' | 'mtb' | 'tt' | 'hybrid' | 'ebike' | null;
           shifting_type: ShiftingType | null;
           brake_type: BrakeType | null;
           drivetrain_speed: number | null;
@@ -106,10 +107,11 @@ export interface Database {
           model_name?: string | null;
           frame_type?: number | null;
           description?: string | null;
-          total_distance?: number;
+          total_distance?: number | null;
           is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
+          bike_type?: 'road' | 'mtb' | 'tt' | 'hybrid' | 'ebike' | null;
           shifting_type?: ShiftingType | null;
           brake_type?: BrakeType | null;
           drivetrain_speed?: number | null;
@@ -133,10 +135,11 @@ export interface Database {
           model_name?: string | null;
           frame_type?: number | null;
           description?: string | null;
-          total_distance?: number;
+          total_distance?: number | null;
           is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
+          bike_type?: 'road' | 'mtb' | 'tt' | 'hybrid' | 'ebike' | null;
           shifting_type?: ShiftingType | null;
           brake_type?: BrakeType | null;
           drivetrain_speed?: number | null;
@@ -165,7 +168,7 @@ export interface Database {
           spec: string | null;
           lube_type: LubeType | null;
           recommended_distance: number;
-          current_distance: number;
+          current_distance: number | null;
           bike_distance_at_install: number;
           installed_at: string;
           replaced_at: string | null;
@@ -330,9 +333,6 @@ export interface Database {
 
 // Convenience types
 export type User = Database["public"]["Tables"]["users"]["Row"];
-export type UserInsert = Database["public"]["Tables"]["users"]["Insert"];
-export type UserToken = Database["public"]["Tables"]["user_tokens"]["Row"];
-export type UserTokenInsert = Database["public"]["Tables"]["user_tokens"]["Insert"];
 export type Bike = Database["public"]["Tables"]["bikes"]["Row"];
 export type BikeInsert = Database["public"]["Tables"]["bikes"]["Insert"];
 export type Component = Database["public"]["Tables"]["components"]["Row"];

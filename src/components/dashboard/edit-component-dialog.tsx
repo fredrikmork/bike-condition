@@ -109,7 +109,7 @@ export function EditComponentDialog({
       });
 
       if (result.success) {
-        toast.success(`${values.name} updated`);
+        toast.success(`${values.name ?? component.name} updated`);
         onOpenChange(false);
       } else {
         toast.error("Failed to update component", { description: result.error });
