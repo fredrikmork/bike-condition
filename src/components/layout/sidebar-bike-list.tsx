@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuBadge,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
@@ -17,6 +18,7 @@ interface SidebarBikeListProps {
 
 export function SidebarBikeList({ bikes }: SidebarBikeListProps) {
   const { selectedBikeId, setSelectedBikeId } = useBikeStore();
+  const { setOpenMobile } = useSidebar();
 
   return (
     <SidebarMenu>
@@ -30,7 +32,7 @@ export function SidebarBikeList({ bikes }: SidebarBikeListProps) {
           <SidebarMenuItem key={bike.id}>
             <SidebarMenuButton
               isActive={selectedBikeId === bike.id}
-              onClick={() => setSelectedBikeId(bike.id)}
+              onClick={() => { setSelectedBikeId(bike.id); setOpenMobile(false); }}
               tooltip={bike.name}
             >
               <Bike className="h-4 w-4" />

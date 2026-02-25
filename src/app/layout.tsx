@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   title: "Bike Condition",
   description:
     "Track your bike component wear and know when it's time for maintenance",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#1a1a2e",
 };
 
 export default function RootLayout({

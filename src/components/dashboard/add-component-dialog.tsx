@@ -195,7 +195,7 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
           {isCustom && (
             <div className="grid gap-2">
               <Label>Icon</Label>
-              <div className="grid grid-cols-10 gap-1">
+              <div className="grid grid-cols-8 gap-1 sm:grid-cols-10">
                 {CUSTOM_ICON_OPTIONS.map(({ key, icon: IconComp }) => (
                   <button
                     key={key}
