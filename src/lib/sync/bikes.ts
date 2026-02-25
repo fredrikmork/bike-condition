@@ -31,21 +31,21 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       return result;
     }
 
-    // Get existing bikes for this user
-    const { data: existingBikes } = await supabaseAdmin
-      .from("bikes")
-      .select("id, strava_gear_id, total_distance")
-      .eq("user_id", userId);
+    // Fetch existing bikes and virtual periods in parallel
+    const [{ data: existingBikes }, { data: allPeriods }] = await Promise.all([
+      supabaseAdmin
+        .from("bikes")
+        .select("id, strava_gear_id, total_distance")
+        .eq("user_id", userId),
+      supabaseAdmin
+        .from("virtual_periods")
+        .select("bike_id, start_date, end_date")
+        .eq("user_id", userId),
+    ]);
 
     const existingBikeMap = new Map(
       existingBikes?.map((b) => [b.strava_gear_id, b]) || []
     );
-
-    // Pre-fetch all virtual (trainer) periods for this user's bikes
-    const { data: allPeriods } = await supabaseAdmin
-      .from("virtual_periods")
-      .select("bike_id, start_date, end_date")
-      .eq("user_id", userId);
 
     const periodsByBike = new Map<string, { start_date: string; end_date: string | null }[]>();
     for (const p of allPeriods ?? []) {
@@ -53,40 +53,45 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       periodsByBike.get(p.bike_id)!.push({ start_date: p.start_date, end_date: p.end_date });
     }
 
-    // Process each bike from Strava
-    for (const stravaBike of athlete.bikes) {
-      try {
-        // Fetch full gear details
-        const gearDetails = await client.getGear(stravaBike.id);
+    // Fetch all gear details in parallel instead of sequentially
+    const gearResults = await Promise.allSettled(
+      athlete.bikes.map((b) => client.getGear(b.id))
+    );
 
+    // Process all bikes in parallel
+    const bikeResults = await Promise.allSettled(
+      athlete.bikes.map(async (stravaBike, i) => {
+        const gearResult = gearResults[i];
+        if (gearResult.status === "rejected") {
+          throw new Error(
+            `Failed to fetch gear for ${stravaBike.name}: ${gearResult.reason instanceof Error ? gearResult.reason.message : String(gearResult.reason)}`
+          );
+        }
+        const gearDetails = gearResult.value;
         const existingBike = existingBikeMap.get(stravaBike.id);
 
         if (existingBike) {
-          // Update existing bike
-          await supabaseAdmin
-            .from("bikes")
-            .update({
-              name: gearDetails.name,
-              brand_name: gearDetails.brand_name ?? null,
-              model_name: gearDetails.model_name ?? null,
-              frame_type: gearDetails.frame_type ?? null,
-              description: gearDetails.description ?? null,
-              total_distance: gearDetails.distance,
-              is_primary: gearDetails.primary,
-              weight: gearDetails.weight ?? null,
-            })
-            .eq("id", existingBike.id);
-
-          // Update component distances using activity data + gear fallback
           const trainerPeriods = periodsByBike.get(existingBike.id) ?? [];
-          await updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance, trainerPeriods);
-
-          // Add any missing default component types
-          await addMissingDefaultComponents(existingBike.id, gearDetails.distance);
-
-          result.updated++;
+          // Run bike update and component operations in parallel
+          await Promise.all([
+            supabaseAdmin
+              .from("bikes")
+              .update({
+                name: gearDetails.name,
+                brand_name: gearDetails.brand_name ?? null,
+                model_name: gearDetails.model_name ?? null,
+                frame_type: gearDetails.frame_type ?? null,
+                description: gearDetails.description ?? null,
+                total_distance: gearDetails.distance,
+                is_primary: gearDetails.primary,
+                weight: gearDetails.weight ?? null,
+              })
+              .eq("id", existingBike.id),
+            updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance, trainerPeriods),
+            addMissingDefaultComponents(existingBike.id, gearDetails.distance),
+          ]);
+          return "updated" as const;
         } else {
-          // Create new bike
           const bikeInsert: BikeInsert = {
             user_id: userId,
             strava_gear_id: stravaBike.id,
@@ -107,26 +112,25 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             .single();
 
           if (insertError || !newBike) {
-            result.errors.push(
-              `Failed to create bike ${gearDetails.name}: ${insertError?.message}`
-            );
-            continue;
+            throw new Error(`Failed to create bike ${gearDetails.name}: ${insertError?.message}`);
           }
 
-          // Create default components for new bike with the bike's current distance
-          const defaultComponents = createDefaultComponents(
-            newBike.id,
-            gearDetails.distance
-          );
+          const defaultComponents = createDefaultComponents(newBike.id, gearDetails.distance);
           await supabaseAdmin.from("components").insert(defaultComponents);
 
-          result.created++;
+          return "created" as const;
         }
+      })
+    );
 
+    for (const r of bikeResults) {
+      if (r.status === "fulfilled") {
         result.synced++;
-      } catch (error) {
+        if (r.value === "updated") result.updated++;
+        else result.created++;
+      } else {
         result.errors.push(
-          `Error syncing bike ${stravaBike.name}: ${error instanceof Error ? error.message : "Unknown error"}`
+          r.reason instanceof Error ? r.reason.message : String(r.reason)
         );
       }
     }

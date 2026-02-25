@@ -28,18 +28,31 @@ export async function syncActivities(
     const accessToken = await getValidAccessToken(userId);
     const client = new StravaClient(accessToken);
 
-    // Get last sync timestamp
-    const { data: syncStatus } = await supabaseAdmin
-      .from("sync_status")
-      .select("last_activity_sync")
-      .eq("user_id", userId)
-      .single();
+    // Fetch sync status and bikes in parallel
+    const [{ data: syncStatus }, { data: bikes }] = await Promise.all([
+      supabaseAdmin
+        .from("sync_status")
+        .select("last_activity_sync")
+        .eq("user_id", userId)
+        .single(),
+      supabaseAdmin
+        .from("bikes")
+        .select("id, strava_gear_id")
+        .eq("user_id", userId),
+    ]);
 
-    // Fetch all history on first sync or when full resync is requested
-    const isFullSync = options.fullSync || !syncStatus?.last_activity_sync;
-    const lastSync = isFullSync
-      ? new Date(0) // epoch — fetch entire activity history
-      : new Date(syncStatus.last_activity_sync as string);
+    // Determine sync window:
+    //   - explicit full resync: from epoch (all history)
+    //   - incremental: from last successful sync timestamp
+    //   - first-time (no last_activity_sync): last 90 days only
+    //     → keeps the first sync well within Vercel Hobby's 10 s hard limit.
+    //     Component wear is still accurate because the gear-based fallback
+    //     (bike.total_distance − bike_distance_at_install) covers all older rides.
+    const lastSync = options.fullSync
+      ? new Date(0)
+      : syncStatus?.last_activity_sync
+        ? new Date(syncStatus.last_activity_sync as string)
+        : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // 90 days ago
 
     // Full re-sync: delete existing activities so we rebuild from scratch
     if (options.fullSync) {
@@ -49,32 +62,30 @@ export async function syncActivities(
         .eq("user_id", userId);
     }
 
-    // Full sync: no page limit (default 200 safety cap); incremental: 10 pages
-    const maxPages = isFullSync ? undefined : 10;
+    // Cap pages: explicit full sync = 200; everything else = 10 (incremental
+    // and first-time both stay well within 10 s on Hobby plan)
+    const maxPages = options.fullSync ? undefined : 10;
     const activities = await client.getAllActivitiesSince(lastSync, maxPages);
 
     if (activities.length === 0) {
       return result;
     }
 
-    // Get user's bikes for mapping gear_id
-    const { data: bikes } = await supabaseAdmin
-      .from("bikes")
-      .select("id, strava_gear_id")
-      .eq("user_id", userId);
-
     const bikeMap = new Map(bikes?.map((b) => [b.strava_gear_id, b.id]) || []);
 
-    // Get existing activities to avoid duplicates
-    const activityIds = activities.map((a) => a.id);
-    const { data: existingActivities } = await supabaseAdmin
-      .from("activities")
-      .select("strava_activity_id")
-      .in("strava_activity_id", activityIds);
-
-    const existingIds = new Set(
-      existingActivities?.map((a) => a.strava_activity_id) || []
-    );
+    // Skip dedup query when we just deleted everything (full sync) or when
+    // there was no previous sync (first-time users have no existing activities)
+    let existingIds = new Set<number>();
+    if (!options.fullSync && syncStatus?.last_activity_sync) {
+      const activityIds = activities.map((a) => a.id);
+      const { data: existingActivities } = await supabaseAdmin
+        .from("activities")
+        .select("strava_activity_id")
+        .in("strava_activity_id", activityIds);
+      existingIds = new Set(
+        existingActivities?.map((a) => a.strava_activity_id) || []
+      );
+    }
 
     // Process activities
     const newActivities: ActivityInsert[] = [];
@@ -106,19 +117,25 @@ export async function syncActivities(
       });
     }
 
-    // Insert new activities in batches
+    // Insert new activities in parallel batches
     if (newActivities.length > 0) {
       const batchSize = 100;
+      const batches: ActivityInsert[][] = [];
       for (let i = 0; i < newActivities.length; i += batchSize) {
-        const batch = newActivities.slice(i, i + batchSize);
-        const { error } = await supabaseAdmin.from("activities").insert(batch);
+        batches.push(newActivities.slice(i, i + batchSize));
+      }
 
+      const insertResults = await Promise.all(
+        batches.map((batch) => supabaseAdmin.from("activities").insert(batch))
+      );
+
+      insertResults.forEach(({ error }, i) => {
         if (error) {
           result.errors.push(`Failed to insert activities batch: ${error.message}`);
         } else {
-          result.synced += batch.length;
+          result.synced += batches[i].length;
         }
-      }
+      });
     }
 
     // Update sync status

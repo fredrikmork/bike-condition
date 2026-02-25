@@ -5,6 +5,10 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { EmptyState } from "@/components/shared/empty-state";
 
+// Allow up to 60 s for server actions (sync) on this route — takes effect on Pro.
+// On Hobby the hard cap is 10 s; sync is designed to fit within that limit.
+export const maxDuration = 60;
+
 export default async function Home() {
   const session = await auth();
 
