@@ -27,49 +27,31 @@ async function createOrUpdateUser(
   email: string | null | undefined,
   image: string | null | undefined
 ): Promise<string> {
-  // Check if user exists
-  const { data: existingUser } = await supabaseAdmin
+  // Upsert — one round-trip instead of SELECT + INSERT/UPDATE
+  const { data: user, error } = await supabaseAdmin
     .from("users")
-    .select("id")
-    .eq("strava_id", stravaId)
-    .single();
-
-  if (existingUser) {
-    // Update existing user
-    await supabaseAdmin
-      .from("users")
-      .update({
+    .upsert(
+      {
+        strava_id: stravaId,
         name: name ?? null,
         email: email ?? null,
         profile_image: image ?? null,
-      })
-      .eq("id", existingUser.id);
-
-    return existingUser.id;
-  }
-
-  // Create new user
-  const { data: newUser, error } = await supabaseAdmin
-    .from("users")
-    .insert({
-      strava_id: stravaId,
-      name: name ?? null,
-      email: email ?? null,
-      profile_image: image ?? null,
-    })
+      },
+      { onConflict: "strava_id" }
+    )
     .select("id")
     .single();
 
-  if (error || !newUser) {
-    throw new Error(`Failed to create user: ${error?.message}`);
+  if (error || !user) {
+    throw new Error(`Failed to upsert user: ${error?.message}`);
   }
 
-  // Create sync status entry for new user
-  await supabaseAdmin.from("sync_status").insert({
-    user_id: newUser.id,
-  });
+  // Ensure sync_status row exists (no-op for existing users)
+  await supabaseAdmin
+    .from("sync_status")
+    .upsert({ user_id: user.id }, { onConflict: "user_id", ignoreDuplicates: true });
 
-  return newUser.id;
+  return user.id;
 }
 
 const config: NextAuthConfig = {
@@ -106,7 +88,11 @@ const config: NextAuthConfig = {
           user.image
         );
 
-        // Store tokens in Supabase
+        // Attach DB userId to the Auth.js user object so the jwt callback
+        // can read it without a second database query.
+        user.id = userId;
+
+        // Store tokens in Supabase (parallel with sync_status already done inside createOrUpdateUser)
         if (account.access_token && account.refresh_token && account.expires_at) {
           await storeTokens(
             userId,
@@ -123,22 +109,13 @@ const config: NextAuthConfig = {
       }
     },
 
-    async jwt({ token, account }) {
+    async jwt({ token, user, account }) {
       const t = token as typeof token & AppJWT;
 
-      // Initial sign in
-      if (account) {
-        const stravaId = parseInt(account.providerAccountId, 10);
-
-        // Get user ID from database
-        const { data: user } = await supabaseAdmin
-          .from("users")
-          .select("id")
-          .eq("strava_id", stravaId)
-          .single();
-
-        t.userId = user?.id;
-        t.stravaId = stravaId;
+      // Initial sign in — user.id was set in signIn callback, no extra DB query needed
+      if (account && user) {
+        t.userId = user.id;
+        t.stravaId = parseInt(account.providerAccountId, 10);
         t.accessToken = account.access_token as string | undefined;
         t.refreshToken = account.refresh_token as string | undefined;
         t.expiresAt = account.expires_at;
