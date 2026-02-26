@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { calculateComponentWear } from "@/lib/wear/calculator";
 import { getBikeConfig, isComponentVisible } from "@/lib/components/visibility";
@@ -32,6 +33,7 @@ interface SidebarAttentionItemsProps {
 
 export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
   const { setSelectedBikeId, setFocusedComponentId } = useBikeStore();
+  const { setOpenMobile } = useSidebar();
   const [expanded, setExpanded] = useState(false);
 
   const items: AttentionItem[] = bikes.flatMap((bike) => {
@@ -70,6 +72,7 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
                 onClick={() => {
                   setSelectedBikeId(item.bikeId);
                   setFocusedComponentId(item.componentId);
+                  setOpenMobile(false);
                 }}
                 tooltip={
                   multipleBikes
