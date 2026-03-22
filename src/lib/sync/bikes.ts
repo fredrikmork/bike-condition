@@ -3,6 +3,7 @@ import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
 import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
+import { migrateDefaultDistances } from "@/lib/components/migrate-defaults";
 import type { BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -125,6 +126,9 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
 
     // Compute dominant sport type per bike from activity history
     await updateDominantSportTypes(userId);
+
+    // Migrate any components still using old default recommended distances
+    await migrateDefaultDistances();
 
     // Update sync status
     await supabaseAdmin

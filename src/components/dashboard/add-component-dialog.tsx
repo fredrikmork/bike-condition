@@ -25,6 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { addComponentAction } from "@/app/actions/components";
 import { CUSTOM_ICON_OPTIONS } from "@/lib/components/icons";
 import { getBikeConfig } from "@/lib/components/visibility";
@@ -178,9 +184,23 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
           {/* Distance — once a type is selected */}
           {selectedType && (
             <div className="grid gap-2">
-              <Label htmlFor="component-distance">
-                Recommended replacement distance (km)
-              </Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="component-distance">
+                  Recommended replacement distance (km)
+                </Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-default shrink-0" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-xs">
+                    <p>
+                      These intervals are estimates based on average road cycling
+                      conditions. Always physically inspect your components — use
+                      this app as a guideline only.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <Input
                 id="component-distance"
                 type="number"

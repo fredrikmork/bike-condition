@@ -24,6 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { updateComponentAction } from "@/app/actions/components";
 import { getSuggestedDistance, LUBE_LABELS, formatDistance } from "@/lib/wear/calculator";
 import type { Component, LubeType } from "@/lib/supabase/types";
@@ -201,10 +207,24 @@ export function EditComponentDialog({
 
           {/* Recommended distance */}
           <div className="grid gap-1.5">
-            <Label htmlFor="ec-distance">
-              Recommended distance{" "}
-              <span className="text-muted-foreground font-normal text-xs">(km)</span>
-            </Label>
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="ec-distance">
+                Recommended distance{" "}
+                <span className="text-muted-foreground font-normal text-xs">(km)</span>
+              </Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground cursor-default shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <p>
+                    These intervals are estimates based on average road cycling
+                    conditions. Always physically inspect your components — use
+                    this app as a guideline only.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <div className="flex items-center gap-2">
               <Input
                 id="ec-distance"
