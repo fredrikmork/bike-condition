@@ -39,6 +39,7 @@ export function BatchReplaceDialog({
   onOpenChange,
 }: BatchReplaceDialogProps) {
   const [date, setDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [checked, setChecked] = useState<Set<string>>(
     new Set(components.map((c) => c.id))
   );
@@ -137,7 +138,7 @@ export function BatchReplaceDialog({
           {/* Date picker */}
           <div className="grid gap-2">
             <Label htmlFor="batch-replace-date">Replacement date</Label>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   id="batch-replace-date"
@@ -152,7 +153,13 @@ export function BatchReplaceDialog({
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={(d) => d && setDate(d)}
+                  onSelect={(d) => {
+                    if (d) {
+                      setDate(d);
+                      setCalendarOpen(false);
+                    }
+                  }}
+                  captionLayout="dropdown"
                   disabled={{ after: new Date() }}
                   defaultMonth={date}
                 />

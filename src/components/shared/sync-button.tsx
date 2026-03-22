@@ -28,7 +28,7 @@ function formatRelativeTime(dateStr: string): string {
   const days = Math.floor(hours / 24);
   if (days === 1) return "yesterday";
   if (days < 7) return `${days} days ago`;
-  return new Date(dateStr).toLocaleDateString();
+  return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export function SyncButton({ lastSynced }: SyncButtonProps) {

@@ -37,6 +37,7 @@ export function ReplaceDialog({
   onOpenChange,
 }: ReplaceDialogProps) {
   const [date, setDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export function ReplaceDialog({
 
         <div className="grid gap-2 py-4">
           <Label htmlFor="replace-date">Replacement date</Label>
-          <Popover>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 id="replace-date"
@@ -100,7 +101,13 @@ export function ReplaceDialog({
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={(d) => d && setDate(d)}
+                onSelect={(d) => {
+                  if (d) {
+                    setDate(d);
+                    setCalendarOpen(false);
+                  }
+                }}
+                captionLayout="dropdown"
                 disabled={{ after: new Date() }}
                 defaultMonth={date}
               />
