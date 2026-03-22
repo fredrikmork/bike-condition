@@ -214,6 +214,24 @@ export async function getTypesWithHistoryForBikes(
   return result;
 }
 
+// Returns total VirtualRide distance (meters) per bike from activity history.
+export async function getVirtualKmForBikes(bikeIds: string[]): Promise<Record<string, number>> {
+  if (bikeIds.length === 0) return {};
+
+  const { data } = await supabaseAdmin
+    .from("activities")
+    .select("bike_id, distance")
+    .in("bike_id", bikeIds)
+    .eq("activity_type", "VirtualRide");
+
+  const result: Record<string, number> = {};
+  for (const row of data || []) {
+    if (!row.bike_id) continue;
+    result[row.bike_id] = (result[row.bike_id] ?? 0) + row.distance;
+  }
+  return result;
+}
+
 // Sync status queries
 export async function getSyncStatus(userId: string): Promise<SyncStatus | null> {
   const { data } = await supabaseAdmin

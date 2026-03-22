@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, CircleDot, Cog, PauseCircle, RotateCw } from "lucide-react";
+import { ChevronDown, CircleDot, Cog, RotateCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ interface ComponentGroupProps {
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
   bikeId: string;
-  trainerActive?: boolean;
+  hasVirtualRides?: boolean;
 }
 
 export function ComponentGroup({
@@ -29,7 +29,7 @@ export function ComponentGroup({
   typesWithHistory = new Set(),
   lastSync,
   bikeId,
-  trainerActive = false,
+  hasVirtualRides = false,
 }: ComponentGroupProps) {
   const [expanded, setExpanded] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -95,10 +95,9 @@ export function ComponentGroup({
                   {components.length}
                 </Badge>
                 <StatusIndicator status={worstStatus} isOverdue={worstIsOverdue} />
-                {trainerActive && (
-                  <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground gap-1">
-                    <PauseCircle className="h-2.5 w-2.5" />
-                    Trainer
+                {hasVirtualRides && group.id !== "drivetrain" && (
+                  <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+                    Outdoor km only
                   </Badge>
                 )}
               </div>
@@ -142,7 +141,7 @@ export function ComponentGroup({
                     hasHistory={typesWithHistory.has(component.type)}
                     lastSync={lastSync}
                     displayName={shortName(component.name)}
-                    trainerActive={trainerActive && TRAINER_PAUSE_TYPES.has(component.type)}
+                    outdoorOnly={hasVirtualRides && TRAINER_PAUSE_TYPES.has(component.type)}
                   />
                 ))}
               </div>

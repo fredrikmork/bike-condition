@@ -11,7 +11,7 @@ interface ComponentListProps {
   bikeConfig?: BikeConfig | null;
   lastSync?: string | null;
   bikeId: string;
-  hasActiveTrainerPeriod?: boolean;
+  hasVirtualRides?: boolean;
 }
 
 export function ComponentList({
@@ -20,7 +20,7 @@ export function ComponentList({
   bikeConfig = null,
   lastSync,
   bikeId,
-  hasActiveTrainerPeriod = false,
+  hasVirtualRides = false,
 }: ComponentListProps) {
   // Filter by visibility rules and mute state
   const visible = components.filter(
@@ -52,8 +52,6 @@ export function ComponentList({
 
         if (groupComponents.length === 0) return null;
 
-        const groupHasPausedTypes = groupComponents.some((c) => TRAINER_PAUSE_TYPES.has(c.type));
-
         return (
           <ComponentGroup
             key={group.id}
@@ -62,7 +60,7 @@ export function ComponentList({
             typesWithHistory={typesWithHistory}
             lastSync={lastSync}
             bikeId={bikeId}
-            trainerActive={groupHasPausedTypes && hasActiveTrainerPeriod}
+            hasVirtualRides={hasVirtualRides}
           />
         );
       })}
@@ -79,7 +77,7 @@ export function ComponentList({
                 component={component}
                 hasHistory={typesWithHistory.has(component.type)}
                 lastSync={lastSync}
-                trainerActive={TRAINER_PAUSE_TYPES.has(component.type) && hasActiveTrainerPeriod}
+                outdoorOnly={TRAINER_PAUSE_TYPES.has(component.type) && hasVirtualRides}
               />
             ))}
           </div>

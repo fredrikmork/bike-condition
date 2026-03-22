@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { format, parseISO } from "date-fns";
-import { X } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -13,16 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { saveBikeConfigAction } from "@/app/actions/bike-config";
-import {
-  getVirtualPeriodsAction,
-  addVirtualPeriodAction,
-  removeVirtualPeriodAction,
-} from "@/app/actions/virtual-periods";
-import type { Bike, BikeConfig, ShiftingType, BrakeType, TireSystem, ElectronicSystem, VirtualPeriod } from "@/lib/supabase/types";
+import type { Bike, BikeConfig, ShiftingType, BrakeType, TireSystem, ElectronicSystem } from "@/lib/supabase/types";
 
 interface BikeConfigDialogProps {
   bike: Bike;
@@ -54,47 +45,8 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
     (bike.tire_system as TireSystem) ?? null
   );
   const [saving, setSaving] = useState(false);
-  const [periods, setPeriods] = useState<VirtualPeriod[]>([]);
-  const [newStart, setNewStart] = useState("");
-  const [newEnd, setNewEnd] = useState("");
-  const [addingPeriod, setAddingPeriod] = useState(false);
 
   const isComplete = shifting !== null && brakes !== null && speed !== null && tires !== null;
-
-  // Load trainer periods when dialog opens
-  useEffect(() => {
-    if (!open) return;
-    getVirtualPeriodsAction(bike.id).then((r) => {
-      if (r.success && r.data) setPeriods(r.data);
-    });
-  }, [open, bike.id]);
-
-  async function handleAddPeriod() {
-    if (!newStart) return;
-    setAddingPeriod(true);
-    try {
-      const result = await addVirtualPeriodAction(bike.id, newStart, newEnd || null);
-      if (result.success) {
-        const refreshed = await getVirtualPeriodsAction(bike.id);
-        if (refreshed.success && refreshed.data) setPeriods(refreshed.data);
-        setNewStart("");
-        setNewEnd("");
-      } else {
-        toast.error("Could not add period", { description: result.error });
-      }
-    } finally {
-      setAddingPeriod(false);
-    }
-  }
-
-  async function handleRemovePeriod(periodId: string) {
-    const result = await removeVirtualPeriodAction(periodId);
-    if (result.success) {
-      setPeriods((prev) => prev.filter((p) => p.id !== periodId));
-    } else {
-      toast.error("Could not remove period", { description: result.error });
-    }
-  }
 
   async function handleSave() {
     if (!isComplete) return;
@@ -241,68 +193,6 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
             </div>
           </Section>
 
-          {/* Trainer / virtual periods */}
-          <Section label="Trainer periods">
-            <p className="text-xs text-muted-foreground -mt-1">
-              Add date ranges when this bike was on an indoor trainer. Tires, inner tubes, brake pads and rotors won&apos;t accumulate distance from virtual rides during these periods — the wheels stay on the real bike.
-            </p>
-
-            {/* Existing periods */}
-            {periods.length > 0 && (
-              <div className="space-y-1.5">
-                {periods.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-                    <span>
-                      {format(parseISO(p.start_date), "d MMM yyyy")}
-                      {" — "}
-                      {p.end_date ? format(parseISO(p.end_date), "d MMM yyyy") : "ongoing"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePeriod(p.id)}
-                      className="ml-2 text-muted-foreground hover:text-destructive transition-colors"
-                      aria-label="Remove period"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add new period */}
-            <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
-              <div className="grid gap-1">
-                <Label className="text-xs">From</Label>
-                <Input
-                  type="date"
-                  value={newStart}
-                  onChange={(e) => setNewStart(e.target.value)}
-                  className="h-8 text-xs"
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">To (leave empty = ongoing)</Label>
-                <Input
-                  type="date"
-                  value={newEnd}
-                  min={newStart || undefined}
-                  onChange={(e) => setNewEnd(e.target.value)}
-                  className="h-8 text-xs"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                disabled={!newStart || addingPeriod}
-                onClick={handleAddPeriod}
-              >
-                Add
-              </Button>
-            </div>
-          </Section>
         </div>
 
         <DialogFooter>

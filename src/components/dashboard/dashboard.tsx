@@ -9,9 +9,10 @@ interface DashboardProps {
   bikes: BikeWithComponents[];
   lastSync: string | null;
   historyByBike: Record<string, string[]>;
+  virtualKmByBike: Record<string, number>;
 }
 
-export function Dashboard({ bikes, lastSync, historyByBike }: DashboardProps) {
+export function Dashboard({ bikes, lastSync, historyByBike, virtualKmByBike }: DashboardProps) {
   const { selectedBikeId, setSelectedBikeId } = useBikeStore();
 
   // Initialize with primary or most-ridden bike
@@ -36,6 +37,7 @@ export function Dashboard({ bikes, lastSync, historyByBike }: DashboardProps) {
           bike={selectedBike}
           typesWithHistory={typesWithHistory}
           lastSync={lastSync}
+          virtualKm={virtualKmByBike[selectedBike.id] ?? 0}
         />
       )}
     </>

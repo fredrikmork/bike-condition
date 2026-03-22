@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
-  PauseCircle,
   Pencil,
   RotateCw,
   Trash2,
@@ -60,11 +59,11 @@ interface ComponentCardProps {
   lastSync?: string | null;
   /** Override the name shown on the card face (dialogs still use component.name) */
   displayName?: string;
-  /** True when the bike is currently in a trainer period — distance from virtual rides is paused */
-  trainerActive?: boolean;
+  /** True when this component excludes virtual ride km (wheels, brake cables on a trainer bike) */
+  outdoorOnly?: boolean;
 }
 
-export function ComponentCard({ component, hasHistory = false, lastSync, displayName, trainerActive = false }: ComponentCardProps) {
+export function ComponentCard({ component, hasHistory = false, lastSync, displayName, outdoorOnly = false }: ComponentCardProps) {
   const { focusedComponentId, setFocusedComponentId } = useBikeStore();
   const focused = focusedComponentId === component.id;
   const cardRef = useRef<HTMLDivElement>(null);
@@ -113,9 +112,8 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     ? new Date(component.installed_at) > new Date(lastSync)
     : false;
 
-  const indicatorColor = trainerActive
-    ? "bg-muted-foreground/40"
-    : wear.status === "critical"
+  const indicatorColor =
+    wear.status === "critical"
       ? "bg-status-critical"
       : wear.status === "warning"
         ? "bg-status-warning"
@@ -168,12 +166,6 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   Custom
-                </Badge>
-              )}
-              {trainerActive && (
-                <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground gap-1 shrink-0">
-                  <PauseCircle className="h-2.5 w-2.5" />
-                  Trainer
                 </Badge>
               )}
             </div>
@@ -303,10 +295,24 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
             onClick={canExpand ? () => setExpanded((v) => !v) : undefined}
             onKeyDown={canExpand ? (e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); } : undefined}
           >
-            <span>
-              {formatDistance(component.current_distance ?? 0)} /{" "}
-              {formatDistance(component.recommended_distance)}
-            </span>
+            {outdoorOnly ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-default">
+                    {formatDistance(component.current_distance ?? 0)} /{" "}
+                    {formatDistance(component.recommended_distance)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Virtual rides not counted for this component</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <span>
+                {formatDistance(component.current_distance ?? 0)} /{" "}
+                {formatDistance(component.recommended_distance)}
+              </span>
+            )}
             <div className="flex items-center gap-2">
               <span>
                 {needsSync ? (

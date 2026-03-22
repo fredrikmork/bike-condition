@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth/config";
-import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes } from "@/lib/db/queries";
+import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes, getVirtualKmForBikes } from "@/lib/db/queries";
 import { LoginPage } from "@/components/shared/login-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -31,11 +31,15 @@ export default async function Home() {
     );
   }
 
-  const historyByBike = await getTypesWithHistoryForBikes(bikes.map((b) => b.id));
+  const bikeIds = bikes.map((b) => b.id);
+  const [historyByBike, virtualKmByBike] = await Promise.all([
+    getTypesWithHistoryForBikes(bikeIds),
+    getVirtualKmForBikes(bikeIds),
+  ]);
 
   return (
     <AppShell bikes={bikes} lastSynced={lastSync}>
-      <Dashboard bikes={bikes} lastSync={lastSync} historyByBike={historyByBike} />
+      <Dashboard bikes={bikes} lastSync={lastSync} historyByBike={historyByBike} virtualKmByBike={virtualKmByBike} />
     </AppShell>
   );
 }

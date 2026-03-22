@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
+import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
 import type { BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -146,12 +147,13 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
 }
 
 /**
- * Update all active component distances using the higher of:
- * 1. Activity-based: SUM(activities.distance) WHERE start_date >= installed_at
- * 2. Gear-based:     bike.total_distance - component.bike_distance_at_install
+ * Update all active component distances.
  *
- * Trainer periods affect only the visual display (badge, muted bar) — all
- * components accumulate distance from every activity regardless of type.
+ * TRAINER_PAUSE_TYPES (wheels + brake cables): sum only outdoor (non-VirtualRide)
+ * activities. The gear-based fallback is skipped because Strava's total_distance
+ * includes virtual km, which would defeat the exclusion.
+ *
+ * All other components: MAX(activity sum, gear distance) as before.
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
@@ -177,9 +179,17 @@ async function updateComponentDistancesFromActivities(
         (a) => new Date(a.start_date).getTime() >= new Date(component.installed_at).getTime()
       );
 
-      const activityDistance = relevantActivities.reduce((sum, a) => sum + a.distance, 0);
+      const isOutdoorOnly = TRAINER_PAUSE_TYPES.has(component.type);
+
+      const activityDistance = relevantActivities
+        .filter((a) => !isOutdoorOnly || a.activity_type !== "VirtualRide")
+        .reduce((sum, a) => sum + a.distance, 0);
+
+      // For outdoor-only components skip the gear fallback — Strava total includes virtual km
       const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
-      const current_distance = Math.max(activityDistance, gearDistance);
+      const current_distance = isOutdoorOnly
+        ? activityDistance
+        : Math.max(activityDistance, gearDistance);
 
       await supabaseAdmin
         .from("components")

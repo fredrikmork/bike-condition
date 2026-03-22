@@ -29,7 +29,6 @@ import { formatDistance } from "@/lib/wear/calculator";
 import { getBikeConfig } from "@/lib/components/visibility";
 import { getBatteryHealth } from "@/lib/wear/battery";
 import { markChargedAction } from "@/app/actions/bike-config";
-import { getVirtualPeriodsAction } from "@/app/actions/virtual-periods";
 import { cn } from "@/lib/utils";
 import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
 
@@ -61,26 +60,15 @@ interface BikeDetailProps {
   bike: BikeWithComponents;
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
+  virtualKm?: number;
 }
 
-export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: BikeDetailProps) {
+export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtualKm = 0 }: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
   const [mutedSheetOpen, setMutedSheetOpen] = useState(false);
-  const [hasActiveTrainerPeriod, setHasActiveTrainerPeriod] = useState(false);
 
-  useEffect(() => {
-    setHasActiveTrainerPeriod(false);
-    getVirtualPeriodsAction(bike.id).then((r) => {
-      if (!r.success || !r.data) return;
-      const today = new Date().toISOString().slice(0, 10);
-      const active = r.data.some((p) => {
-        const end = p.end_date ?? today;
-        return today >= p.start_date && today <= end;
-      });
-      setHasActiveTrainerPeriod(active);
-    });
-  }, [bike.id]);
+  const hasVirtualRides = virtualKm > 0;
 
   const mutedComponents = bike.components.filter((c) => c.muted);
   const [chargeDate, setChargeDate] = useState<Date>(new Date());
@@ -188,6 +176,21 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {bike.is_primary && <Badge variant="secondary">Primary</Badge>}
             <Badge variant="outline">{formatDistance(bike.total_distance ?? 0)}</Badge>
+            {hasVirtualRides && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-muted-foreground">
+                    {formatDistance(virtualKm)} virtual
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p className="max-w-xs">
+                    {formatDistance(virtualKm)} ridden on an indoor trainer (Zwift / virtual rides).
+                    Wheels and brake cables do not count this distance.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
 
             {/* Electronic charge chip */}
             {isElectronic && (
@@ -266,7 +269,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync }: Bik
           bikeConfig={config}
           lastSync={lastSync}
           bikeId={bike.id}
-          hasActiveTrainerPeriod={hasActiveTrainerPeriod}
+          hasVirtualRides={hasVirtualRides}
         />
 
         {mutedComponents.length > 0 && (
