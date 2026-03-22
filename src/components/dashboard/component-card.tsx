@@ -75,7 +75,21 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     return () => clearTimeout(timer);
   }, [focused, setFocusedComponentId]);
 
+  // Reset notes expand state when notes content changes
+  useEffect(() => {
+    setNotesExpanded(false);
+  }, [component.notes]);
+
+  // Detect whether notes text overflows 2 lines (must run in collapsed state)
+  useEffect(() => {
+    if (notesExpanded || !notesRef.current) return;
+    setNotesOverflows(notesRef.current.scrollHeight > notesRef.current.clientHeight);
+  }, [component.notes, notesExpanded]);
+
   const [expanded, setExpanded] = useState(false);
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  const [notesOverflows, setNotesOverflows] = useState(false);
+  const notesRef = useRef<HTMLParagraphElement>(null);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -122,8 +136,8 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
   // Brand/model/spec → shown on card face
   const hasFaceInfo = !!(component.brand || component.model || component.spec);
 
-  // Lube/notes → live behind expand
-  const canExpand = !!(component.lube_type || component.notes);
+  // Lube type → lives behind expand toggle at the bottom
+  const canExpand = !!component.lube_type;
 
   // All metadata null → show ghost CTA
   const isUnedited = !hasFaceInfo && !component.lube_type && !component.notes;
@@ -270,10 +284,34 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
             </div>
           )}
 
+          {/* Notes — always visible above progress bar */}
+          {component.notes && (
+            <div className="mt-2 mb-3">
+              <p
+                ref={notesRef}
+                className={cn(
+                  "text-xs text-muted-foreground leading-relaxed",
+                  !notesExpanded && "line-clamp-2"
+                )}
+              >
+                {component.notes}
+              </p>
+              {notesOverflows && (
+                <button
+                  type="button"
+                  onClick={() => setNotesExpanded((v) => !v)}
+                  className="mt-0.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-pointer"
+                >
+                  {notesExpanded ? "Show less" : "Show more"}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Wear bar */}
           <Progress
             value={cappedPercentage}
-            className={cn("h-2 mb-3", !hasFaceInfo && !isUnedited && "mt-3")}
+            className={cn("h-2 mb-3", !hasFaceInfo && !isUnedited && !component.notes && "mt-3")}
             indicatorClassName={indicatorColor}
           />
 
@@ -344,19 +382,12 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
             </div>
           </div>
 
-          {/* Expanded metadata: lube chip + notes */}
+          {/* Expanded metadata: lube type */}
           {canExpand && expanded && (
-            <div className="mt-3 pt-3 border-t space-y-2">
-              {component.lube_type && (
-                <Badge variant="secondary" className="text-[10px]">
-                  {LUBE_LABELS[component.lube_type as LubeType]}
-                </Badge>
-              )}
-              {component.notes && (
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {component.notes}
-                </p>
-              )}
+            <div className="mt-3 pt-3 border-t">
+              <Badge variant="secondary" className="text-[10px]">
+                {LUBE_LABELS[component.lube_type as LubeType]}
+              </Badge>
             </div>
           )}
         </CardContent>
