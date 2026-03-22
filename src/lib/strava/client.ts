@@ -81,14 +81,14 @@ export class StravaClient {
       const activities = await this.getActivities({
         after,
         page,
-        per_page: 100,
+        per_page: 200,
       });
 
       if (activities.length === 0) break;
 
       allActivities.push(...activities);
 
-      if (activities.length < 100) break;
+      if (activities.length < 200) break;
     }
 
     return allActivities;

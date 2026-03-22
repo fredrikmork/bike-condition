@@ -48,11 +48,12 @@ export async function syncActivities(
     //     → keeps the first sync well within Vercel Hobby's 10 s hard limit.
     //     Component wear is still accurate because the gear-based fallback
     //     (bike.total_distance − bike_distance_at_install) covers all older rides.
+    const OVERLAP_MS = 7 * 24 * 60 * 60 * 1000; // 7 days — catches late-posted activities
     const lastSync = options.fullSync
       ? new Date(0)
       : syncStatus?.last_activity_sync
-        ? new Date(syncStatus.last_activity_sync as string)
-        : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // 90 days ago
+        ? new Date(new Date(syncStatus.last_activity_sync as string).getTime() - OVERLAP_MS)
+        : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // 90 days ago (first sync)
 
     // Full re-sync: delete existing activities so we rebuild from scratch
     if (options.fullSync) {
@@ -96,9 +97,12 @@ export async function syncActivities(
         continue;
       }
 
+      // Prefer sport_type (new Strava field) over the deprecated type field
+      const activityType = activity.sport_type ?? activity.type;
+
       // Only sync cycling activities
       const cyclingTypes = ["Ride", "VirtualRide", "EBikeRide", "Handcycle", "Velomobile"];
-      if (!cyclingTypes.includes(activity.type)) {
+      if (!cyclingTypes.includes(activityType)) {
         result.skipped++;
         continue;
       }
@@ -113,7 +117,7 @@ export async function syncActivities(
         distance: Math.round(activity.distance),
         moving_time: activity.moving_time,
         start_date: activity.start_date,
-        activity_type: activity.type,
+        activity_type: activityType,
       });
     }
 
