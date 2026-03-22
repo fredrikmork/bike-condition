@@ -141,7 +141,7 @@ export function ComponentGroup({
                     hasHistory={typesWithHistory.has(component.type)}
                     lastSync={lastSync}
                     displayName={shortName(component.name)}
-                    outdoorOnly={hasVirtualRides && TRAINER_PAUSE_TYPES.has(component.type)}
+                    outdoorOnly={false}
                   />
                 ))}
               </div>

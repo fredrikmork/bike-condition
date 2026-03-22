@@ -168,6 +168,11 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   Custom
                 </Badge>
               )}
+              {outdoorOnly && (
+                <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground shrink-0">
+                  Outdoor km only
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <StatusIndicator status={wear.status} isOverdue={wear.isOverdue} />
