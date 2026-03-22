@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,7 +29,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { updateComponentAction } from "@/app/actions/components";
 import { getSuggestedDistance, LUBE_LABELS, formatDistance } from "@/lib/wear/calculator";
 import type { Component, LubeType } from "@/lib/supabase/types";
 
@@ -49,19 +47,29 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+export type UpdateComponentData = {
+  name: string;
+  brand: string | null;
+  model: string | null;
+  spec: string | null;
+  lube_type: LubeType | null;
+  recommended_distance: number;
+  notes: string | null;
+};
+
 interface EditComponentDialogProps {
   component: Component;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSave: (data: UpdateComponentData) => void;
 }
 
 export function EditComponentDialog({
   component,
   open,
   onOpenChange,
+  onSave,
 }: EditComponentDialogProps) {
-  const [loading, setLoading] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -101,32 +109,16 @@ export function EditComponentDialog({
   const suggestedM = getSuggestedDistance(component.type, lubeType ?? null);
   const suggestedKm = suggestedM ? Math.round(suggestedM / 1000) : null;
 
-  async function onSubmit(values: FormValues) {
-    setLoading(true);
-    try {
-      const result = await updateComponentAction(component.id, {
-        name: isCustom ? (values.name ?? component.name) : component.name,
-        brand: values.brand || null,
-        model: values.model || null,
-        spec: values.spec || null,
-        lube_type: (values.lube_type as LubeType) ?? null,
-        recommended_distance: values.recommended_distance_km * 1000,
-        notes: values.notes || null,
-      });
-
-      if (result.success) {
-        toast.success(`${values.name ?? component.name} updated`);
-        onOpenChange(false);
-      } else {
-        toast.error("Failed to update component", { description: result.error });
-      }
-    } catch {
-      toast.error("Failed to update component", {
-        description: "An unexpected error occurred",
-      });
-    } finally {
-      setLoading(false);
-    }
+  function onSubmit(values: FormValues) {
+    onSave({
+      name: isCustom ? (values.name ?? component.name) : component.name,
+      brand: values.brand || null,
+      model: values.model || null,
+      spec: values.spec || null,
+      lube_type: (values.lube_type as LubeType) ?? null,
+      recommended_distance: values.recommended_distance_km * 1000,
+      notes: values.notes || null,
+    });
   }
 
   return (
@@ -282,13 +274,10 @@ export function EditComponentDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving…" : "Save"}
-            </Button>
+            <Button type="submit">Save</Button>
           </DialogFooter>
         </form>
       </DialogContent>

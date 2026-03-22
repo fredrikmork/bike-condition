@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -21,57 +20,34 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { replaceComponentAction } from "@/app/actions/replace";
 
 interface ReplaceDialogProps {
-  componentId: string;
   componentName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onReplace: (date: Date) => void;
 }
 
 export function ReplaceDialog({
-  componentId,
   componentName,
   open,
   onOpenChange,
+  onReplace,
 }: ReplaceDialogProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (open) setDate(new Date());
-  }, [open]);
+  function handleOpenChange(v: boolean) {
+    if (v) setDate(new Date());
+    onOpenChange(v);
+  }
 
-  async function handleReplace() {
-    setLoading(true);
-    try {
-      const result = await replaceComponentAction(
-        componentId,
-        date.toISOString()
-      );
-      if (result.success) {
-        toast.success(`${componentName} replaced`, {
-          description: `Replacement date: ${format(date, "PPP")}`,
-        });
-        onOpenChange(false);
-      } else {
-        toast.error("Failed to replace component", {
-          description: result.error,
-        });
-      }
-    } catch {
-      toast.error("Failed to replace component", {
-        description: "An unexpected error occurred",
-      });
-    } finally {
-      setLoading(false);
-    }
+  function handleReplace() {
+    onReplace(date);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Replace {componentName}</DialogTitle>
@@ -119,13 +95,10 @@ export function ReplaceDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={loading}
           >
             Cancel
           </Button>
-          <Button onClick={handleReplace} disabled={loading}>
-            {loading ? "Replacing..." : "Replace"}
-          </Button>
+          <Button onClick={handleReplace}>Replace</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

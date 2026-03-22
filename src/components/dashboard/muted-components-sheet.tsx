@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useOptimistic, useTransition } from "react";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,20 +25,26 @@ export function MutedComponentsSheet({
   open,
   onOpenChange,
 }: MutedComponentsSheetProps) {
-  const [unmuting, setUnmuting] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const [optimisticComponents, removeOptimistic] = useOptimistic(
+    components,
+    (state: Component[], id: string) => state.filter((c) => c.id !== id)
+  );
 
-  async function handleUnmute(component: Component) {
-    setUnmuting(component.id);
-    try {
-      const result = await muteComponentAction(component.id, false);
-      if (!result.success) {
-        toast.error("Failed to unmute component", { description: result.error });
+  function handleUnmute(component: Component) {
+    startTransition(async () => {
+      removeOptimistic(component.id);
+      try {
+        const result = await muteComponentAction(component.id, false);
+        if (!result.success) {
+          toast.error("Failed to unmute component", { description: result.error });
+        } else {
+          toast.success(`${component.name} unmuted`);
+        }
+      } catch {
+        toast.error("Failed to unmute component");
       }
-    } catch {
-      toast.error("Failed to unmute component");
-    } finally {
-      setUnmuting(null);
-    }
+    });
   }
 
   return (
@@ -53,10 +59,10 @@ export function MutedComponentsSheet({
         </SheetHeader>
 
         <div className="mt-6 space-y-3">
-          {components.length === 0 ? (
+          {optimisticComponents.length === 0 ? (
             <p className="text-sm text-muted-foreground">No hidden components.</p>
           ) : (
-            components.map((component) => (
+            optimisticComponents.map((component) => (
               <div
                 key={component.id}
                 className="flex items-center justify-between rounded-lg border px-3 py-2.5"
@@ -68,7 +74,6 @@ export function MutedComponentsSheet({
                   variant="ghost"
                   size="sm"
                   className="ml-3 shrink-0 h-7 text-xs"
-                  disabled={unmuting === component.id}
                   onClick={() => handleUnmute(component)}
                 >
                   <Bell className="h-3.5 w-3.5 mr-1.5" />

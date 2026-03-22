@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useOptimistic, useTransition } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -41,9 +41,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StatusIndicator } from "./status-indicator";
 import { ReplaceDialog } from "./replace-dialog";
-import { EditComponentDialog } from "./edit-component-dialog";
+import { EditComponentDialog, type UpdateComponentData } from "./edit-component-dialog";
 import { ComponentHistorySheet } from "./component-history-sheet";
-import { deleteComponentAction, muteComponentAction } from "@/app/actions/components";
+import { deleteComponentAction, muteComponentAction, updateComponentAction } from "@/app/actions/components";
+import { replaceComponentAction } from "@/app/actions/replace";
 import {
   calculateComponentWear,
   formatDistance,
@@ -68,6 +69,13 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
   const focused = focusedComponentId === component.id;
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const [, startTransition] = useTransition();
+  const [optimisticHidden, setOptimisticHidden] = useOptimistic(false, (_, v: boolean) => v);
+  const [optimisticComponent, applyOptimisticUpdate] = useOptimistic(
+    component,
+    (state: Component, update: Partial<Component>) => ({ ...state, ...update })
+  );
+
   const [expanded, setExpanded] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
   const [notesOverflows, setNotesOverflows] = useState(false);
@@ -81,49 +89,113 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     return () => clearTimeout(timer);
   }, [focused, setFocusedComponentId]);
 
-  // Reset notes expand state when notes content changes
-  useEffect(() => {
-    setNotesExpanded(false);
-  }, [component.notes]);
-
   // Detect whether notes text overflows 2 lines (must run in collapsed state)
   useEffect(() => {
     if (notesExpanded || !notesRef.current) return;
     setNotesOverflows(notesRef.current.scrollHeight > notesRef.current.clientHeight);
   }, [component.notes, notesExpanded]);
+
   const [editOpen, setEditOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [muting, setMuting] = useState(false);
 
-  async function handleMute() {
-    setMuting(true);
-    try {
-      const result = await muteComponentAction(component.id, true);
-      if (!result.success) {
-        toast.error("Failed to mute component", { description: result.error });
+  function handleMute() {
+    startTransition(async () => {
+      setOptimisticHidden(true);
+      try {
+        const result = await muteComponentAction(component.id, true);
+        if (!result.success) {
+          toast.error("Failed to mute component", { description: result.error });
+        } else {
+          toast.success(`${component.name} muted`);
+        }
+      } catch {
+        toast.error("Failed to mute component");
       }
-    } catch {
-      toast.error("Failed to mute component");
-    } finally {
-      setMuting(false);
-    }
+    });
   }
 
-  const wear = calculateComponentWear(component);
+  function handleDelete() {
+    setDeleteDialogOpen(false);
+    startTransition(async () => {
+      setOptimisticHidden(true);
+      try {
+        const result = await deleteComponentAction(component.id);
+        if (result.success) {
+          toast.success(`${component.name} removed`);
+        } else {
+          toast.error("Failed to delete component", { description: result.error });
+        }
+      } catch {
+        toast.error("Failed to delete component", {
+          description: "An unexpected error occurred",
+        });
+      }
+    });
+  }
+
+  function handleSaveEdit(data: UpdateComponentData) {
+    setEditOpen(false);
+    startTransition(async () => {
+      applyOptimisticUpdate({
+        name: data.name,
+        brand: data.brand,
+        model: data.model,
+        spec: data.spec,
+        lube_type: data.lube_type,
+        recommended_distance: data.recommended_distance,
+        notes: data.notes,
+      });
+      try {
+        const result = await updateComponentAction(component.id, data);
+        if (result.success) {
+          toast.success(`${data.name} updated`);
+        } else {
+          toast.error("Failed to update component", { description: result.error });
+        }
+      } catch {
+        toast.error("Failed to update component", { description: "An unexpected error occurred" });
+      }
+    });
+  }
+
+  function handleReplace(date: Date) {
+    setReplaceOpen(false);
+    startTransition(async () => {
+      applyOptimisticUpdate({
+        current_distance: 0,
+        installed_at: date.toISOString(),
+      });
+      try {
+        const result = await replaceComponentAction(component.id, date.toISOString());
+        if (result.success) {
+          toast.success(`${component.name} replaced`, {
+            description: `Replacement date: ${format(date, "PPP")}`,
+          });
+        } else {
+          toast.error("Failed to replace component", { description: result.error });
+        }
+      } catch {
+        toast.error("Failed to replace component", { description: "An unexpected error occurred" });
+      }
+    });
+  }
+
+  if (optimisticHidden) return null;
+
+  const wear = calculateComponentWear(optimisticComponent);
   const cappedPercentage = Math.min(wear.percentage, 100);
   const isCustom = component.type === "custom";
 
-  const installed = new Date(component.installed_at).getTime();
+  const installed = new Date(optimisticComponent.installed_at).getTime();
   const created = new Date(component.created_at).getTime();
   const wasReplaced = Math.abs(installed - created) >= 60_000;
   const installedLabel = wasReplaced ? "Replaced" : "Tracking since";
-  const installedDate = format(new Date(component.installed_at), "d MMM yyyy");
+  const installedDate = format(new Date(optimisticComponent.installed_at), "d MMM yyyy");
 
   // True when the component was installed after the last sync — distances are stale
   const needsSync = lastSync
-    ? new Date(component.installed_at) > new Date(lastSync)
+    ? new Date(optimisticComponent.installed_at) > new Date(lastSync)
     : false;
 
   const indicatorColor =
@@ -134,32 +206,13 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
         : "bg-status-healthy";
 
   // Brand/model/spec → shown on card face
-  const hasFaceInfo = !!(component.brand || component.model || component.spec);
+  const hasFaceInfo = !!(optimisticComponent.brand || optimisticComponent.model || optimisticComponent.spec);
 
   // Lube type → lives behind expand toggle at the bottom
-  const canExpand = !!component.lube_type;
+  const canExpand = !!optimisticComponent.lube_type;
 
   // All metadata null → show ghost CTA
-  const isUnedited = !hasFaceInfo && !component.lube_type && !component.notes;
-
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      const result = await deleteComponentAction(component.id);
-      if (result.success) {
-        toast.success(`${component.name} removed`);
-      } else {
-        toast.error("Failed to delete component", { description: result.error });
-      }
-    } catch {
-      toast.error("Failed to delete component", {
-        description: "An unexpected error occurred",
-      });
-    } finally {
-      setDeleting(false);
-      setDeleteDialogOpen(false);
-    }
-  }
+  const isUnedited = !hasFaceInfo && !optimisticComponent.lube_type && !optimisticComponent.notes;
 
   const focusRingClass = focused
     ? wear.status === "critical"
@@ -176,7 +229,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <h4 className="text-sm font-medium truncate">{displayName ?? component.name}</h4>
+              <h4 className="text-sm font-medium truncate">{displayName ?? optimisticComponent.name}</h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   Custom
@@ -222,7 +275,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <DropdownMenuItem onClick={handleMute} disabled={muting}>
+                      <DropdownMenuItem onClick={handleMute}>
                         <BellOff className="mr-2 h-3.5 w-3.5" />
                         Mute
                       </DropdownMenuItem>
@@ -261,14 +314,14 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           {/* Subtitle: brand/model text + spec chip, or unedited ghost CTA */}
           {(hasFaceInfo || isUnedited) && (
             <div className="flex items-center gap-1.5 min-w-0 mt-0.5 mb-3">
-              {(component.brand || component.model) && (
+              {(optimisticComponent.brand || optimisticComponent.model) && (
                 <span className="text-xs text-muted-foreground truncate">
-                  {[component.brand, component.model].filter(Boolean).join(" ")}
+                  {[optimisticComponent.brand, optimisticComponent.model].filter(Boolean).join(" ")}
                 </span>
               )}
-              {component.spec && (
+              {optimisticComponent.spec && (
                 <Badge variant="outline" className="text-[10px] font-normal shrink-0">
-                  {component.spec}
+                  {optimisticComponent.spec}
                 </Badge>
               )}
               {isUnedited && (
@@ -285,7 +338,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           )}
 
           {/* Notes — always visible above progress bar */}
-          {component.notes && (
+          {optimisticComponent.notes && (
             <div className="mt-2 mb-3">
               <p
                 ref={notesRef}
@@ -294,7 +347,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                   !notesExpanded && "line-clamp-2"
                 )}
               >
-                {component.notes}
+                {optimisticComponent.notes}
               </p>
               {notesOverflows && (
                 <button
@@ -311,7 +364,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           {/* Wear bar */}
           <Progress
             value={cappedPercentage}
-            className={cn("h-2 mb-3", !hasFaceInfo && !isUnedited && !component.notes && "mt-3")}
+            className={cn("h-2 mb-3", !hasFaceInfo && !isUnedited && !optimisticComponent.notes && "mt-3")}
             indicatorClassName={indicatorColor}
           />
 
@@ -342,8 +395,8 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="cursor-default">
-                    {formatDistance(component.current_distance ?? 0)} /{" "}
-                    {formatDistance(component.recommended_distance)}
+                    {formatDistance(optimisticComponent.current_distance ?? 0)} /{" "}
+                    {formatDistance(optimisticComponent.recommended_distance)}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">
@@ -352,8 +405,8 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
               </Tooltip>
             ) : (
               <span>
-                {formatDistance(component.current_distance ?? 0)} /{" "}
-                {formatDistance(component.recommended_distance)}
+                {formatDistance(optimisticComponent.current_distance ?? 0)} /{" "}
+                {formatDistance(optimisticComponent.recommended_distance)}
               </span>
             )}
             <div className="flex items-center gap-2">
@@ -386,7 +439,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           {canExpand && expanded && (
             <div className="mt-3 pt-3 border-t">
               <Badge variant="secondary" className="text-[10px]">
-                {LUBE_LABELS[component.lube_type as LubeType]}
+                {LUBE_LABELS[optimisticComponent.lube_type as LubeType]}
               </Badge>
             </div>
           )}
@@ -398,13 +451,14 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
         component={component}
         open={editOpen}
         onOpenChange={setEditOpen}
+        onSave={handleSaveEdit}
       />
 
       <ReplaceDialog
-        componentId={component.id}
         componentName={component.name}
         open={replaceOpen}
         onOpenChange={setReplaceOpen}
+        onReplace={handleReplace}
       />
 
       {hasHistory && (
@@ -428,7 +482,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+            <AlertDialogAction onClick={handleDelete}>
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
