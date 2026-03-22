@@ -68,6 +68,12 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
   const focused = focusedComponentId === component.id;
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const [expanded, setExpanded] = useState(false);
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  const [notesOverflows, setNotesOverflows] = useState(false);
+  const notesRef = useRef<HTMLParagraphElement>(null);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+
   useEffect(() => {
     if (!focused) return;
     cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -85,12 +91,6 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     if (notesExpanded || !notesRef.current) return;
     setNotesOverflows(notesRef.current.scrollHeight > notesRef.current.clientHeight);
   }, [component.notes, notesExpanded]);
-
-  const [expanded, setExpanded] = useState(false);
-  const [notesExpanded, setNotesExpanded] = useState(false);
-  const [notesOverflows, setNotesOverflows] = useState(false);
-  const notesRef = useRef<HTMLParagraphElement>(null);
-  const [replaceOpen, setReplaceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
