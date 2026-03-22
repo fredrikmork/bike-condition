@@ -193,6 +193,7 @@ Required in `.env.local`:
 
 - All code should follow the project's linting and formatting rules.
 - Before any commit, ensure that `npm run lint` passes without errors.
+- **Do not commit or push unless you are confident the code works.** Lint passing is not sufficient — runtime errors (e.g. React hook ordering, missing state declarations) require a build check (`pnpm run build`) before committing. If a build is not feasible, flag it to the user rather than pushing potentially broken code.
 - When generating code, follow consistent naming conventions, clear structure, and idiomatic patterns for the chosen tech stack.
 - Prefer modular, testable functions and components.
 - When suggesting refactors or improvements, prioritize readability, maintainability, and long‑term scalability.
