@@ -12,19 +12,28 @@ export async function saveUserEmail(
   email: string
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Not authenticated" };
+  const stravaId = session?.stravaId;
+  if (!stravaId) return { success: false, error: "Not authenticated" };
 
   const parsed = EmailSchema.safeParse({ email });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const { error } = await supabaseAdmin
+  const { error, data: updated } = await supabaseAdmin
     .from("users")
     .update({ email: parsed.data.email })
-    .eq("id", session.userId);
+    .eq("strava_id", stravaId)
+    .select("id");
 
-  if (error) return { success: false, error: "Failed to save email" };
+  if (error) {
+    console.error("[saveUserEmail] update failed:", error.message, "stravaId:", stravaId);
+    return { success: false, error: "Failed to save email" };
+  }
+  if (!updated || updated.length === 0) {
+    console.error("[saveUserEmail] no rows matched stravaId:", stravaId);
+    return { success: false, error: "User not found" };
+  }
 
   return { success: true };
 }
