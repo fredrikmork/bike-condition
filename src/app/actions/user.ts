@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { track } from "@vercel/analytics/server";
 
 const EmailSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -34,6 +35,8 @@ export async function saveUserEmail(
     console.error("[saveUserEmail] no rows matched stravaId:", stravaId);
     return { success: false, error: "User not found" };
   }
+
+  await track("email_notifications_enabled");
 
   return { success: true };
 }

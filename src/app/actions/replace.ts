@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth/config";
 import { replaceComponent, getComponentById, getBikeById } from "@/lib/db/queries";
 import { clearNotificationsForComponent } from "@/lib/notifications";
 import { revalidatePath } from "next/cache";
+import { track } from "@vercel/analytics/server";
 
 export async function replaceComponentAction(
   componentId: string,
@@ -43,6 +44,18 @@ export async function replaceComponentAction(
 
   // Clear notification log so the freshly installed component can trigger new notifications
   await clearNotificationsForComponent(componentId);
+
+  const wearPct = component.current_distance && component.recommended_distance
+    ? Math.round((component.current_distance / component.recommended_distance) * 100)
+    : 0;
+  const daysInstalled = Math.round(
+    (Date.now() - new Date(component.installed_at).getTime()) / 86400000
+  );
+  await track("component_replaced", {
+    component_type: component.type,
+    wear_pct: wearPct,
+    days_installed: daysInstalled,
+  });
 
   revalidatePath("/");
 

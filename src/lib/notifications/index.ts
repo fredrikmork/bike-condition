@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { sendWarnEmail, sendCriticalEmail } from "@/lib/email";
+import { track } from "@vercel/analytics/server";
 
 const WARN_THRESHOLD = 80;
 const CRITICAL_THRESHOLD = 100;
@@ -25,7 +26,7 @@ export async function checkAndSendNotifications(userId: string): Promise<void> {
   // Fetch all active (non-replaced, non-muted) components with their bike name
   const { data: components } = await supabaseAdmin
     .from("components")
-    .select("id, name, current_distance, recommended_distance, bike_id, bikes(name)")
+    .select("id, name, type, current_distance, recommended_distance, bike_id, bikes(name)")
     .eq("bikes.user_id", userId)
     .is("replaced_at", null)
     .eq("muted", false)
@@ -66,6 +67,7 @@ export async function checkAndSendNotifications(userId: string): Promise<void> {
     if (wearPct >= CRITICAL_THRESHOLD && !alreadyNotified.has(`${component.id}:critical`)) {
       try {
         await sendCriticalEmail(emailOptions);
+        await track("notification_sent", { type: "critical", component_type: component.type, wear_pct: wearPct });
         await supabaseAdmin.from("notification_log").upsert(
           { user_id: userId, component_id: component.id, notification_type: "critical", wear_pct_at_send: wearPct },
           { onConflict: "component_id,notification_type" }
@@ -84,6 +86,7 @@ export async function checkAndSendNotifications(userId: string): Promise<void> {
     ) {
       try {
         await sendWarnEmail(emailOptions);
+        await track("notification_sent", { type: "warn", component_type: component.type, wear_pct: wearPct });
         await supabaseAdmin.from("notification_log").upsert(
           { user_id: userId, component_id: component.id, notification_type: "warn", wear_pct_at_send: wearPct },
           { onConflict: "component_id,notification_type" }

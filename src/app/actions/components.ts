@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth/config";
 import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault, getComponentHistory, updateComponent } from "@/lib/db/queries";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { track } from "@vercel/analytics/server";
 import type { LubeType, Component } from "@/lib/supabase/types";
 
 const UpdateComponentSchema = z.object({
@@ -46,6 +47,8 @@ export async function addComponentAction(
   });
 
   if (!result) return { success: false, error: "Failed to add component" };
+
+  await track("component_added", { component_type: data.type });
 
   revalidatePath("/");
   return { success: true };
@@ -114,6 +117,8 @@ export async function muteComponentAction(
     .eq("id", componentId);
 
   if (error) return { success: false, error: error.message };
+
+  if (muted) await track("component_muted", { component_type: component.type });
 
   revalidatePath("/");
   return { success: true };

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth/config";
 import { syncBikes } from "@/lib/sync/bikes";
 import { syncActivities } from "@/lib/sync/activities";
 import { revalidatePath } from "next/cache";
+import { track } from "@vercel/analytics/server";
 
 export interface SyncResult {
   success: boolean;
@@ -38,6 +39,12 @@ export async function syncStravaData(fullSync = false): Promise<SyncResult> {
   // Sync bikes (updates component distances using activity data + gear fallback)
   const bikeResult = await syncBikes(session.userId);
   errors.push(...bikeResult.errors);
+
+  await track("manual_sync", {
+    activities_synced: activityResult.synced,
+    full_sync: fullSync,
+    success: errors.length === 0,
+  });
 
   // Revalidate the dashboard page
   revalidatePath("/");
