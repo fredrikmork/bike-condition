@@ -7,6 +7,7 @@ export const StravaAthleteSchema = z.object({
   username: z.string().nullable(),
   firstname: z.string(),
   lastname: z.string(),
+  email: z.string().nullable().optional(),
   city: z.string().nullable(),
   state: z.string().nullable(),
   country: z.string().nullable(),
