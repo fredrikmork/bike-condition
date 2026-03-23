@@ -42,22 +42,22 @@ export function SyncButton({ lastSynced }: SyncButtonProps) {
             <SidebarMenuButton
               onClick={handleSync}
               disabled={syncing}
-              tooltip="Manuell synkronisering"
+              tooltip="Manual sync"
             >
               <RefreshCw className={cn("h-4 w-4", syncing && "animate-spin")} />
-              <span>{syncing ? "Synkroniserer..." : "Synkroniser Strava"}</span>
+              <span>{syncing ? "Syncing..." : "Sync Strava"}</span>
             </SidebarMenuButton>
           </TooltipTrigger>
           <TooltipContent side="right" className="max-w-64">
-            Appen synkroniseres automatisk etter hver tur via Strava. Bruk denne knappen manuelt hvis noe ser feil ut, eller etter at du har oppdatert en komponent.
+            Strava automatically triggers a sync after each ride. Use this manually if something looks off or after editing a component.
           </TooltipContent>
         </Tooltip>
         <p className="px-2 pt-0.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
           {syncing
-            ? "Henter turer og sykler…"
+            ? "Fetching rides & bikes…"
             : lastSynced
-              ? `Sist synkronisert ${formatRelativeTime(lastSynced)}`
-              : "Ikke synkronisert ennå"}
+              ? `Last synced ${formatRelativeTime(lastSynced)}`
+              : "Never synced"}
         </p>
       </SidebarMenuItem>
     </SidebarMenu>

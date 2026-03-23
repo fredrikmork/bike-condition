@@ -41,7 +41,7 @@ export function DashboardHeader() {
             </Button>
           </TooltipTrigger>
           <TooltipContent className="max-w-64">
-            Synkroniseres automatisk etter hver Strava-tur. Bruk denne hvis noe ser feil ut eller etter at du har oppdatert en komponent.
+            Strava automatically triggers a sync after each ride. Use this manually if something looks off or after editing a component.
           </TooltipContent>
         </Tooltip>
         <Tooltip>

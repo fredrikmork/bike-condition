@@ -110,9 +110,9 @@ export function LoginPage() {
 
           {/* Headline */}
           <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Know your bike
+            Know your bike&apos;s
             <br />
-            <span className="text-muted-foreground">inside out.</span>
+            <span className="text-muted-foreground">components.</span>
           </h1>
           <p className="mb-8 max-w-lg text-base text-muted-foreground">
             Connect Strava and get automatic wear tracking for every component —

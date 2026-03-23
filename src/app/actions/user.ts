@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth/config";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 const EmailSchema = z.object({
-  email: z.string().email("Ugyldig e-postadresse"),
+  email: z.string().email("Invalid email address"),
 });
 
 export async function saveUserEmail(
@@ -24,7 +24,7 @@ export async function saveUserEmail(
     .update({ email: parsed.data.email })
     .eq("id", session.userId);
 
-  if (error) return { success: false, error: "Kunne ikke lagre e-post" };
+  if (error) return { success: false, error: "Failed to save email" };
 
   return { success: true };
 }

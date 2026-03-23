@@ -31,7 +31,7 @@ Clickable SVG components showing detailed wear information.
 ### Infrastructure
 - Next.js 16 with App Router, React 19, TypeScript 5.9 (strict mode)
 - Auth.js v5 with Strava OAuth (JWT session strategy)
-- Supabase database with RLS-protected tables: users, bikes, components, activities, user_tokens, sync_status
+- Supabase database with RLS-protected tables: users, bikes, components, activities, user_tokens, sync_status, notification_log
 - Vercel hosting with automatic deployments from GitHub
 - ESLint 9 flat config
 
@@ -42,11 +42,13 @@ Clickable SVG components showing detailed wear information.
 - Collapsible component groups (Front Wheel, Rear Wheel, Drivetrain) with worst-status summary
 - Two-column component grid at wider screen widths
 - Sidebar: bike count with n+1 joke, total distance, collapsible Needs Attention section
+- Header toolbar: manual sync button, notification bell, theme toggle
 - Dark theme
 
 ### Core Features
 - Strava OAuth login/logout
-- Activity sync from Strava (full history + incremental)
+- **Strava webhook**: automatic activity sync triggered by Strava after every ride (no manual action needed)
+- Activity sync from Strava (full history + incremental, 7-day overlap)
 - Bike sync with automatic component distance updates
 - Component wear tracking using `MAX(activity-based, gear-based)` distance calculation
 - Default components auto-created for new bikes
@@ -56,34 +58,13 @@ Clickable SVG components showing detailed wear information.
 - Batch wheel replace: replace all wheel-mounted components at once from within the wheel group
 - Full re-sync capability to rebuild activity data from scratch
 - Electronic groupset tracker: km-since-charge chip for Di2/AXS/EPS bikes with per-system battery wear model (3 %/year degradation) and warning states
+- **Email notifications**: wear alerts at 80 % (warn) and 100 % (critical) via Resend — deduped per component install, reset on replacement
 
-### Recent changes (2026-02-24)
-- **Needs Attention → focus component**: Clicking a Needs Attention sidebar item scrolls to and highlights the corresponding ComponentCard with a status-coloured ring. Groups auto-expand if needed. Focus clears after 3 s.
-- **"Tracking since" label**: Components without a replacement date show "Tracking since [date]" instead of "Installed [date]".
-- **Pointer cursor + tooltips on component action menu**: All dropdown items have pointer cursor (changed in the shadcn primitive). Edit, Replace, Mute, View history and Delete each have a descriptive tooltip.
-- **Muted progress bar for paused components**: Trainer-paused components show a neutral grey progress bar instead of the status colour.
-- **`brake_cables` now paused during trainer periods** (visual only — badge + muted bar).
-- **Trainer period sync decoupled from visual display**: `TRAINER_PAUSE_TYPES` now only controls the Trainer badge and muted bar. All components accumulate distance from every activity using the standard `MAX(activity_sum, gear_distance)` formula — no virtual-ride exclusion in sync.
-
-### Recent changes (2026-02-22)
-- **Trainer periods**: Users can define date ranges when a bike was on an indoor trainer. Managed in the bike config dialog. When a period is currently active, affected component groups and cards show a "Trainer" badge.
-- **Bike header metadata**: Frame type (Road/Mountain/Cross/Time Trial), dominant sport type (Ride/Virtual/MTB derived from activity history), and weight chips shown in the bike header. Outer Card wrapper removed for a flatter layout. Initial bike selection prefers Ride bikes over virtual-only bikes.
-- **Mute components**: Components can be muted to hide them from the dashboard and suppress wear warnings. Accessible via a "X hidden components" link at the bottom of the component list.
-- Sidebar redesign: StatsCards removed from dashboard; stats moved to sidebar (bike count, total distance, Needs Attention)
-- Needs Attention list in sidebar: first 3 items shown, expandable, click navigates to bike
-- n+1 bike joke as description text in sidebar Bikes section
-- Component groups (Front Wheel, Rear Wheel, Drivetrain) as collapsible cards with worst-status summary
-- Two-column grid inside groups and for ungrouped components at sm+ breakpoints
-- Front/Rear prefix stripped from component names inside wheel group cards
-- Batch "Replace whole wheel" dialog with checklist and shared date picker
-- Electronic groupset charge chip with date dialog, battery health warnings, and tooltip
-- Add Component dialog replaced free-text input with a category-grouped type dropdown; only non-installed types shown; recommended distance auto-fills for standard types
-- Decorative icons removed from component card headers
-
-### Recent Fixes (2026-02-16)
-- Fixed activity sync gap that missed rides from Oct 2025 – Feb 2026 (page limit removed)
-- Component distances now use activity data with gear-based fallback (MAX of both)
-- Sync order: activities first, then bikes
+### Recent changes (2026-03-23)
+- **Strava webhook**: POST `/api/strava/webhook` auto-syncs after each activity. Responds immediately, runs sync in background via `after()`. GET handler responds to Strava hub challenge for subscription setup.
+- **Email notifications**: `checkAndSendNotifications(userId)` runs after each webhook sync. Sends warn/critical emails via Resend. `notification_log` table tracks sent notifications to avoid duplicates. Log cleared on component replacement.
+- **Email settings**: Bell icon in dashboard header opens dialog to set notification email. BellOff + red dot when no email is configured.
+- **Header toolbar**: Sync, bell, and theme toggle moved to dashboard header. Actions section removed from sidebar.
 
 ## 3. What's next?
 
@@ -95,6 +76,5 @@ Clickable SVG components showing detailed wear information.
 ### v2
 - Graphs and historical visualizations of component wear over time
 - Handle cases where users edit past Strava activities (recalculate wear)
-- Email notifications for component replacement reminders (Resend)
 - User preferences for replacement intervals
 - Manual bike selection as "featured" bike

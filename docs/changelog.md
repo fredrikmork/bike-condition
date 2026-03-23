@@ -2,6 +2,38 @@
 
 All notable changes for this project in this file.
 
+## 2026-03-23: Strava webhook, email notifications & header toolbar
+
+### New features
+
+- **Strava webhook**: `POST /api/strava/webhook` receives activity events from Strava and triggers an incremental sync automatically after every ride — no manual action required. `GET` handler responds to Strava's hub challenge for subscription verification. Sync runs in the background via Next.js `after()` so the response to Strava is always immediate.
+- **Webhook subscription script**: `scripts/setup-strava-webhook.ts` registers, lists, and deletes Strava push subscriptions. Run once with `npx tsx --env-file=.env.local scripts/setup-strava-webhook.ts`.
+- **Email notifications**: After each webhook-triggered sync, `checkAndSendNotifications(userId)` checks all active components and sends wear alerts via Resend — warn at ≥80 %, critical at ≥100 %. Deduplication via `notification_log` table ensures each threshold triggers only one email per component install. Log is cleared when a component is replaced.
+- **Email settings UI**: Bell icon in the dashboard header opens a dialog to set the notification email address. Shows BellOff + red dot when no email is configured. Tooltip shows the current address when set.
+
+### Changes
+
+- **Header toolbar**: Sync button (↻), notification bell, and theme toggle consolidated in the dashboard header. Actions section removed from sidebar.
+- **`notification_log` table**: `component_id`, `notification_type` (`warn`/`critical`), `sent_at`, `wear_pct_at_send`. Unique index on `(component_id, notification_type)` prevents duplicate sends.
+- **`.env.example`**: Documents all required environment variables including `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `NEXT_PUBLIC_APP_URL`, `STRAVA_WEBHOOK_SUBSCRIPTION_ID`.
+- All UI text standardised to English.
+
+### Files changed
+- `src/app/api/strava/webhook/route.ts` — new: webhook GET/POST handler
+- `src/lib/notifications/index.ts` — new: `checkAndSendNotifications`, `clearNotificationsForComponent`
+- `src/lib/email/index.ts` — new: Resend client, `sendWarnEmail`, `sendCriticalEmail`
+- `src/app/actions/user.ts` — new: `saveUserEmail`, `getUserEmail`
+- `src/components/layout/email-settings-dialog.tsx` — new: email settings dialog
+- `src/components/layout/dashboard-header.tsx` — sync button, bell icon, email dialog
+- `src/components/layout/app-sidebar.tsx` — removed Actions section
+- `src/app/actions/replace.ts` — clears notification log on component replace
+- `src/lib/supabase/types.ts` — `notification_log` table types
+- `src/lib/strava/schemas.ts` — `email` field added to `StravaAthleteSchema`
+- `scripts/setup-strava-webhook.ts` — new: webhook subscription management script
+- `.env.example` — new: documents all env vars
+- `tsconfig.json` — `scripts/` excluded from Next.js compilation
+- DB migration: `supabase/migrations/20260323_notification_log.sql`
+
 ## 2026-02-24: UX polish & trainer display fixes
 
 ### Enhancements

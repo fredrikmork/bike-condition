@@ -51,32 +51,31 @@ export function EmailSettingsDialog({ open, onOpenChange, currentEmail }: Props)
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            E-postvarsler
+            Email notifications
           </DialogTitle>
           <DialogDescription>
-            Legg til e-postadressen din for å motta varsler når komponenter nærmer seg
-            utskiftningstid.
+            Add your email address to receive alerts when components are approaching their replacement limit.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2 py-2">
-          <Label htmlFor="email">E-postadresse</Label>
+          <Label htmlFor="email">Email address</Label>
           <Input
             id="email"
             type="email"
-            placeholder="deg@eksempel.no"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
-          {saved && <p className="text-sm text-green-500">Lagret!</p>}
+          {saved && <p className="text-sm text-green-500">Saved!</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Avbryt
+            Cancel
           </Button>
           <Button onClick={handleSave} disabled={isPending || !email}>
-            {isPending ? "Lagrer…" : "Lagre"}
+            {isPending ? "Saving…" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

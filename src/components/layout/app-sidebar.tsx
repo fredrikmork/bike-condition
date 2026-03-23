@@ -17,7 +17,6 @@ import {
 import { SidebarBikeList } from "./sidebar-bike-list";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import { SidebarAttentionItems } from "./sidebar-attention-items";
-import { SyncButton } from "@/components/shared/sync-button";
 import { formatDistance } from "@/lib/wear/calculator";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 
@@ -65,13 +64,6 @@ export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
             <p className="px-2 pt-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
               {formatDistance(totalDistance)} total
             </p>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Actions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SyncButton lastSynced={lastSynced} />
           </SidebarGroupContent>
         </SidebarGroup>
 
