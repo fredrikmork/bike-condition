@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LogOut, Mail, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useMounted } from "@/hooks/use-mounted";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -16,10 +18,20 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmailSettingsDialog } from "./email-settings-dialog";
+import { getUserEmail } from "@/app/actions/user";
 
 export function SidebarUserMenu() {
   const { data: session } = useSession();
   const mounted = useMounted();
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mounted && session?.userId) {
+      getUserEmail().then(setCurrentEmail);
+    }
+  }, [mounted, session?.userId]);
 
   // Render a placeholder during SSR to avoid Radix useId hydration mismatch
   if (!mounted) {
@@ -72,6 +84,16 @@ export function SidebarUserMenu() {
             align="start"
             sideOffset={4}
           >
+            <DropdownMenuItem onClick={() => setEmailDialogOpen(true)}>
+              <Mail className="mr-2 h-4 w-4" />
+              E-postvarsler
+              {currentEmail && (
+                <span className="ml-auto text-xs text-muted-foreground truncate max-w-28">
+                  {currentEmail}
+                </span>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
@@ -79,6 +101,11 @@ export function SidebarUserMenu() {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      <EmailSettingsDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        currentEmail={currentEmail}
+      />
     </SidebarMenu>
   );
 }
