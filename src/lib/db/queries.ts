@@ -234,11 +234,12 @@ export async function getVirtualKmForBikes(bikeIds: string[]): Promise<Record<st
 
 // User queries
 export async function getUserEmail(userId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("users")
     .select("email")
     .eq("id", userId)
     .single();
+  if (error) console.error("[getUserEmail] query failed:", error.message, "| userId:", userId);
   return data?.email ?? null;
 }
 
