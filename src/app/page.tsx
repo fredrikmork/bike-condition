@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth/config";
-import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes, getVirtualKmForBikes } from "@/lib/db/queries";
-import { getUserEmail } from "@/app/actions/user";
+import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes, getVirtualKmForBikes, getUserEmail } from "@/lib/db/queries";
 import { LoginPage } from "@/components/shared/login-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -20,7 +19,7 @@ export default async function Home() {
   const [bikes, syncStatus, userEmail] = await Promise.all([
     getBikesWithComponents(session.userId),
     getSyncStatus(session.userId),
-    getUserEmail(),
+    getUserEmail(session.userId),
   ]);
 
   const lastSync = syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null;

@@ -232,6 +232,16 @@ export async function getVirtualKmForBikes(bikeIds: string[]): Promise<Record<st
   return result;
 }
 
+// User queries
+export async function getUserEmail(userId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("users")
+    .select("email")
+    .eq("id", userId)
+    .single();
+  return data?.email ?? null;
+}
+
 // Sync status queries
 export async function getSyncStatus(userId: string): Promise<SyncStatus | null> {
   const { data } = await supabaseAdmin
