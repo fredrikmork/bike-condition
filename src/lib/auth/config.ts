@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import Strava from "next-auth/providers/strava";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { storeTokens, refreshStravaToken } from "@/lib/strava/tokens";
-import { StravaClient } from "@/lib/strava/client";
 
 import type { NextAuthConfig } from "next-auth";
 
@@ -25,17 +24,17 @@ interface AppJWT {
 async function createOrUpdateUser(
   stravaId: number,
   name: string | null | undefined,
-  email: string | null | undefined,
   image: string | null | undefined
 ): Promise<string> {
   // Upsert — one round-trip instead of SELECT + INSERT/UPDATE
+  // email is intentionally excluded: it is managed by the user via settings
+  // and must not be overwritten on each login (Strava does not return email)
   const { data: user, error } = await supabaseAdmin
     .from("users")
     .upsert(
       {
         strava_id: stravaId,
         name: name ?? null,
-        email: email ?? null,
         profile_image: image ?? null,
       },
       { onConflict: "strava_id" }
@@ -81,24 +80,10 @@ const config: NextAuthConfig = {
       try {
         const stravaId = parseInt(account.providerAccountId, 10);
 
-        // Fetch athlete profile from Strava to get the email address.
-        // Auth.js Strava provider does not reliably return email, but
-        // the /athlete endpoint includes it when profile:read_all is granted.
-        let stravaEmail: string | null = user.email ?? null;
-        if (!stravaEmail && account.access_token) {
-          try {
-            const athlete = await new StravaClient(account.access_token).getAthlete();
-            stravaEmail = athlete.email ?? null;
-          } catch {
-            // Non-fatal — email stays null
-          }
-        }
-
         // Create or update user in Supabase
         const userId = await createOrUpdateUser(
           stravaId,
           user.name,
-          stravaEmail,
           user.image
         );
 
