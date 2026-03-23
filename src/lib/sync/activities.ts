@@ -76,20 +76,26 @@ export async function syncActivities(
 
     // Skip dedup query when we just deleted everything (full sync) or when
     // there was no previous sync (first-time users have no existing activities)
-    let existingIds = new Set<number>();
+    let existingIds = new Set<number>();          // fully handled — skip
+    let existingNullBikeIds = new Set<number>();  // in DB with bike_id=null — re-evaluate
     if (!options.fullSync && syncStatus?.last_activity_sync) {
       const activityIds = activities.map((a) => a.id);
       const { data: existingActivities } = await supabaseAdmin
         .from("activities")
-        .select("strava_activity_id")
+        .select("strava_activity_id, bike_id")
         .in("strava_activity_id", activityIds);
-      existingIds = new Set(
-        existingActivities?.map((a) => a.strava_activity_id) || []
-      );
+      for (const existing of existingActivities ?? []) {
+        if (existing.bike_id !== null) {
+          existingIds.add(existing.strava_activity_id);
+        } else {
+          existingNullBikeIds.add(existing.strava_activity_id);
+        }
+      }
     }
 
     // Process activities
     const newActivities: ActivityInsert[] = [];
+    const bikeIdUpdates: { strava_activity_id: number; bike_id: string }[] = [];
 
     for (const activity of activities) {
       if (existingIds.has(activity.id)) {
@@ -107,11 +113,21 @@ export async function syncActivities(
         continue;
       }
 
-      const bikeId = activity.gear_id ? bikeMap.get(activity.gear_id) : null;
+      const bikeId = activity.gear_id ? (bikeMap.get(activity.gear_id) ?? null) : null;
+
+      if (existingNullBikeIds.has(activity.id)) {
+        // Activity is already in DB with bike_id=null — update if we can now resolve it
+        if (bikeId !== null) {
+          bikeIdUpdates.push({ strava_activity_id: activity.id, bike_id: bikeId });
+        } else {
+          result.skipped++;
+        }
+        continue;
+      }
 
       newActivities.push({
         user_id: userId,
-        bike_id: bikeId ?? null,
+        bike_id: bikeId,
         strava_activity_id: activity.id,
         name: activity.name,
         distance: Math.round(activity.distance),
@@ -140,6 +156,19 @@ export async function syncActivities(
           result.synced += batches[i].length;
         }
       });
+    }
+
+    // Fix activities previously saved with bike_id=null that can now be linked
+    if (bikeIdUpdates.length > 0) {
+      await Promise.all(
+        bikeIdUpdates.map(({ strava_activity_id, bike_id }) =>
+          supabaseAdmin
+            .from("activities")
+            .update({ bike_id })
+            .eq("strava_activity_id", strava_activity_id)
+        )
+      );
+      result.synced += bikeIdUpdates.length;
     }
 
     // Update sync status
