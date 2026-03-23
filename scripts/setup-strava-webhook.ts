@@ -2,7 +2,7 @@
  * One-time script to register the Strava webhook subscription.
  *
  * Run with:
- *   npx tsx scripts/setup-strava-webhook.ts
+ *   npx tsx --env-file=.env.local scripts/setup-strava-webhook.ts
  *
  * Required env vars (from .env.local):
  *   STRAVA_CLIENT_ID
@@ -10,11 +10,6 @@
  *   STRAVA_WEBHOOK_VERIFY_TOKEN   – any secret string you choose
  *   NEXT_PUBLIC_APP_URL           – e.g. https://your-app.vercel.app
  */
-
-import * as dotenv from "dotenv";
-import * as path from "path";
-
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 const { STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_WEBHOOK_VERIFY_TOKEN, NEXT_PUBLIC_APP_URL } =
   process.env;
