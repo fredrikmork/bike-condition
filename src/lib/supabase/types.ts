@@ -288,6 +288,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      notification_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          component_id: string;
+          notification_type: "warn" | "critical";
+          sent_at: string;
+          wear_pct_at_send: number;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          component_id: string;
+          notification_type: "warn" | "critical";
+          sent_at?: string;
+          wear_pct_at_send: number;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          component_id?: string;
+          notification_type?: "warn" | "critical";
+          sent_at?: string;
+          wear_pct_at_send?: number;
+        };
+        Relationships: [];
+      };
       virtual_periods: {
         Row: {
           id: string;

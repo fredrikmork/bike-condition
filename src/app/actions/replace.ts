@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth/config";
 import { replaceComponent, getComponentById, getBikeById } from "@/lib/db/queries";
+import { clearNotificationsForComponent } from "@/lib/notifications";
 import { revalidatePath } from "next/cache";
 
 export async function replaceComponentAction(
@@ -39,6 +40,9 @@ export async function replaceComponentAction(
   if (!newComponent) {
     return { success: false, error: "Failed to replace component" };
   }
+
+  // Clear notification log so the freshly installed component can trigger new notifications
+  await clearNotificationsForComponent(componentId);
 
   revalidatePath("/");
 
