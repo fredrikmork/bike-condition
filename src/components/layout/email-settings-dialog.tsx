@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,10 @@ interface Props {
 export function EmailSettingsDialog({ open, onOpenChange, currentEmail }: Props) {
   const [email, setEmail] = useState(currentEmail ?? "");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEmail(currentEmail ?? "");
+  }, [currentEmail]);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
