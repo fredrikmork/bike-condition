@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/config";
 import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes, getVirtualKmForBikes } from "@/lib/db/queries";
+import { getUserEmail } from "@/app/actions/user";
 import { LoginPage } from "@/components/shared/login-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -16,16 +17,17 @@ export default async function Home() {
     return <LoginPage />;
   }
 
-  const [bikes, syncStatus] = await Promise.all([
+  const [bikes, syncStatus, userEmail] = await Promise.all([
     getBikesWithComponents(session.userId),
     getSyncStatus(session.userId),
+    getUserEmail(),
   ]);
 
   const lastSync = syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null;
 
   if (bikes.length === 0) {
     return (
-      <AppShell bikes={[]} lastSynced={lastSync}>
+      <AppShell bikes={[]} lastSynced={lastSync} userEmail={userEmail}>
         <EmptyState />
       </AppShell>
     );
@@ -38,7 +40,7 @@ export default async function Home() {
   ]);
 
   return (
-    <AppShell bikes={bikes} lastSynced={lastSync}>
+    <AppShell bikes={bikes} lastSynced={lastSync} userEmail={userEmail}>
       <Dashboard bikes={bikes} lastSync={lastSync} historyByBike={historyByBike} virtualKmByBike={virtualKmByBike} />
     </AppShell>
   );

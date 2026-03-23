@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bell, BellOff, RefreshCw } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -12,14 +12,14 @@ import { getUserEmail } from "@/app/actions/user";
 import { useSyncStrava } from "@/hooks/use-sync-strava";
 import { cn } from "@/lib/utils";
 
-export function DashboardHeader() {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
-  const { syncing, handleSync } = useSyncStrava();
+interface DashboardHeaderProps {
+  userEmail: string | null;
+}
 
-  useEffect(() => {
-    getUserEmail().then(setCurrentEmail);
-  }, []);
+export function DashboardHeader({ userEmail: initialEmail }: DashboardHeaderProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentEmail, setCurrentEmail] = useState<string | null>(initialEmail);
+  const { syncing, handleSync } = useSyncStrava();
 
   const hasEmail = !!currentEmail;
 
@@ -70,9 +70,9 @@ export function DashboardHeader() {
       </div>
       <EmailSettingsDialog
         open={dialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={async (open) => {
           setDialogOpen(open);
-          if (!open) getUserEmail().then(setCurrentEmail);
+          if (!open) setCurrentEmail(await getUserEmail());
         }}
         currentEmail={currentEmail}
       />
