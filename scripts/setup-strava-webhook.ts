@@ -21,7 +21,7 @@ if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_WEBHOOK_VERIFY_TOKEN |
   process.exit(1);
 }
 
-const callbackUrl = `${NEXT_PUBLIC_APP_URL}/api/strava/webhook`;
+const callbackUrl = `${NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/api/strava/webhook`;
 
 async function createSubscription() {
   console.log(`Creating Strava webhook subscription...`);
