@@ -13,8 +13,12 @@ function getResend(): Resend {
 const FROM = process.env.RESEND_FROM_EMAIL ?? "Bike Condition <noreply@resend.dev>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+function toKm(meters: number): string {
+  return Math.round(meters / 1000).toLocaleString("nb-NO");
+}
+
 function kmLeft(currentDistance: number, recommendedDistance: number): number {
-  return Math.max(0, Math.round(recommendedDistance - currentDistance));
+  return Math.max(0, Math.round((recommendedDistance - currentDistance) / 1000));
 }
 
 export async function sendWarnEmail(options: {
@@ -28,7 +32,7 @@ export async function sendWarnEmail(options: {
   const { to, componentName, bikeName, currentDistance, recommendedDistance, wearPct } = options;
   const remaining = kmLeft(currentDistance, recommendedDistance);
 
-  await getResend().emails.send({
+  const { error } = await getResend().emails.send({
     from: FROM,
     to,
     subject: `${componentName} nærmer seg utskiftningstid — ${bikeName}`,
@@ -45,11 +49,11 @@ export async function sendWarnEmail(options: {
   <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
     <tr>
       <td style="padding: 8px 0; color: #555;">Kjørt distanse</td>
-      <td style="padding: 8px 0; text-align: right;"><strong>${Math.round(currentDistance).toLocaleString("nb-NO")} km</strong></td>
+      <td style="padding: 8px 0; text-align: right;"><strong>${toKm(currentDistance)} km</strong></td>
     </tr>
     <tr>
       <td style="padding: 8px 0; color: #555;">Anbefalt grense</td>
-      <td style="padding: 8px 0; text-align: right;"><strong>${recommendedDistance.toLocaleString("nb-NO")} km</strong></td>
+      <td style="padding: 8px 0; text-align: right;"><strong>${toKm(recommendedDistance)} km</strong></td>
     </tr>
     <tr>
       <td style="padding: 8px 0; color: #555;">Gjenstår</td>
@@ -63,6 +67,10 @@ export async function sendWarnEmail(options: {
 </body>
 </html>`,
   });
+
+  if (error) {
+    throw new Error(`Resend warn email failed: ${error.message}`);
+  }
 }
 
 export async function sendCriticalEmail(options: {
@@ -76,7 +84,7 @@ export async function sendCriticalEmail(options: {
   const { to, componentName, bikeName, currentDistance, recommendedDistance, wearPct } = options;
   const overBy = Math.round(currentDistance - recommendedDistance);
 
-  await getResend().emails.send({
+  const { error } = await getResend().emails.send({
     from: FROM,
     to,
     subject: `⚠️ ${componentName} bør skiftes nå — ${bikeName}`,
@@ -93,15 +101,15 @@ export async function sendCriticalEmail(options: {
   <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
     <tr>
       <td style="padding: 8px 0; color: #555;">Kjørt distanse</td>
-      <td style="padding: 8px 0; text-align: right;"><strong>${Math.round(currentDistance).toLocaleString("nb-NO")} km</strong></td>
+      <td style="padding: 8px 0; text-align: right;"><strong>${toKm(currentDistance)} km</strong></td>
     </tr>
     <tr>
       <td style="padding: 8px 0; color: #555;">Anbefalt grense</td>
-      <td style="padding: 8px 0; text-align: right;"><strong>${recommendedDistance.toLocaleString("nb-NO")} km</strong></td>
+      <td style="padding: 8px 0; text-align: right;"><strong>${toKm(recommendedDistance)} km</strong></td>
     </tr>
     <tr>
       <td style="padding: 8px 0; color: #555;">Over grensen med</td>
-      <td style="padding: 8px 0; text-align: right; color: #dc2626;"><strong>${overBy.toLocaleString("nb-NO")} km</strong></td>
+      <td style="padding: 8px 0; text-align: right; color: #dc2626;"><strong>${Math.round(overBy / 1000).toLocaleString("nb-NO")} km</strong></td>
     </tr>
   </table>
   <a href="${APP_URL}" style="display: inline-block; background: #dc2626; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 6px; margin-top: 8px;">Registrer utskiftning</a>
@@ -111,4 +119,8 @@ export async function sendCriticalEmail(options: {
 </body>
 </html>`,
   });
+
+  if (error) {
+    throw new Error(`Resend critical email failed: ${error.message}`);
+  }
 }
