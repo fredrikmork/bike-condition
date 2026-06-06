@@ -1,16 +1,16 @@
 "use client";
 
 import { AlertTriangle, Bike, Settings2 } from "lucide-react";
-import { useBikeStore } from "@/lib/stores/bike-store";
-import { calculateComponentWear } from "@/lib/wear/calculator";
 import {
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuBadge,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useBikeStore } from "@/lib/stores/bike-store";
 import type { BikeWithComponents } from "@/lib/supabase/types";
+import { calculateComponentWear } from "@/lib/wear/calculator";
 
 interface SidebarBikeListProps {
   bikes: BikeWithComponents[];
@@ -32,7 +32,10 @@ export function SidebarBikeList({ bikes }: SidebarBikeListProps) {
           <SidebarMenuItem key={bike.id}>
             <SidebarMenuButton
               isActive={selectedBikeId === bike.id}
-              onClick={() => { setSelectedBikeId(bike.id); setOpenMobile(false); }}
+              onClick={() => {
+                setSelectedBikeId(bike.id);
+                setOpenMobile(false);
+              }}
               tooltip={bike.name}
             >
               <Bike className="h-4 w-4" />

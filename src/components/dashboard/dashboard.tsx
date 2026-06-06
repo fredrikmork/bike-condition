@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useBikeStore } from "@/lib/stores/bike-store";
-import { BikeDetail } from "./bike-detail";
 import type { BikeWithComponents } from "@/lib/supabase/types";
+import { BikeDetail } from "./bike-detail";
 
 interface DashboardProps {
   bikes: BikeWithComponents[];

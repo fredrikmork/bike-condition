@@ -59,11 +59,16 @@ Your role:
 ## Commands
 
 ```bash
-pnpm run dev     # Start development server (Turbopack default)
-pnpm run build   # Build for production
-pnpm start       # Start production server
-pnpm run lint    # Run ESLint
+pnpm run dev       # Start development server (Turbopack default)
+pnpm run build     # Build for production
+pnpm start         # Start production server
+pnpm run lint      # Biome format + lint check
+pnpm run lint:fix  # Biome with safe auto-fixes
+pnpm run format    # Format the repo with Biome
+pnpm run typecheck # tsc --noEmit
 ```
+
+A Husky `pre-commit` hook runs `lint-staged` (Biome on staged files) and `pnpm typecheck` on every commit. See README for details.
 
 ## Tech Stack
 
@@ -170,7 +175,7 @@ All components migrated to shadcn/ui:
 - JWT session strategy with Auth.js v5
 - Auth config in `src/lib/auth/config.ts` exports `{ handlers, auth, signIn, signOut }`
 - Use `auth()` instead of `getServerSession()` for server-side session access
-- ESLint 9 with flat config (`eslint.config.mjs`)
+- Biome 2.x for format + lint (`biome.json`); no ESLint
 
 ## Environment Variables
 
@@ -192,7 +197,7 @@ Required in `.env.local`:
 ## Code quality requirements:
 
 - All code should follow the project's linting and formatting rules.
-- Before any commit, ensure that `npm run lint` passes without errors.
+- The Husky pre-commit hook auto-runs Biome (format + lint) on staged files and `tsc --noEmit` on the project. If the hook fails, fix the underlying issue rather than bypassing it.
 - **Do not commit or push unless you are confident the code works.** Lint passing is not sufficient — runtime errors (e.g. React hook ordering, missing state declarations) require a build check (`pnpm run build`) before committing. If a build is not feasible, flag it to the user rather than pushing potentially broken code.
 - When generating code, follow consistent naming conventions, clear structure, and idiomatic patterns for the chosen tech stack.
 - Prefer modular, testable functions and components.

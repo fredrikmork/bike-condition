@@ -13,14 +13,16 @@ export const StravaAthleteSchema = z.object({
   country: z.string().nullable(),
   profile: z.string(), // profile image URL
   profile_medium: z.string().nullable(),
-  bikes: z.array(
-    z.object({
-      id: z.string(),
-      primary: z.boolean(),
-      name: z.string(),
-      distance: z.number(),
-    })
-  ).optional(),
+  bikes: z
+    .array(
+      z.object({
+        id: z.string(),
+        primary: z.boolean(),
+        name: z.string(),
+        distance: z.number(),
+      })
+    )
+    .optional(),
 });
 
 export const StravaGearSchema = z.object({

@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
-import { replaceComponent, getComponentById, getBikeById } from "@/lib/db/queries";
-import { clearNotificationsForComponent } from "@/lib/notifications";
-import { revalidatePath } from "next/cache";
 import { track } from "@vercel/analytics/server";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth/config";
+import { getBikeById, getComponentById, replaceComponent } from "@/lib/db/queries";
+import { clearNotificationsForComponent } from "@/lib/notifications";
 
 export async function replaceComponentAction(
   componentId: string,
@@ -23,7 +23,7 @@ export async function replaceComponentAction(
   }
 
   const replacedDate = new Date(replacedAt);
-  if (isNaN(replacedDate.getTime())) {
+  if (Number.isNaN(replacedDate.getTime())) {
     return { success: false, error: "Invalid date" };
   }
 
@@ -33,11 +33,7 @@ export async function replaceComponentAction(
     return { success: false, error: "Bike not found" };
   }
 
-  const newComponent = await replaceComponent(
-    componentId,
-    bike.total_distance ?? 0,
-    replacedDate
-  );
+  const newComponent = await replaceComponent(componentId, bike.total_distance ?? 0, replacedDate);
   if (!newComponent) {
     return { success: false, error: "Failed to replace component" };
   }
@@ -45,9 +41,10 @@ export async function replaceComponentAction(
   // Clear notification log so the freshly installed component can trigger new notifications
   await clearNotificationsForComponent(componentId);
 
-  const wearPct = component.current_distance && component.recommended_distance
-    ? Math.round((component.current_distance / component.recommended_distance) * 100)
-    : 0;
+  const wearPct =
+    component.current_distance && component.recommended_distance
+      ? Math.round((component.current_distance / component.recommended_distance) * 100)
+      : 0;
   const daysInstalled = Math.round(
     (Date.now() - new Date(component.installed_at).getTime()) / 86400000
   );

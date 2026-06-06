@@ -1,16 +1,15 @@
+import { COMPONENT_GROUPS, GROUPED_TYPES, TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
+import { isComponentVisible } from "@/lib/components/visibility";
+import type { BikeConfig, Component } from "@/lib/supabase/types";
 import { ComponentCard } from "./component-card";
 import { ComponentGroup } from "./component-group";
 import { SyncNudge } from "./sync-nudge";
-import { isComponentVisible } from "@/lib/components/visibility";
-import { COMPONENT_GROUPS, GROUPED_TYPES, TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
-import type { Component, BikeConfig } from "@/lib/supabase/types";
 
 interface ComponentListProps {
   components: Component[];
   typesWithHistory?: Set<string>;
   bikeConfig?: BikeConfig | null;
   lastSync?: string | null;
-  bikeId: string;
   hasVirtualRides?: boolean;
 }
 
@@ -19,13 +18,10 @@ export function ComponentList({
   typesWithHistory = new Set(),
   bikeConfig = null,
   lastSync,
-  bikeId,
   hasVirtualRides = false,
 }: ComponentListProps) {
   // Filter by visibility rules and mute state
-  const visible = components.filter(
-    (c) => !c.muted && isComponentVisible(c.type, bikeConfig)
-  );
+  const visible = components.filter((c) => !c.muted && isComponentVisible(c.type, bikeConfig));
 
   if (visible.length === 0) {
     return (
@@ -59,7 +55,6 @@ export function ComponentList({
             components={groupComponents}
             typesWithHistory={typesWithHistory}
             lastSync={lastSync}
-            bikeId={bikeId}
             hasVirtualRides={hasVirtualRides}
           />
         );

@@ -1,6 +1,6 @@
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { sendWarnEmail, sendCriticalEmail } from "@/lib/email";
 import { track } from "@vercel/analytics/server";
+import { sendCriticalEmail, sendWarnEmail } from "@/lib/email";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 const WARN_THRESHOLD = 80;
 const CRITICAL_THRESHOLD = 100;
@@ -70,13 +70,25 @@ export async function checkAndSendNotifications(userId: string): Promise<void> {
     if (wearPct >= CRITICAL_THRESHOLD && !alreadyNotified.has(`${component.id}:critical`)) {
       try {
         await sendCriticalEmail(emailOptions);
-        await track("notification_sent", { type: "critical", component_type: component.type, wear_pct: wearPct });
+        await track("notification_sent", {
+          type: "critical",
+          component_type: component.type,
+          wear_pct: wearPct,
+        });
         await supabaseAdmin.from("notification_log").upsert(
-          { user_id: userId, component_id: component.id, notification_type: "critical", wear_pct_at_send: wearPct },
+          {
+            user_id: userId,
+            component_id: component.id,
+            notification_type: "critical",
+            wear_pct_at_send: wearPct,
+          },
           { onConflict: "component_id,notification_type" }
         );
       } catch (err) {
-        console.error(`[notifications] Failed to send critical email for component ${component.id}:`, err instanceof Error ? err.message : err);
+        console.error(
+          `[notifications] Failed to send critical email for component ${component.id}:`,
+          err instanceof Error ? err.message : err
+        );
       }
       continue; // Don't also send warn if already critical
     }
@@ -89,13 +101,25 @@ export async function checkAndSendNotifications(userId: string): Promise<void> {
     ) {
       try {
         await sendWarnEmail(emailOptions);
-        await track("notification_sent", { type: "warn", component_type: component.type, wear_pct: wearPct });
+        await track("notification_sent", {
+          type: "warn",
+          component_type: component.type,
+          wear_pct: wearPct,
+        });
         await supabaseAdmin.from("notification_log").upsert(
-          { user_id: userId, component_id: component.id, notification_type: "warn", wear_pct_at_send: wearPct },
+          {
+            user_id: userId,
+            component_id: component.id,
+            notification_type: "warn",
+            wear_pct_at_send: wearPct,
+          },
           { onConflict: "component_id,notification_type" }
         );
       } catch (err) {
-        console.error(`[notifications] Failed to send warn email for component ${component.id}:`, err instanceof Error ? err.message : err);
+        console.error(
+          `[notifications] Failed to send warn email for component ${component.id}:`,
+          err instanceof Error ? err.message : err
+        );
       }
     }
   }
@@ -106,8 +130,5 @@ export async function checkAndSendNotifications(userId: string): Promise<void> {
  * This allows new notifications to be sent for the freshly installed component.
  */
 export async function clearNotificationsForComponent(componentId: string): Promise<void> {
-  await supabaseAdmin
-    .from("notification_log")
-    .delete()
-    .eq("component_id", componentId);
+  await supabaseAdmin.from("notification_log").delete().eq("component_id", componentId);
 }

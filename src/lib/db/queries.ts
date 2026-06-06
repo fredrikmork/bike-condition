@@ -1,5 +1,12 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import type { Bike, Component, ComponentInsert, SyncStatus, BikeWithComponents, LubeType } from "@/lib/supabase/types";
+import type {
+  Bike,
+  BikeWithComponents,
+  Component,
+  ComponentInsert,
+  LubeType,
+  SyncStatus,
+} from "@/lib/supabase/types";
 
 // Bike queries
 export async function getBikesForUser(userId: string): Promise<Bike[]> {
@@ -93,14 +100,8 @@ export async function replaceComponent(
   return newComponent;
 }
 
-export async function addComponent(
-  insert: ComponentInsert
-): Promise<Component | null> {
-  const { data } = await supabaseAdmin
-    .from("components")
-    .insert(insert)
-    .select()
-    .single();
+export async function addComponent(insert: ComponentInsert): Promise<Component | null> {
+  const { data } = await supabaseAdmin.from("components").insert(insert).select().single();
 
   return data;
 }
@@ -151,10 +152,7 @@ export async function getComponentHistory(
 }
 
 export async function deleteComponent(componentId: string): Promise<boolean> {
-  const { error } = await supabaseAdmin
-    .from("components")
-    .delete()
-    .eq("id", componentId);
+  const { error } = await supabaseAdmin.from("components").delete().eq("id", componentId);
 
   return !error;
 }
@@ -178,10 +176,7 @@ export async function addDeletedDefault(bikeId: string, componentType: string): 
 }
 
 export async function getBikeById(bikeId: string, userId?: string): Promise<Bike | null> {
-  let query = supabaseAdmin
-    .from("bikes")
-    .select("*")
-    .eq("id", bikeId);
+  let query = supabaseAdmin.from("bikes").select("*").eq("id", bikeId);
 
   if (userId) {
     query = query.eq("user_id", userId);
@@ -253,4 +248,3 @@ export async function getSyncStatus(userId: string): Promise<SyncStatus | null> 
 
   return data;
 }
-

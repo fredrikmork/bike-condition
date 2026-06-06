@@ -14,7 +14,12 @@
 const { STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_WEBHOOK_VERIFY_TOKEN, NEXT_PUBLIC_APP_URL } =
   process.env;
 
-if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_WEBHOOK_VERIFY_TOKEN || !NEXT_PUBLIC_APP_URL) {
+if (
+  !STRAVA_CLIENT_ID ||
+  !STRAVA_CLIENT_SECRET ||
+  !STRAVA_WEBHOOK_VERIFY_TOKEN ||
+  !NEXT_PUBLIC_APP_URL
+) {
   console.error(
     "Missing required env vars: STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_WEBHOOK_VERIFY_TOKEN, NEXT_PUBLIC_APP_URL"
   );
@@ -118,10 +123,14 @@ async function main() {
   if (existing.length > 0) {
     const alreadyRegistered = existing.find((s) => s.callback_url === callbackUrl);
     if (alreadyRegistered) {
-      console.log(`\nSubscription already exists for this URL (id: ${alreadyRegistered.id}). Nothing to do.`);
+      console.log(
+        `\nSubscription already exists for this URL (id: ${alreadyRegistered.id}). Nothing to do.`
+      );
       return;
     }
-    console.log(`\nNote: A subscription exists for a different URL. You may want to delete it first.`);
+    console.log(
+      `\nNote: A subscription exists for a different URL. You may want to delete it first.`
+    );
     console.log(`Run: npx tsx scripts/setup-strava-webhook.ts delete ${existing[0].id}`);
     return;
   }

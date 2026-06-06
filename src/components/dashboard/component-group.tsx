@@ -1,25 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { ChevronDown, CircleDot, Cog, RotateCw } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ComponentCard } from "./component-card";
-import { BatchReplaceDialog } from "./batch-replace-dialog";
-import { StatusIndicator } from "./status-indicator";
-import { calculateComponentWear, formatDistance } from "@/lib/wear/calculator";
-import { TRAINER_PAUSE_TYPES, type ComponentGroupDef } from "@/lib/components/groups";
+import { Card, CardContent } from "@/components/ui/card";
+import type { ComponentGroupDef } from "@/lib/components/groups";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
+import { calculateComponentWear, formatDistance } from "@/lib/wear/calculator";
+import { BatchReplaceDialog } from "./batch-replace-dialog";
+import { ComponentCard } from "./component-card";
+import { StatusIndicator } from "./status-indicator";
 
 interface ComponentGroupProps {
   group: ComponentGroupDef;
   components: Component[];
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
-  bikeId: string;
   hasVirtualRides?: boolean;
 }
 
@@ -28,7 +27,6 @@ export function ComponentGroup({
   components,
   typesWithHistory = new Set(),
   lastSync,
-  bikeId,
   hasVirtualRides = false,
 }: ComponentGroupProps) {
   const [expanded, setExpanded] = useState(false);
@@ -45,14 +43,11 @@ export function ComponentGroup({
 
   // Compute worst status across all group components
   const wears = components.map((c) => calculateComponentWear(c));
-  const worstStatus = wears.reduce<"healthy" | "warning" | "critical">(
-    (worst, w) => {
-      if (w.status === "critical") return "critical";
-      if (w.status === "warning" && worst !== "critical") return "warning";
-      return worst;
-    },
-    "healthy"
-  );
+  const worstStatus = wears.reduce<"healthy" | "warning" | "critical">((worst, w) => {
+    if (w.status === "critical") return "critical";
+    if (w.status === "warning" && worst !== "critical") return "warning";
+    return worst;
+  }, "healthy");
   const worstIsOverdue = wears.some((w) => w.isOverdue);
 
   // Most-worn component by percentage
@@ -96,7 +91,10 @@ export function ComponentGroup({
                 </Badge>
                 <StatusIndicator status={worstStatus} isOverdue={worstIsOverdue} />
                 {hasVirtualRides && group.id !== "drivetrain" && (
-                  <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-normal text-muted-foreground"
+                  >
                     Outdoor km only
                   </Badge>
                 )}
@@ -104,8 +102,7 @@ export function ComponentGroup({
               <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 {shortName(mostWorn.name)}
                 {" — "}
-                {Math.round(Math.min(mostWornWear.percentage, 100))}%
-                {" · "}
+                {Math.round(Math.min(mostWornWear.percentage, 100))}%{" · "}
                 {formatDistance(mostWornWear.remainingDistance)} left
               </p>
             </div>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { saveBikeConfigAction } from "@/app/actions/bike-config";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +12,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import type {
+  Bike,
+  BikeConfig,
+  BrakeType,
+  ElectronicSystem,
+  ShiftingType,
+  TireSystem,
+} from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
-import { saveBikeConfigAction } from "@/app/actions/bike-config";
-import type { Bike, BikeConfig, ShiftingType, BrakeType, TireSystem, ElectronicSystem } from "@/lib/supabase/types";
 
 interface BikeConfigDialogProps {
   bike: Bike;
@@ -37,13 +44,9 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
   const [electronicSystem, setElectronicSystem] = useState<ElectronicSystem | null>(
     (bike.electronic_system as ElectronicSystem) ?? null
   );
-  const [brakes, setBrakes] = useState<BrakeType | null>(
-    (bike.brake_type as BrakeType) ?? null
-  );
+  const [brakes, setBrakes] = useState<BrakeType | null>((bike.brake_type as BrakeType) ?? null);
   const [speed, setSpeed] = useState<number | null>(bike.drivetrain_speed ?? null);
-  const [tires, setTires] = useState<TireSystem | null>(
-    (bike.tire_system as TireSystem) ?? null
-  );
+  const [tires, setTires] = useState<TireSystem | null>((bike.tire_system as TireSystem) ?? null);
   const [saving, setSaving] = useState(false);
 
   const isComplete = shifting !== null && brakes !== null && speed !== null && tires !== null;
@@ -57,7 +60,9 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
         brake_type: brakes,
         drivetrain_speed: speed,
         tire_system: tires,
-        ...(shifting === "electronic" && electronicSystem ? { electronic_system: electronicSystem } : {}),
+        ...(shifting === "electronic" && electronicSystem
+          ? { electronic_system: electronicSystem }
+          : {}),
       };
       const result = await saveBikeConfigAction(bike.id, config);
       if (result.success) {
@@ -81,8 +86,7 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
         <DialogHeader>
           <DialogTitle>Configure {bike.name}</DialogTitle>
           <DialogDescription>
-            Tell us about your setup so we show the right components and
-            replacement intervals.
+            Tell us about your setup so we show the right components and replacement intervals.
           </DialogDescription>
         </DialogHeader>
 
@@ -192,7 +196,6 @@ export function BikeConfigDialog({ bike, open, onOpenChange }: BikeConfigDialogP
               />
             </div>
           </Section>
-
         </div>
 
         <DialogFooter>

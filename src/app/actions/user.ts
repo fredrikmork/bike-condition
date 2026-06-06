@@ -1,17 +1,15 @@
 "use server";
 
+import { track } from "@vercel/analytics/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { track } from "@vercel/analytics/server";
 
 const EmailSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
 
-export async function saveUserEmail(
-  email: string
-): Promise<{ success: boolean; error?: string }> {
+export async function saveUserEmail(email: string): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
   const stravaId = session?.stravaId;
   if (!stravaId) return { success: false, error: "Not authenticated" };

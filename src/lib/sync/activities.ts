@@ -1,6 +1,6 @@
-import { supabaseAdmin } from "@/lib/supabase/server";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import type { ActivityInsert } from "@/lib/supabase/types";
 
 interface SyncActivitiesResult {
@@ -30,15 +30,8 @@ export async function syncActivities(
 
     // Fetch sync status and bikes in parallel
     const [{ data: syncStatus }, { data: bikes }] = await Promise.all([
-      supabaseAdmin
-        .from("sync_status")
-        .select("last_activity_sync")
-        .eq("user_id", userId)
-        .single(),
-      supabaseAdmin
-        .from("bikes")
-        .select("id, strava_gear_id")
-        .eq("user_id", userId),
+      supabaseAdmin.from("sync_status").select("last_activity_sync").eq("user_id", userId).single(),
+      supabaseAdmin.from("bikes").select("id, strava_gear_id").eq("user_id", userId),
     ]);
 
     // Determine sync window:
@@ -57,10 +50,7 @@ export async function syncActivities(
 
     // Full re-sync: delete existing activities so we rebuild from scratch
     if (options.fullSync) {
-      await supabaseAdmin
-        .from("activities")
-        .delete()
-        .eq("user_id", userId);
+      await supabaseAdmin.from("activities").delete().eq("user_id", userId);
     }
 
     // Cap pages: explicit full sync = 200; everything else = 10 (incremental
@@ -76,8 +66,8 @@ export async function syncActivities(
 
     // Skip dedup query when we just deleted everything (full sync) or when
     // there was no previous sync (first-time users have no existing activities)
-    let existingIds = new Set<number>();          // fully handled — skip
-    let existingNullBikeIds = new Set<number>();  // in DB with bike_id=null — re-evaluate
+    const existingIds = new Set<number>(); // fully handled — skip
+    const existingNullBikeIds = new Set<number>(); // in DB with bike_id=null — re-evaluate
     if (!options.fullSync && syncStatus?.last_activity_sync) {
       const activityIds = activities.map((a) => a.id);
       const { data: existingActivities } = await supabaseAdmin
@@ -172,22 +162,20 @@ export async function syncActivities(
     }
 
     // Update sync status
-    await supabaseAdmin
-      .from("sync_status")
-      .upsert({
+    await supabaseAdmin.from("sync_status").upsert(
+      {
         user_id: userId,
         last_activity_sync: new Date().toISOString(),
         last_sync_error: result.errors.length > 0 ? result.errors.join("; ") : null,
-      }, {
+      },
+      {
         onConflict: "user_id",
-      });
+      }
+    );
 
     return result;
   } catch (error) {
-    result.errors.push(
-      `Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
+    result.errors.push(`Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     return result;
   }
 }
-

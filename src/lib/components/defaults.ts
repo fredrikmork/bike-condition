@@ -1,4 +1,4 @@
-import type { ComponentInsert, BikeConfig, BrakeType } from "@/lib/supabase/types";
+import type { BikeConfig, BrakeType, ComponentInsert } from "@/lib/supabase/types";
 
 export type ComponentType =
   // Drivetrain
@@ -37,21 +37,21 @@ export interface DefaultComponent {
 
 // Brake pad distances differ by brake type
 const BRAKE_PAD_DISTANCE: Record<BrakeType, number> = {
-  disc: 3_500_000,  // 3,500 km — mixed resin/sintered average (resin: 2,500–5,000 km; sintered: 5,000–8,000 km)
-  rim:  5_000_000,  // 5,000 km — alloy rim, dry conditions (3,000–7,000 km range)
+  disc: 3_500_000, // 3,500 km — mixed resin/sintered average (resin: 2,500–5,000 km; sintered: 5,000–8,000 km)
+  rim: 5_000_000, // 5,000 km — alloy rim, dry conditions (3,000–7,000 km range)
 };
 
 // Always-present components regardless of bike config
 const UNIVERSAL_COMPONENTS: DefaultComponent[] = [
-  { name: "Chain",          type: "chain",          recommended_distance: 3_000_000  }, // 11/12-speed at 0.5% stretch: 2,500–5,000 km
-  { name: "Cassette",       type: "cassette",        recommended_distance: 15_000_000 }, // 105/Ultegra: 8,000–20,000 km; replace 3× chain lifespan
-  { name: "Chainrings",     type: "chainrings",      recommended_distance: 25_000_000 }, // Aluminium road rings: 15,000–30,000 km
-  { name: "Bottom Bracket", type: "bottom_bracket",  recommended_distance: 15_000_000 }, // Sealed cartridge: 8,000–25,000 km
-  { name: "Pulley Wheels",  type: "pulley_wheels",   recommended_distance: 15_000_000 }, // OEM plastic: 8,000–20,000 km
-  { name: "Front Tire",     type: "tire_front",      recommended_distance: 10_000_000 }, // GP5000 front: 8,000–14,000 km (BicycleRollingResistance endurance test)
-  { name: "Rear Tire",      type: "tire_rear",       recommended_distance: 6_000_000  }, // GP5000 rear: 4,000–8,000 km
-  { name: "Bar Tape",       type: "bar_tape",        recommended_distance: 8_000_000  }, // 5,000–10,000 km depending on material and sweat exposure
-  { name: "Cleats",         type: "cleats",          recommended_distance: 10_000_000 }, // SPD-SL: 10,000–20,000 km (walking-dependent)
+  { name: "Chain", type: "chain", recommended_distance: 3_000_000 }, // 11/12-speed at 0.5% stretch: 2,500–5,000 km
+  { name: "Cassette", type: "cassette", recommended_distance: 15_000_000 }, // 105/Ultegra: 8,000–20,000 km; replace 3× chain lifespan
+  { name: "Chainrings", type: "chainrings", recommended_distance: 25_000_000 }, // Aluminium road rings: 15,000–30,000 km
+  { name: "Bottom Bracket", type: "bottom_bracket", recommended_distance: 15_000_000 }, // Sealed cartridge: 8,000–25,000 km
+  { name: "Pulley Wheels", type: "pulley_wheels", recommended_distance: 15_000_000 }, // OEM plastic: 8,000–20,000 km
+  { name: "Front Tire", type: "tire_front", recommended_distance: 10_000_000 }, // GP5000 front: 8,000–14,000 km (BicycleRollingResistance endurance test)
+  { name: "Rear Tire", type: "tire_rear", recommended_distance: 6_000_000 }, // GP5000 rear: 4,000–8,000 km
+  { name: "Bar Tape", type: "bar_tape", recommended_distance: 8_000_000 }, // 5,000–10,000 km depending on material and sweat exposure
+  { name: "Cleats", type: "cleats", recommended_distance: 10_000_000 }, // SPD-SL: 10,000–20,000 km (walking-dependent)
 ];
 
 /**
@@ -64,13 +64,13 @@ function buildConfiguredComponentList(config: BikeConfig): DefaultComponent[] {
   const padDistance = BRAKE_PAD_DISTANCE[config.brake_type];
   components.push(
     { name: "Brake Pads (Front)", type: "brake_pads_front", recommended_distance: padDistance },
-    { name: "Brake Pads (Rear)",  type: "brake_pads_rear",  recommended_distance: padDistance }
+    { name: "Brake Pads (Rear)", type: "brake_pads_rear", recommended_distance: padDistance }
   );
 
   if (config.brake_type === "disc") {
     components.push(
       { name: "Brake Rotor (Front)", type: "brake_rotor_front", recommended_distance: 25_000_000 }, // 15,000–40,000 km; descending volume is dominant factor
-      { name: "Brake Rotor (Rear)",  type: "brake_rotor_rear",  recommended_distance: 25_000_000 }
+      { name: "Brake Rotor (Rear)", type: "brake_rotor_rear", recommended_distance: 25_000_000 }
     );
     // Hydraulic disc → no brake cables
   }
@@ -92,7 +92,7 @@ function buildConfiguredComponentList(config: BikeConfig): DefaultComponent[] {
   if (config.tire_system !== "tubeless") {
     components.push(
       { name: "Inner Tube (Front)", type: "inner_tube_front", recommended_distance: 5_000_000 }, // Butyl: 3,000–6,000 km; primarily replaced on puncture
-      { name: "Inner Tube (Rear)",  type: "inner_tube_rear",  recommended_distance: 4_000_000 }
+      { name: "Inner Tube (Rear)", type: "inner_tube_rear", recommended_distance: 4_000_000 }
     );
   }
   // Tubeless → no inner tubes
@@ -138,21 +138,18 @@ export function getAvailableComponentTypes(
  * Kept for backwards compatibility with existing data.
  */
 export const DEFAULT_COMPONENTS: DefaultComponent[] = [
-  { name: "Chain",                type: "chain",             recommended_distance: 3_000_000  },
-  { name: "Cassette",             type: "cassette",          recommended_distance: 15_000_000 },
-  { name: "Front Tire",           type: "tire_front",        recommended_distance: 10_000_000 },
-  { name: "Rear Tire",            type: "tire_rear",         recommended_distance: 6_000_000  },
-  { name: "Brake Pads (Front)",   type: "brake_pads_front",  recommended_distance: 3_500_000  },
-  { name: "Brake Pads (Rear)",    type: "brake_pads_rear",   recommended_distance: 3_500_000  },
-  { name: "Bottom Bracket",       type: "bottom_bracket",    recommended_distance: 15_000_000 },
-  { name: "Chainring(s)",         type: "chainrings",        recommended_distance: 25_000_000 },
+  { name: "Chain", type: "chain", recommended_distance: 3_000_000 },
+  { name: "Cassette", type: "cassette", recommended_distance: 15_000_000 },
+  { name: "Front Tire", type: "tire_front", recommended_distance: 10_000_000 },
+  { name: "Rear Tire", type: "tire_rear", recommended_distance: 6_000_000 },
+  { name: "Brake Pads (Front)", type: "brake_pads_front", recommended_distance: 3_500_000 },
+  { name: "Brake Pads (Rear)", type: "brake_pads_rear", recommended_distance: 3_500_000 },
+  { name: "Bottom Bracket", type: "bottom_bracket", recommended_distance: 15_000_000 },
+  { name: "Chainring(s)", type: "chainrings", recommended_distance: 25_000_000 },
 ];
 
 /** Legacy factory — used only for unconfigured bikes during sync */
-export function createDefaultComponents(
-  bikeId: string,
-  bikeDistance: number
-): ComponentInsert[] {
+export function createDefaultComponents(bikeId: string, bikeDistance: number): ComponentInsert[] {
   return DEFAULT_COMPONENTS.map((component) => ({
     bike_id: bikeId,
     name: component.name,

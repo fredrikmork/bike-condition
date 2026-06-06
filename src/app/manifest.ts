@@ -4,8 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Bike Condition",
     short_name: "Bike Condition",
-    description:
-      "Track your bike component wear and know when it's time for maintenance",
+    description: "Track your bike component wear and know when it's time for maintenance",
     start_url: "/",
     display: "standalone",
     background_color: "#2a2a2a",

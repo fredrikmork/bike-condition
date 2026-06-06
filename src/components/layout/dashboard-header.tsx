@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { Bell, BellOff, RefreshCw } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { getUserEmail } from "@/app/actions/user";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { EmailSettingsDialog } from "./email-settings-dialog";
-import { getUserEmail } from "@/app/actions/user";
 import { useSyncStrava } from "@/hooks/use-sync-strava";
 import { cn } from "@/lib/utils";
+import { EmailSettingsDialog } from "./email-settings-dialog";
 
 const NOTIFICATIONS_ENABLED = false;
 
@@ -33,17 +33,13 @@ export function DashboardHeader({ userEmail: initialEmail }: DashboardHeaderProp
       <div className="ml-auto flex items-center gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSync}
-              disabled={syncing}
-            >
+            <Button variant="ghost" size="icon" onClick={handleSync} disabled={syncing}>
               <RefreshCw className={cn("h-4 w-4", syncing && "animate-spin")} />
             </Button>
           </TooltipTrigger>
           <TooltipContent className="max-w-64">
-            Strava automatically triggers a sync after each ride. Use this manually if something looks off or after editing a component.
+            Strava automatically triggers a sync after each ride. Use this manually if something
+            looks off or after editing a component.
           </TooltipContent>
         </Tooltip>
         {NOTIFICATIONS_ENABLED && (

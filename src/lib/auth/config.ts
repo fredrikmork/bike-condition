@@ -1,9 +1,8 @@
+import type { NextAuthConfig } from "next-auth";
 import NextAuth from "next-auth";
 import Strava from "next-auth/providers/strava";
+import { refreshStravaToken, storeTokens } from "@/lib/strava/tokens";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { storeTokens, refreshStravaToken } from "@/lib/strava/tokens";
-
-import type { NextAuthConfig } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
@@ -73,7 +72,7 @@ const config: NextAuthConfig = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (!account || account.provider !== "strava") {
+      if (account?.provider !== "strava") {
         return true;
       }
 
@@ -81,11 +80,7 @@ const config: NextAuthConfig = {
         const stravaId = parseInt(account.providerAccountId, 10);
 
         // Create or update user in Supabase
-        const userId = await createOrUpdateUser(
-          stravaId,
-          user.name,
-          user.image
-        );
+        const userId = await createOrUpdateUser(stravaId, user.name, user.image);
 
         // Attach DB userId to the Auth.js user object so the jwt callback
         // can read it without a second database query.
@@ -145,7 +140,10 @@ const config: NextAuthConfig = {
               );
             }
           } catch (error) {
-            console.error("Token refresh failed:", error instanceof Error ? error.message : "Unknown error");
+            console.error(
+              "Token refresh failed:",
+              error instanceof Error ? error.message : "Unknown error"
+            );
             // Return token as-is, client will need to re-authenticate
           }
         }

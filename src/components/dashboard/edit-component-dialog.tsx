@@ -1,8 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Info } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,14 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Info } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { getSuggestedDistance, LUBE_LABELS, formatDistance } from "@/lib/wear/calculator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Component, LubeType } from "@/lib/supabase/types";
+import { formatDistance, getSuggestedDistance, LUBE_LABELS } from "@/lib/wear/calculator";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(100).optional(),
@@ -127,8 +123,8 @@ export function EditComponentDialog({
         <DialogHeader>
           <DialogTitle>Edit {component.name}</DialogTitle>
           <DialogDescription>
-            Update component details. Lube type affects the suggested replacement
-            interval for chains.
+            Update component details. Lube type affects the suggested replacement interval for
+            chains.
           </DialogDescription>
         </DialogHeader>
 
@@ -138,9 +134,7 @@ export function EditComponentDialog({
             <div className="grid gap-1.5">
               <Label htmlFor="ec-name">Name</Label>
               <Input id="ec-name" {...register("name")} />
-              {errors.name && (
-                <p className="text-xs text-destructive">{errors.name.message}</p>
-              )}
+              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
           )}
 
@@ -160,15 +154,9 @@ export function EditComponentDialog({
           <div className="grid gap-1.5">
             <Label htmlFor="ec-spec">
               Spec{" "}
-              <span className="text-muted-foreground font-normal text-xs">
-                (full model string)
-              </span>
+              <span className="text-muted-foreground font-normal text-xs">(full model string)</span>
             </Label>
-            <Input
-              id="ec-spec"
-              placeholder="e.g. CN-HG701-11"
-              {...register("spec")}
-            />
+            <Input id="ec-spec" placeholder="e.g. CN-HG701-11" {...register("spec")} />
           </div>
 
           {/* Lube type — chain only */}
@@ -185,13 +173,11 @@ export function EditComponentDialog({
                   <SelectValue placeholder="Select lube type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(Object.entries(LUBE_LABELS) as [LubeType, string][]).map(
-                    ([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  )}
+                  {(Object.entries(LUBE_LABELS) as [LubeType, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -210,9 +196,8 @@ export function EditComponentDialog({
                 </TooltipTrigger>
                 <TooltipContent side="right" className="max-w-xs">
                   <p>
-                    These intervals are estimates based on average road cycling
-                    conditions. Always physically inspect your components — use
-                    this app as a guideline only.
+                    These intervals are estimates based on average road cycling conditions. Always
+                    physically inspect your components — use this app as a guideline only.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -247,19 +232,14 @@ export function EditComponentDialog({
               </p>
             )}
             {errors.recommended_distance_km && (
-              <p className="text-xs text-destructive">
-                {errors.recommended_distance_km.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.recommended_distance_km.message}</p>
             )}
           </div>
 
           {/* Notes */}
           <div className="grid gap-1.5">
             <Label htmlFor="ec-notes">
-              Notes{" "}
-              <span className="text-muted-foreground font-normal text-xs">
-                (optional)
-              </span>
+              Notes <span className="text-muted-foreground font-normal text-xs">(optional)</span>
             </Label>
             <Textarea
               id="ec-notes"
@@ -270,11 +250,7 @@ export function EditComponentDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit">Save</Button>

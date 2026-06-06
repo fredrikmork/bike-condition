@@ -7,23 +7,23 @@ import { supabaseAdmin } from "@/lib/supabase/server";
  * are considered "unmodified by the user" and will be updated.
  */
 const MIGRATIONS: Array<{ type: string; oldDistance: number; newDistance: number }> = [
-  { type: "cassette",          oldDistance: 10_000_000, newDistance: 15_000_000 },
-  { type: "chainrings",        oldDistance: 15_000_000, newDistance: 25_000_000 },
-  { type: "bottom_bracket",    oldDistance: 10_000_000, newDistance: 15_000_000 },
-  { type: "pulley_wheels",     oldDistance: 20_000_000, newDistance: 15_000_000 },
-  { type: "tire_front",        oldDistance:  5_000_000, newDistance: 10_000_000 },
-  { type: "tire_rear",         oldDistance:  4_000_000, newDistance:  6_000_000 },
-  { type: "brake_pads_front",  oldDistance:  1_500_000, newDistance:  3_500_000 },
-  { type: "brake_pads_rear",   oldDistance:  1_500_000, newDistance:  3_500_000 },
-  { type: "brake_pads_front",  oldDistance:  3_000_000, newDistance:  5_000_000 }, // rim brakes old default
-  { type: "brake_pads_rear",   oldDistance:  3_000_000, newDistance:  5_000_000 },
+  { type: "cassette", oldDistance: 10_000_000, newDistance: 15_000_000 },
+  { type: "chainrings", oldDistance: 15_000_000, newDistance: 25_000_000 },
+  { type: "bottom_bracket", oldDistance: 10_000_000, newDistance: 15_000_000 },
+  { type: "pulley_wheels", oldDistance: 20_000_000, newDistance: 15_000_000 },
+  { type: "tire_front", oldDistance: 5_000_000, newDistance: 10_000_000 },
+  { type: "tire_rear", oldDistance: 4_000_000, newDistance: 6_000_000 },
+  { type: "brake_pads_front", oldDistance: 1_500_000, newDistance: 3_500_000 },
+  { type: "brake_pads_rear", oldDistance: 1_500_000, newDistance: 3_500_000 },
+  { type: "brake_pads_front", oldDistance: 3_000_000, newDistance: 5_000_000 }, // rim brakes old default
+  { type: "brake_pads_rear", oldDistance: 3_000_000, newDistance: 5_000_000 },
   { type: "brake_rotor_front", oldDistance: 20_000_000, newDistance: 25_000_000 },
-  { type: "brake_rotor_rear",  oldDistance: 20_000_000, newDistance: 25_000_000 },
-  { type: "brake_cables",      oldDistance:  5_000_000, newDistance: 12_000_000 },
-  { type: "shifter_cables",    oldDistance:  5_000_000, newDistance: 10_000_000 },
-  { type: "inner_tube_front",  oldDistance:  3_000_000, newDistance:  5_000_000 },
-  { type: "inner_tube_rear",   oldDistance:  2_000_000, newDistance:  4_000_000 },
-  { type: "bar_tape",          oldDistance:  5_000_000, newDistance:  8_000_000 },
+  { type: "brake_rotor_rear", oldDistance: 20_000_000, newDistance: 25_000_000 },
+  { type: "brake_cables", oldDistance: 5_000_000, newDistance: 12_000_000 },
+  { type: "shifter_cables", oldDistance: 5_000_000, newDistance: 10_000_000 },
+  { type: "inner_tube_front", oldDistance: 3_000_000, newDistance: 5_000_000 },
+  { type: "inner_tube_rear", oldDistance: 2_000_000, newDistance: 4_000_000 },
+  { type: "bar_tape", oldDistance: 5_000_000, newDistance: 8_000_000 },
 ];
 
 /**

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { Mail } from "lucide-react";
+import { useState, useTransition } from "react";
+import { saveUserEmail } from "@/app/actions/user";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { saveUserEmail } from "@/app/actions/user";
 
 interface Props {
   open: boolean;
@@ -61,7 +61,8 @@ export function EmailSettingsDialog({ open, onOpenChange, currentEmail }: Props)
             Email notifications
           </DialogTitle>
           <DialogDescription>
-            Add your email address to receive alerts when components are approaching their replacement limit.
+            Add your email address to receive alerts when components are approaching their
+            replacement limit.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2 py-2">

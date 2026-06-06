@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { AlertTriangle, ChevronDown } from "lucide-react";
-import { useBikeStore } from "@/lib/stores/bike-store";
+import { useState } from "react";
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { calculateComponentWear } from "@/lib/wear/calculator";
 import { getBikeConfig, isComponentVisible } from "@/lib/components/visibility";
-import { cn } from "@/lib/utils";
+import { useBikeStore } from "@/lib/stores/bike-store";
 import type { BikeWithComponents } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
+import { calculateComponentWear } from "@/lib/wear/calculator";
 
 const INITIAL_VISIBLE = 3;
 
@@ -75,9 +75,7 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
                   setOpenMobile(false);
                 }}
                 tooltip={
-                  multipleBikes
-                    ? `${item.componentName} — ${item.bikeName}`
-                    : item.componentName
+                  multipleBikes ? `${item.componentName} — ${item.bikeName}` : item.componentName
                 }
                 className={
                   item.status === "critical"
@@ -87,9 +85,7 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
               >
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm leading-tight">
-                    {item.componentName}
-                  </span>
+                  <span className="truncate text-sm leading-tight">{item.componentName}</span>
                   {multipleBikes && (
                     <span className="truncate text-xs leading-tight opacity-60">
                       {item.bikeName}
@@ -113,9 +109,7 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
                     expanded && "rotate-180"
                   )}
                 />
-                <span className="text-xs">
-                  {expanded ? "Show less" : `${hidden} more`}
-                </span>
+                <span className="text-xs">{expanded ? "Show less" : `${hidden} more`}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}

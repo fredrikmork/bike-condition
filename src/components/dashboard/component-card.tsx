@@ -1,34 +1,24 @@
 "use client";
 
-import { useState, useRef, useEffect, useOptimistic, useTransition } from "react";
 import { format } from "date-fns";
 import {
+  BellOff,
+  ChevronDown,
+  History,
   MoreHorizontal,
   Pencil,
+  RefreshCw,
   RotateCw,
   Trash2,
-  History,
-  ChevronDown,
-  RefreshCw,
-  BellOff,
 } from "lucide-react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  deleteComponentAction,
+  muteComponentAction,
+  updateComponentAction,
+} from "@/app/actions/components";
+import { replaceComponentAction } from "@/app/actions/replace";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,20 +29,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { StatusIndicator } from "./status-indicator";
-import { ReplaceDialog } from "./replace-dialog";
-import { EditComponentDialog, type UpdateComponentData } from "./edit-component-dialog";
-import { ComponentHistorySheet } from "./component-history-sheet";
-import { deleteComponentAction, muteComponentAction, updateComponentAction } from "@/app/actions/components";
-import { replaceComponentAction } from "@/app/actions/replace";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  calculateComponentWear,
-  formatDistance,
-  LUBE_LABELS,
-} from "@/lib/wear/calculator";
-import { cn } from "@/lib/utils";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component, LubeType } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
+import { calculateComponentWear, formatDistance, LUBE_LABELS } from "@/lib/wear/calculator";
+import { ComponentHistorySheet } from "./component-history-sheet";
+import { EditComponentDialog, type UpdateComponentData } from "./edit-component-dialog";
+import { ReplaceDialog } from "./replace-dialog";
+import { StatusIndicator } from "./status-indicator";
 
 interface ComponentCardProps {
   component: Component;
@@ -64,7 +60,13 @@ interface ComponentCardProps {
   outdoorOnly?: boolean;
 }
 
-export function ComponentCard({ component, hasHistory = false, lastSync, displayName, outdoorOnly = false }: ComponentCardProps) {
+export function ComponentCard({
+  component,
+  hasHistory = false,
+  lastSync,
+  displayName,
+  outdoorOnly = false,
+}: ComponentCardProps) {
   const { focusedComponentId, setFocusedComponentId } = useBikeStore();
   const focused = focusedComponentId === component.id;
   const cardRef = useRef<HTMLDivElement>(null);
@@ -89,7 +91,8 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
     return () => clearTimeout(timer);
   }, [focused, setFocusedComponentId]);
 
-  // Detect whether notes text overflows 2 lines (must run in collapsed state)
+  // Detect whether notes text overflows 2 lines (must run in collapsed state).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: notes content drives DOM overflow re-measurement
   useEffect(() => {
     if (notesExpanded || !notesRef.current) return;
     setNotesOverflows(notesRef.current.scrollHeight > notesRef.current.clientHeight);
@@ -206,7 +209,11 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
         : "bg-status-healthy";
 
   // Brand/model/spec → shown on card face
-  const hasFaceInfo = !!(optimisticComponent.brand || optimisticComponent.model || optimisticComponent.spec);
+  const hasFaceInfo = !!(
+    optimisticComponent.brand ||
+    optimisticComponent.model ||
+    optimisticComponent.spec
+  );
 
   // Lube type → lives behind expand toggle at the bottom
   const canExpand = !!optimisticComponent.lube_type;
@@ -229,14 +236,19 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <h4 className="text-sm font-medium truncate">{displayName ?? optimisticComponent.name}</h4>
+              <h4 className="text-sm font-medium truncate">
+                {displayName ?? optimisticComponent.name}
+              </h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   Custom
                 </Badge>
               )}
               {outdoorOnly && (
-                <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground shrink-0">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-normal text-muted-foreground shrink-0"
+                >
                   Outdoor km only
                 </Badge>
               )}
@@ -280,7 +292,9 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                         Mute
                       </DropdownMenuItem>
                     </TooltipTrigger>
-                    <TooltipContent side="right">Hide wear alerts for this component</TooltipContent>
+                    <TooltipContent side="right">
+                      Hide wear alerts for this component
+                    </TooltipContent>
                   </Tooltip>
                   {hasHistory && (
                     <Tooltip>
@@ -304,7 +318,9 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
                         Delete
                       </DropdownMenuItem>
                     </TooltipTrigger>
-                    <TooltipContent side="right">Remove this component from tracking</TooltipContent>
+                    <TooltipContent side="right">
+                      Remove this component from tracking
+                    </TooltipContent>
                   </Tooltip>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -364,21 +380,23 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           {/* Wear bar */}
           <Progress
             value={cappedPercentage}
-            className={cn("h-2 mb-3", !hasFaceInfo && !isUnedited && !optimisticComponent.notes && "mt-3")}
+            className={cn(
+              "h-2 mb-3",
+              !hasFaceInfo && !isUnedited && !optimisticComponent.notes && "mt-3"
+            )}
             indicatorClassName={indicatorColor}
           />
 
           {/* Install date */}
           <div className="mb-2">
-            <Badge
-              variant="outline"
-              className="text-[10px] font-normal text-muted-foreground"
-            >
+            <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
               {installedLabel}: {installedDate}
             </Badge>
           </div>
 
           {/* Distance row + expand toggle */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: keyboard + role="button" provide a11y semantics */}
+          {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-expanded is valid for role="button" */}
           <div
             className={cn(
               "flex items-center justify-between text-xs text-muted-foreground",
@@ -389,7 +407,13 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
             aria-label={canExpand ? (expanded ? "Collapse details" : "Expand details") : undefined}
             tabIndex={canExpand ? 0 : undefined}
             onClick={canExpand ? () => setExpanded((v) => !v) : undefined}
-            onKeyDown={canExpand ? (e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); } : undefined}
+            onKeyDown={
+              canExpand
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v);
+                  }
+                : undefined
+            }
           >
             {outdoorOnly ? (
               <Tooltip>
@@ -482,9 +506,7 @@ export function ComponentCard({ component, hasHistory = false, lastSync, display
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Remove
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>Remove</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

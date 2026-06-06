@@ -8,7 +8,7 @@ interface StatusIndicatorProps {
 }
 
 const gradients: Record<string, string> = {
-  warning:  "linear-gradient(135deg, #fbbf24, #f97316)",
+  warning: "linear-gradient(135deg, #fbbf24, #f97316)",
   critical: "linear-gradient(135deg, #f87171, #dc2626)",
 };
 

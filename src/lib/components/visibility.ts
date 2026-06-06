@@ -4,10 +4,7 @@ import type { BikeConfig } from "@/lib/supabase/types";
  * Returns true if a component type should be visible given the bike's configuration.
  * When config is null (bike not yet configured), all components are shown.
  */
-export function isComponentVisible(
-  type: string,
-  config: BikeConfig | null
-): boolean {
+export function isComponentVisible(type: string, config: BikeConfig | null): boolean {
   if (!config) return true;
 
   // Electronic shifting → no cables
@@ -26,7 +23,8 @@ export function isComponentVisible(
       type === "brake_rotor_front" ||
       type === "brake_rotor_rear" ||
       type === "brake_rotors" // legacy
-    ) return false;
+    )
+      return false;
   }
 
   // Tubeless → no inner tubes

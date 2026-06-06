@@ -1,9 +1,9 @@
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { StravaClient } from "@/lib/strava/client";
-import { getValidAccessToken } from "@/lib/strava/tokens";
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
 import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
 import { migrateDefaultDistances } from "@/lib/components/migrate-defaults";
+import { StravaClient } from "@/lib/strava/client";
+import { getValidAccessToken } from "@/lib/strava/tokens";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import type { BikeInsert } from "@/lib/supabase/types";
 
 interface SyncBikesResult {
@@ -39,14 +39,10 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       .select("id, strava_gear_id, total_distance")
       .eq("user_id", userId);
 
-    const existingBikeMap = new Map(
-      existingBikes?.map((b) => [b.strava_gear_id, b]) || []
-    );
+    const existingBikeMap = new Map(existingBikes?.map((b) => [b.strava_gear_id, b]) || []);
 
     // Fetch all gear details in parallel instead of sequentially
-    const gearResults = await Promise.allSettled(
-      athlete.bikes.map((b) => client.getGear(b.id))
-    );
+    const gearResults = await Promise.allSettled(athlete.bikes.map((b) => client.getGear(b.id)));
 
     // Process all bikes in parallel
     const bikeResults = await Promise.allSettled(
@@ -118,9 +114,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
         if (r.value === "updated") result.updated++;
         else result.created++;
       } else {
-        result.errors.push(
-          r.reason instanceof Error ? r.reason.message : String(r.reason)
-        );
+        result.errors.push(r.reason instanceof Error ? r.reason.message : String(r.reason));
       }
     }
 
@@ -131,21 +125,20 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
     await migrateDefaultDistances();
 
     // Update sync status
-    await supabaseAdmin
-      .from("sync_status")
-      .upsert({
+    await supabaseAdmin.from("sync_status").upsert(
+      {
         user_id: userId,
         last_bike_sync: new Date().toISOString(),
         last_sync_error: result.errors.length > 0 ? result.errors.join("; ") : null,
-      }, {
+      },
+      {
         onConflict: "user_id",
-      });
+      }
+    );
 
     return result;
   } catch (error) {
-    result.errors.push(
-      `Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
+    result.errors.push(`Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     return result;
   }
 }
@@ -161,7 +154,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
-  bikeTotalDistance: number,
+  bikeTotalDistance: number
 ): Promise<void> {
   const { data: components } = await supabaseAdmin
     .from("components")
@@ -195,10 +188,7 @@ async function updateComponentDistancesFromActivities(
         ? activityDistance
         : Math.max(activityDistance, gearDistance);
 
-      await supabaseAdmin
-        .from("components")
-        .update({ current_distance })
-        .eq("id", component.id);
+      await supabaseAdmin.from("components").update({ current_distance }).eq("id", component.id);
     })
   );
 }
@@ -231,15 +221,10 @@ async function addMissingDefaultComponents(
 
   // Remove obsolete component types
   const obsoleteTypes = new Set(["bar_tape", "brake_pads"]);
-  const obsoleteIds = existingComponents
-    .filter((c) => obsoleteTypes.has(c.type))
-    .map((c) => c.id);
+  const obsoleteIds = existingComponents.filter((c) => obsoleteTypes.has(c.type)).map((c) => c.id);
 
   if (obsoleteIds.length > 0) {
-    await supabaseAdmin
-      .from("components")
-      .delete()
-      .in("id", obsoleteIds);
+    await supabaseAdmin.from("components").delete().in("id", obsoleteIds);
   }
 
   // Build existingTypes after filtering out deleted obsolete entries
@@ -300,4 +285,3 @@ async function updateDominantSportTypes(userId: string): Promise<void> {
     })
   );
 }
-

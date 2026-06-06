@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useOptimistic, startTransition } from "react";
 import { format } from "date-fns";
-import { Settings2, Zap, CalendarIcon } from "lucide-react";
+import { CalendarIcon, Settings2, Zap } from "lucide-react";
+import { startTransition, useOptimistic, useState } from "react";
+import { markChargedAction } from "@/app/actions/bike-config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -14,23 +16,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ComponentList } from "./component-list";
-import { MutedComponentsSheet } from "./muted-components-sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getBikeConfig } from "@/lib/components/visibility";
+import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
+import { getBatteryHealth } from "@/lib/wear/battery";
+import { formatDistance } from "@/lib/wear/calculator";
 import { AddComponentDialog } from "./add-component-dialog";
 import { BikeConfigDialog } from "./bike-config-dialog";
-import { formatDistance } from "@/lib/wear/calculator";
-import { getBikeConfig } from "@/lib/components/visibility";
-import { getBatteryHealth } from "@/lib/wear/battery";
-import { markChargedAction } from "@/app/actions/bike-config";
-import { cn } from "@/lib/utils";
-import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
+import { ComponentList } from "./component-list";
+import { MutedComponentsSheet } from "./muted-components-sheet";
 
 const ELECTRONIC_LABELS: Record<ElectronicSystem, string> = {
   di2: "Di2",
@@ -63,7 +59,12 @@ interface BikeDetailProps {
   virtualKm?: number;
 }
 
-export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtualKm = 0 }: BikeDetailProps) {
+export function BikeDetail({
+  bike,
+  typesWithHistory = new Set(),
+  lastSync,
+  virtualKm = 0,
+}: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
   const [mutedSheetOpen, setMutedSheetOpen] = useState(false);
@@ -87,11 +88,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
 
   const [optimisticKm, setOptimisticKm] = useOptimistic<number | null>(kmSinceCharge);
 
-  const batteryHealth = getBatteryHealth(
-    optimisticKm,
-    bike.electronic_system,
-    bike.created_at
-  );
+  const batteryHealth = getBatteryHealth(optimisticKm, bike.electronic_system, bike.created_at);
 
   function handleConfirmCharge() {
     setChargeDialogOpen(false);
@@ -149,25 +146,56 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold">{bike.name}</h2>
-            {subtitle && (
-              <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
             {/* Bike metadata chips */}
             {(frameLabel || sportLabel || weightLabel) && (
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 {frameLabel && (
-                  <span className="inline-flex rounded-md p-px" style={{ background: "linear-gradient(135deg, var(--chip-frame-from), var(--chip-frame-to))" }}>
-                    <Badge className="text-xs font-normal border-0 rounded-[5px]" style={{ backgroundColor: "var(--card)", color: "var(--chip-frame-text)" }}>{frameLabel}</Badge>
+                  <span
+                    className="inline-flex rounded-md p-px"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--chip-frame-from), var(--chip-frame-to))",
+                    }}
+                  >
+                    <Badge
+                      className="text-xs font-normal border-0 rounded-[5px]"
+                      style={{ backgroundColor: "var(--card)", color: "var(--chip-frame-text)" }}
+                    >
+                      {frameLabel}
+                    </Badge>
                   </span>
                 )}
                 {sportLabel && (
-                  <span className="inline-flex rounded-md p-px" style={{ background: "linear-gradient(135deg, var(--chip-sport-from), var(--chip-sport-to))" }}>
-                    <Badge className="text-xs font-normal border-0 rounded-[5px]" style={{ backgroundColor: "var(--card)", color: "var(--chip-sport-text)" }}>{sportLabel}</Badge>
+                  <span
+                    className="inline-flex rounded-md p-px"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--chip-sport-from), var(--chip-sport-to))",
+                    }}
+                  >
+                    <Badge
+                      className="text-xs font-normal border-0 rounded-[5px]"
+                      style={{ backgroundColor: "var(--card)", color: "var(--chip-sport-text)" }}
+                    >
+                      {sportLabel}
+                    </Badge>
                   </span>
                 )}
                 {weightLabel && (
-                  <span className="inline-flex rounded-md p-px" style={{ background: "linear-gradient(135deg, var(--chip-weight-from), var(--chip-weight-to))" }}>
-                    <Badge className="text-xs font-normal border-0 rounded-[5px]" style={{ backgroundColor: "var(--card)", color: "var(--chip-weight-text)" }}>{weightLabel}</Badge>
+                  <span
+                    className="inline-flex rounded-md p-px"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--chip-weight-from), var(--chip-weight-to))",
+                    }}
+                  >
+                    <Badge
+                      className="text-xs font-normal border-0 rounded-[5px]"
+                      style={{ backgroundColor: "var(--card)", color: "var(--chip-weight-text)" }}
+                    >
+                      {weightLabel}
+                    </Badge>
                   </span>
                 )}
               </div>
@@ -197,7 +225,10 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => { setChargeDate(new Date()); setChargeDialogOpen(true); }}
+                    onClick={() => {
+                      setChargeDate(new Date());
+                      setChargeDialogOpen(true);
+                    }}
                     disabled={charging}
                     aria-label="Mark battery charged"
                     className={chipClass}
@@ -206,9 +237,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
                     <span>{systemLabel}</span>
                     <span className="opacity-50">·</span>
                     <span>
-                      {optimisticKm != null
-                        ? `${optimisticKm.toLocaleString()} km`
-                        : "— km"}
+                      {optimisticKm != null ? `${optimisticKm.toLocaleString()} km` : "— km"}
                     </span>
                     {batteryHealth.status === "critical" && (
                       <span className="font-semibold">· Charge now</span>
@@ -223,9 +252,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
                   {lastChargeLabel && (
                     <p className="text-muted-foreground mt-0.5">{lastChargeLabel}</p>
                   )}
-                  <p className="text-muted-foreground mt-0.5">
-                    Tap to mark battery charged
-                  </p>
+                  <p className="text-muted-foreground mt-0.5">Tap to mark battery charged</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -262,8 +289,8 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
             <div>
               <p className="text-sm font-medium">Set up {bike.name}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Configure shifting, brakes, and tire system to see the right
-                components and replacement intervals.
+                Configure shifting, brakes, and tire system to see the right components and
+                replacement intervals.
               </p>
             </div>
           </button>
@@ -278,7 +305,6 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
           typesWithHistory={typesWithHistory}
           bikeConfig={config}
           lastSync={lastSync}
-          bikeId={bike.id}
           hasVirtualRides={hasVirtualRides}
         />
 
@@ -292,12 +318,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
         )}
       </div>
 
-      <BikeConfigDialog
-        key={bike.id}
-        bike={bike}
-        open={configOpen}
-        onOpenChange={setConfigOpen}
-      />
+      <BikeConfigDialog key={bike.id} bike={bike} open={configOpen} onOpenChange={setConfigOpen} />
 
       <MutedComponentsSheet
         components={mutedComponents}
@@ -311,8 +332,8 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
           <DialogHeader>
             <DialogTitle>Mark battery as charged</DialogTitle>
             <DialogDescription>
-              Pick the date you charged the battery. The km counter resets to 0
-              from the current distance.
+              Pick the date you charged the battery. The km counter resets to 0 from the current
+              distance.
             </DialogDescription>
           </DialogHeader>
 
@@ -345,9 +366,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
             <Button variant="outline" onClick={() => setChargeDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmCharge}>
-              Mark charged
-            </Button>
+            <Button onClick={handleConfirmCharge}>Mark charged</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

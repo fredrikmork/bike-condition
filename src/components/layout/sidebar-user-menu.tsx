@@ -2,7 +2,6 @@
 
 import { LogOut, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
-import { useMounted } from "@/hooks/use-mounted";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -10,12 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMounted } from "@/hooks/use-mounted";
 
 export function SidebarUserMenu() {
   const { data: session } = useSession();
@@ -43,10 +39,7 @@ export function SidebarUserMenu() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent"
-            >
+            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
               <Avatar className="h-8 w-8">
                 <AvatarImage
                   src={session?.user?.image ?? undefined}
@@ -57,9 +50,7 @@ export function SidebarUserMenu() {
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
-                  {session?.user?.name ?? "Athlete"}
-                </span>
+                <span className="truncate font-semibold">{session?.user?.name ?? "Athlete"}</span>
                 <span className="truncate text-xs text-muted-foreground">
                   {session?.user?.email ?? "Strava"}
                 </span>

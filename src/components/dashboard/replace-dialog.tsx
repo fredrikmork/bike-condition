@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -14,11 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface ReplaceDialogProps {
@@ -52,8 +48,8 @@ export function ReplaceDialog({
         <DialogHeader>
           <DialogTitle>Replace {componentName}</DialogTitle>
           <DialogDescription>
-            Mark this component as replaced and start tracking a new one. Pick
-            the date you installed the replacement.
+            Mark this component as replaced and start tracking a new one. Pick the date you
+            installed the replacement.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,10 +88,7 @@ export function ReplaceDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleReplace}>Replace</Button>

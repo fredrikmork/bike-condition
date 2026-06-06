@@ -1,9 +1,9 @@
 import { after } from "next/server";
 import { z } from "zod";
+import { checkAndSendNotifications } from "@/lib/notifications";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { syncActivities } from "@/lib/sync/activities";
 import { syncBikes } from "@/lib/sync/bikes";
-import { checkAndSendNotifications } from "@/lib/notifications";
 
 // Strava sends this on GET to verify the endpoint during subscription setup
 const HubChallengeSchema = z.object({

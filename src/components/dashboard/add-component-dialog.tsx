@@ -1,11 +1,10 @@
 "use client";
 
+import { Info, Plus } from "lucide-react";
 import { useState } from "react";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { addComponentAction } from "@/app/actions/components";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,19 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { addComponentAction } from "@/app/actions/components";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CATEGORY_ORDER, getComponentCategory } from "@/lib/components/categories";
+import { getAvailableComponentTypes } from "@/lib/components/defaults";
 import { CUSTOM_ICON_OPTIONS } from "@/lib/components/icons";
 import { getBikeConfig } from "@/lib/components/visibility";
-import { getAvailableComponentTypes } from "@/lib/components/defaults";
-import { getComponentCategory, CATEGORY_ORDER } from "@/lib/components/categories";
-import { cn } from "@/lib/utils";
 import type { BikeWithComponents } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
 
 interface AddComponentDialogProps {
   bike: BikeWithComponents;
@@ -54,14 +49,11 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
   const config = getBikeConfig(bike);
   const availableTypes = getAvailableComponentTypes(config, bike.components);
 
-  const grouped = CATEGORY_ORDER.reduce<Record<string, typeof availableTypes>>(
-    (acc, cat) => {
-      const items = availableTypes.filter((t) => getComponentCategory(t.type) === cat);
-      if (items.length > 0) acc[cat] = items;
-      return acc;
-    },
-    {}
-  );
+  const grouped = CATEGORY_ORDER.reduce<Record<string, typeof availableTypes>>((acc, cat) => {
+    const items = availableTypes.filter((t) => getComponentCategory(t.type) === cat);
+    if (items.length > 0) acc[cat] = items;
+    return acc;
+  }, {});
 
   const isCustom = selectedType === "custom";
 
@@ -118,10 +110,7 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
   }
 
   const canSubmit =
-    !!selectedType &&
-    !!distance &&
-    Number(distance) > 0 &&
-    (!isCustom || !!customName.trim());
+    !!selectedType && !!distance && Number(distance) > 0 && (!isCustom || !!customName.trim());
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -133,9 +122,7 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Component</DialogTitle>
-          <DialogDescription>
-            Choose a component type to track on this bike.
-          </DialogDescription>
+          <DialogDescription>Choose a component type to track on this bike.</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -185,18 +172,15 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
           {selectedType && (
             <div className="grid gap-2">
               <div className="flex items-center gap-1.5">
-                <Label htmlFor="component-distance">
-                  Recommended replacement distance (km)
-                </Label>
+                <Label htmlFor="component-distance">Recommended replacement distance (km)</Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="h-3.5 w-3.5 text-muted-foreground cursor-default shrink-0" />
                   </TooltipTrigger>
                   <TooltipContent side="right" className="max-w-xs">
                     <p>
-                      These intervals are estimates based on average road cycling
-                      conditions. Always physically inspect your components — use
-                      this app as a guideline only.
+                      These intervals are estimates based on average road cycling conditions. Always
+                      physically inspect your components — use this app as a guideline only.
                     </p>
                   </TooltipContent>
                 </Tooltip>

@@ -1,9 +1,15 @@
-import { auth } from "@/lib/auth/config";
-import { getBikesWithComponents, getSyncStatus, getTypesWithHistoryForBikes, getVirtualKmForBikes, getUserEmail } from "@/lib/db/queries";
-import { LoginPage } from "@/components/shared/login-page";
-import { AppShell } from "@/components/layout/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
+import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/shared/empty-state";
+import { LoginPage } from "@/components/shared/login-page";
+import { auth } from "@/lib/auth/config";
+import {
+  getBikesWithComponents,
+  getSyncStatus,
+  getTypesWithHistoryForBikes,
+  getUserEmail,
+  getVirtualKmForBikes,
+} from "@/lib/db/queries";
 
 // Allow up to 60 s for server actions (sync) on this route — takes effect on Pro.
 // On Hobby the hard cap is 10 s; sync is designed to fit within that limit.
@@ -26,7 +32,7 @@ export default async function Home() {
 
   if (bikes.length === 0) {
     return (
-      <AppShell bikes={[]} lastSynced={lastSync} userEmail={userEmail}>
+      <AppShell bikes={[]} userEmail={userEmail}>
         <EmptyState />
       </AppShell>
     );
@@ -39,8 +45,13 @@ export default async function Home() {
   ]);
 
   return (
-    <AppShell bikes={bikes} lastSynced={lastSync} userEmail={userEmail}>
-      <Dashboard bikes={bikes} lastSync={lastSync} historyByBike={historyByBike} virtualKmByBike={virtualKmByBike} />
+    <AppShell bikes={bikes} userEmail={userEmail}>
+      <Dashboard
+        bikes={bikes}
+        lastSync={lastSync}
+        historyByBike={historyByBike}
+        virtualKmByBike={virtualKmByBike}
+      />
     </AppShell>
   );
 }

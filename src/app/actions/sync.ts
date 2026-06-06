@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
-import { syncBikes } from "@/lib/sync/bikes";
-import { syncActivities } from "@/lib/sync/activities";
-import { revalidatePath } from "next/cache";
 import { track } from "@vercel/analytics/server";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth/config";
+import { syncActivities } from "@/lib/sync/activities";
+import { syncBikes } from "@/lib/sync/bikes";
 
 export interface SyncResult {
   success: boolean;

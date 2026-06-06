@@ -14,18 +14,17 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import type { BikeWithComponents } from "@/lib/supabase/types";
+import { formatDistance } from "@/lib/wear/calculator";
+import { SidebarAttentionItems } from "./sidebar-attention-items";
 import { SidebarBikeList } from "./sidebar-bike-list";
 import { SidebarUserMenu } from "./sidebar-user-menu";
-import { SidebarAttentionItems } from "./sidebar-attention-items";
-import { formatDistance } from "@/lib/wear/calculator";
-import type { BikeWithComponents } from "@/lib/supabase/types";
 
 interface AppSidebarProps {
   bikes: BikeWithComponents[];
-  lastSynced?: string | null;
 }
 
-export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
+export function AppSidebar({ bikes }: AppSidebarProps) {
   const totalDistance = bikes.reduce((sum, b) => sum + (b.total_distance ?? 0), 0);
 
   return (
@@ -40,9 +39,7 @@ export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Bike Condition</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    Wear Tracking
-                  </span>
+                  <span className="truncate text-xs text-muted-foreground">Wear Tracking</span>
                 </div>
               </div>
             </SidebarMenuButton>
@@ -52,12 +49,9 @@ export function AppSidebar({ bikes, lastSynced }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>
-            Bikes ({bikes.length})
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Bikes ({bikes.length})</SidebarGroupLabel>
           <p className="px-2 pb-2 text-xs text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
-            The correct number of bikes is n+1.
-            You currently have n&nbsp;=&nbsp;{bikes.length}.
+            The correct number of bikes is n+1. You currently have n&nbsp;=&nbsp;{bikes.length}.
           </p>
           <SidebarGroupContent>
             <SidebarBikeList bikes={bikes} />

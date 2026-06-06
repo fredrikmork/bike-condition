@@ -9,9 +9,7 @@ interface TokenResult {
   expiresAt: Date;
 }
 
-export async function refreshStravaToken(
-  refreshToken: string
-): Promise<TokenResult> {
+export async function refreshStravaToken(refreshToken: string): Promise<TokenResult> {
   const response = await fetch(STRAVA_TOKEN_URL, {
     method: "POST",
     headers: {

@@ -1,19 +1,18 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import type { BikeWithComponents } from "@/lib/supabase/types";
 import { AppSidebar } from "./app-sidebar";
 import { DashboardHeader } from "./dashboard-header";
-import type { BikeWithComponents } from "@/lib/supabase/types";
 
 interface AppShellProps {
   bikes: BikeWithComponents[];
-  lastSynced?: string | null;
   userEmail?: string | null;
   children: React.ReactNode;
 }
 
-export function AppShell({ bikes, lastSynced, userEmail, children }: AppShellProps) {
+export function AppShell({ bikes, userEmail, children }: AppShellProps) {
   return (
     <SidebarProvider>
-      <AppSidebar bikes={bikes} lastSynced={lastSynced} />
+      <AppSidebar bikes={bikes} />
       <SidebarInset>
         <DashboardHeader userEmail={userEmail ?? null} />
         <main className="flex-1 overflow-auto p-4 md:p-6">

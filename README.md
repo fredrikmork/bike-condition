@@ -4,7 +4,7 @@ Next.js app for tracking wear on bicycle components using Strava ride data.
 
 ## Tech stack
 
-Next.js 16 (App Router, Turbopack) · React 19 · TypeScript 5.9 (strict) · Auth.js v5 (Strava OAuth) · Supabase · Tailwind CSS v4 · shadcn/ui · Biome (format + lint) · ESLint (Next.js rules) · Husky (git hooks).
+Next.js 16 (App Router, Turbopack) · React 19 · TypeScript 5.9 (strict) · Auth.js v5 (Strava OAuth) · Supabase · Tailwind CSS v4 · shadcn/ui · Biome (format + lint) · Husky (git hooks).
 
 ## Getting started
 
@@ -23,11 +23,10 @@ Required env vars in `.env.local` — see `CLAUDE.md` for the full list (Strava 
 | `pnpm build` | Production build. |
 | `pnpm start` | Run the production build. |
 | `pnpm typecheck` | `tsc --noEmit`. |
-| `pnpm biome` | Run Biome format + lint check (no writes). |
-| `pnpm biome:fix` | Run Biome and auto-fix what it can. |
+| `pnpm lint` | Biome format + lint check (no writes). |
+| `pnpm lint:fix` | Biome with safe auto-fixes. |
 | `pnpm format` | Format the repo with Biome. |
 | `pnpm format:check` | Check formatting without writing. |
-| `pnpm lint` | Run ESLint (Next.js-specific rules). |
 
 ## Pre-commit hook
 
@@ -42,4 +41,4 @@ To bypass the hook in an emergency (discouraged): `git commit --no-verify`.
 
 ### Biome configuration
 
-`biome.json` enables both the formatter and linter with these conventions: 2-space indent, double quotes, semicolons, 100-character line width, ES5 trailing commas. Lint uses Biome's `recommended` rule set with a couple of project-specific overrides.
+`biome.json` enables both the formatter and linter with these conventions: 2-space indent, double quotes, semicolons, 100-character line width, ES5 trailing commas. Lint uses Biome's `recommended` rule set with a few project-specific overrides (a11y rules tuned for decorative icons, etc.). Biome handles everything ESLint used to — there is no ESLint config in the repo.

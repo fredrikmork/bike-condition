@@ -1,12 +1,20 @@
 "use server";
 
+import { track } from "@vercel/analytics/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
-import { addComponent, deleteComponent, getComponentById, getBikeById, addDeletedDefault, getComponentHistory, updateComponent } from "@/lib/db/queries";
+import {
+  addComponent,
+  addDeletedDefault,
+  deleteComponent,
+  getBikeById,
+  getComponentById,
+  getComponentHistory,
+  updateComponent,
+} from "@/lib/db/queries";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
-import { track } from "@vercel/analytics/server";
-import type { LubeType, Component } from "@/lib/supabase/types";
+import type { Component, LubeType } from "@/lib/supabase/types";
 
 const UpdateComponentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -31,7 +39,8 @@ export async function addComponentAction(
   if (!session?.userId) return { success: false, error: "Not authenticated" };
 
   if (!data.name.trim()) return { success: false, error: "Name is required" };
-  if (data.recommendedDistanceKm <= 0) return { success: false, error: "Distance must be greater than 0" };
+  if (data.recommendedDistanceKm <= 0)
+    return { success: false, error: "Distance must be greater than 0" };
 
   const bike = await getBikeById(bikeId, session.userId);
   if (!bike) return { success: false, error: "Bike not found" };
@@ -111,10 +120,7 @@ export async function muteComponentAction(
   const ownerBike = await getBikeById(component.bike_id, session.userId);
   if (!ownerBike) return { success: false, error: "Not authorized" };
 
-  const { error } = await supabaseAdmin
-    .from("components")
-    .update({ muted })
-    .eq("id", componentId);
+  const { error } = await supabaseAdmin.from("components").update({ muted }).eq("id", componentId);
 
   if (error) return { success: false, error: error.message };
 

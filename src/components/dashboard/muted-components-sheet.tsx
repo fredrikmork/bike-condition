@@ -1,8 +1,10 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
 import { Bell } from "lucide-react";
+import { useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
+import { muteComponentAction } from "@/app/actions/components";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -10,8 +12,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { muteComponentAction } from "@/app/actions/components";
 import type { Component } from "@/lib/supabase/types";
 
 interface MutedComponentsSheetProps {
@@ -53,8 +53,8 @@ export function MutedComponentsSheet({
         <SheetHeader>
           <SheetTitle>Hidden components</SheetTitle>
           <SheetDescription>
-            These components are muted. They won&apos;t appear in the dashboard
-            or trigger warnings. Unmute to start tracking them again.
+            These components are muted. They won&apos;t appear in the dashboard or trigger warnings.
+            Unmute to start tracking them again.
           </SheetDescription>
         </SheetHeader>
 

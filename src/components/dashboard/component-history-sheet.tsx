@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getComponentHistoryAction } from "@/app/actions/components";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -10,10 +12,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { getComponentHistoryAction } from "@/app/actions/components";
-import { formatDistance, LUBE_LABELS } from "@/lib/wear/calculator";
 import type { Component, LubeType } from "@/lib/supabase/types";
+import { formatDistance, LUBE_LABELS } from "@/lib/wear/calculator";
 
 interface ComponentHistorySheetProps {
   bikeId: string;
@@ -52,7 +52,9 @@ export function ComponentHistorySheet({
 
     void fetchHistory();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, bikeId, componentType]);
 
   return (
@@ -60,9 +62,7 @@ export function ComponentHistorySheet({
       <SheetContent className="sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{componentName} — History</SheetTitle>
-          <SheetDescription>
-            Previously retired versions of this component.
-          </SheetDescription>
+          <SheetDescription>Previously retired versions of this component.</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
@@ -71,9 +71,7 @@ export function ComponentHistorySheet({
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
             </div>
           ) : history.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No history found.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">No history found.</p>
           ) : (
             <ol className="relative border-l border-border pl-4 space-y-6">
               {history.map((entry) => (
@@ -89,16 +87,17 @@ export function ComponentHistorySheet({
 
 function HistoryEntry({ entry }: { entry: Component }) {
   const installedDate = format(new Date(entry.installed_at), "d MMM yyyy");
-  const replacedDate = entry.replaced_at
-    ? format(new Date(entry.replaced_at), "d MMM yyyy")
-    : null;
+  const replacedDate = entry.replaced_at ? format(new Date(entry.replaced_at), "d MMM yyyy") : null;
 
   const specParts = [entry.brand, entry.model, entry.spec].filter(Boolean);
 
   return (
     <li className="relative">
       {/* Timeline dot */}
-      <span aria-hidden="true" className="absolute -left-[1.35rem] top-1 h-2.5 w-2.5 rounded-full border-2 border-border bg-background" />
+      <span
+        aria-hidden="true"
+        className="absolute -left-[1.35rem] top-1 h-2.5 w-2.5 rounded-full border-2 border-border bg-background"
+      />
 
       <div className="grid gap-1">
         {/* Date range */}
@@ -108,9 +107,7 @@ function HistoryEntry({ entry }: { entry: Component }) {
         </p>
 
         {/* Spec */}
-        {specParts.length > 0 && (
-          <p className="text-sm font-medium">{specParts.join(" ")}</p>
-        )}
+        {specParts.length > 0 && <p className="text-sm font-medium">{specParts.join(" ")}</p>}
         {specParts.length === 0 && (
           <p className="text-sm text-muted-foreground italic">No spec recorded</p>
         )}

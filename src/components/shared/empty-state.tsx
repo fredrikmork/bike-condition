@@ -16,8 +16,7 @@ export function EmptyState() {
       <div className="text-center max-w-md">
         <h2 className="text-xl font-semibold mb-2">No bikes yet</h2>
         <p className="text-muted-foreground mb-6">
-          Sync with Strava to import your bikes and start tracking component
-          wear.
+          Sync with Strava to import your bikes and start tracking component wear.
         </p>
         <Button onClick={handleSync} disabled={syncing}>
           <RefreshCw className={cn("mr-2 h-4 w-4", syncing && "animate-spin")} />

@@ -1,17 +1,17 @@
 "use server";
 
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { auth } from "@/lib/auth/config";
-import { supabaseAdmin } from "@/lib/supabase/server";
 import { createConfiguredComponents } from "@/lib/components/defaults";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import type { BikeConfig } from "@/lib/supabase/types";
 
 const BikeConfigSchema = z.object({
-  shifting_type:    z.enum(["mechanical", "electronic"]),
-  brake_type:       z.enum(["disc", "rim"]),
+  shifting_type: z.enum(["mechanical", "electronic"]),
+  brake_type: z.enum(["disc", "rim"]),
   drivetrain_speed: z.number().int().min(8).max(13),
-  tire_system:      z.enum(["tubeless", "clincher", "tubular"]),
+  tire_system: z.enum(["tubeless", "clincher", "tubular"]),
 });
 
 export async function saveBikeConfigAction(
@@ -40,14 +40,12 @@ export async function saveBikeConfigAction(
   const { error: updateError } = await supabaseAdmin
     .from("bikes")
     .update({
-      shifting_type:    parsed.data.shifting_type,
-      brake_type:       parsed.data.brake_type,
+      shifting_type: parsed.data.shifting_type,
+      brake_type: parsed.data.brake_type,
       drivetrain_speed: parsed.data.drivetrain_speed,
-      tire_system:      parsed.data.tire_system,
-      config_complete:  true,
-      ...(config.electronic_system != null
-        ? { electronic_system: config.electronic_system }
-        : {}),
+      tire_system: parsed.data.tire_system,
+      config_complete: true,
+      ...(config.electronic_system != null ? { electronic_system: config.electronic_system } : {}),
     })
     .eq("id", bikeId);
 
@@ -85,7 +83,7 @@ export async function markChargedAction(
   if (!session?.userId) return { success: false, error: "Not authenticated" };
 
   const chargedDate = new Date(chargedAt);
-  if (isNaN(chargedDate.getTime())) {
+  if (Number.isNaN(chargedDate.getTime())) {
     return { success: false, error: "Invalid date" };
   }
 

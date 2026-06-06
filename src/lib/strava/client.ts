@@ -1,10 +1,10 @@
 import {
-  StravaAthleteSchema,
-  StravaGearSchema,
+  type StravaActivity,
   StravaActivitySchema,
   type StravaAthlete,
+  StravaAthleteSchema,
   type StravaGear,
-  type StravaActivity,
+  StravaGearSchema,
 } from "./schemas";
 
 const STRAVA_API_BASE = "https://www.strava.com/api/v3";
@@ -38,7 +38,10 @@ export class StravaClient {
     return schema.parse(await this.request(endpoint));
   }
 
-  private async fetchArray<T>(endpoint: string, schema: { parse: (data: unknown) => T }): Promise<T[]> {
+  private async fetchArray<T>(
+    endpoint: string,
+    schema: { parse: (data: unknown) => T }
+  ): Promise<T[]> {
     const data = await this.request(endpoint);
     if (!Array.isArray(data)) {
       throw new Error("Expected array response from Strava API");
@@ -54,12 +57,14 @@ export class StravaClient {
     return this.fetch(`/gear/${gearId}`, StravaGearSchema);
   }
 
-  async getActivities(options: {
-    after?: number; // Unix timestamp
-    before?: number;
-    page?: number;
-    per_page?: number;
-  } = {}): Promise<StravaActivity[]> {
+  async getActivities(
+    options: {
+      after?: number; // Unix timestamp
+      before?: number;
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<StravaActivity[]> {
     const params = new URLSearchParams();
 
     if (options.after) params.set("after", options.after.toString());

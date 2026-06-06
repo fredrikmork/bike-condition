@@ -20,10 +20,7 @@ export function SyncNudge({ count }: SyncNudgeProps) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2.5 text-sm">
       <RefreshCw
-        className={cn(
-          "h-4 w-4 shrink-0 text-muted-foreground",
-          syncing && "animate-spin"
-        )}
+        className={cn("h-4 w-4 shrink-0 text-muted-foreground", syncing && "animate-spin")}
       />
       <span className="flex-1 text-muted-foreground">{label} — sync to update distances.</span>
       <Button

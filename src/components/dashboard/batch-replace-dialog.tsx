@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { replaceComponentAction } from "@/app/actions/replace";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -15,15 +16,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { replaceComponentAction } from "@/app/actions/replace";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ComponentGroupDef } from "@/lib/components/groups";
 import type { Component } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
 
 interface BatchReplaceDialogProps {
   group: ComponentGroupDef;
@@ -40,9 +36,7 @@ export function BatchReplaceDialog({
 }: BatchReplaceDialogProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [checked, setChecked] = useState<Set<string>>(
-    new Set(components.map((c) => c.id))
-  );
+  const [checked, setChecked] = useState<Set<string>>(new Set(components.map((c) => c.id)));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -101,8 +95,7 @@ export function BatchReplaceDialog({
     }
   }
 
-  const title =
-    group.id === "front_wheel" ? "Replace Front Wheel" : "Replace Rear Wheel";
+  const title = group.id === "front_wheel" ? "Replace Front Wheel" : "Replace Rear Wheel";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -110,8 +103,8 @@ export function BatchReplaceDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Select the components you replaced. They will all be reset to 0 km
-            with the same installation date.
+            Select the components you replaced. They will all be reset to 0 km with the same
+            installation date.
           </DialogDescription>
         </DialogHeader>
 
@@ -169,17 +162,10 @@ export function BatchReplaceDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleReplace}
-            disabled={loading || checked.size === 0}
-          >
+          <Button onClick={handleReplace} disabled={loading || checked.size === 0}>
             {loading
               ? "Replacing…"
               : `Replace ${checked.size} component${checked.size !== 1 ? "s" : ""}`}

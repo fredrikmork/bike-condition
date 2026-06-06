@@ -16,8 +16,14 @@
       "!**/public",
       "!**/coverage",
       "!**/pnpm-lock.yaml",
-      "!**/src/components/ui"
+      "!**/src/components/ui",
+      "!**/src/app/globals.css"
     ]
+  },
+  "css": {
+    "parser": {
+      "cssModules": true
+    }
   },
   "formatter": {
     "enabled": true,
@@ -45,7 +51,9 @@
         "noExplicitAny": "warn"
       },
       "a11y": {
-        "useKeyWithClickEvents": "off"
+        "useKeyWithClickEvents": "off",
+        "noSvgWithoutTitle": "off",
+        "useButtonType": "off"
       }
     }
   }

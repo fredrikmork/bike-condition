@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
   public: {
@@ -83,7 +77,7 @@ export interface Database {
           is_primary: boolean;
           retired: boolean;
           deleted_defaults: string[];
-          bike_type: 'road' | 'mtb' | 'tt' | 'hybrid' | 'ebike' | null;
+          bike_type: "road" | "mtb" | "tt" | "hybrid" | "ebike" | null;
           shifting_type: ShiftingType | null;
           brake_type: BrakeType | null;
           drivetrain_speed: number | null;
@@ -111,7 +105,7 @@ export interface Database {
           is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
-          bike_type?: 'road' | 'mtb' | 'tt' | 'hybrid' | 'ebike' | null;
+          bike_type?: "road" | "mtb" | "tt" | "hybrid" | "ebike" | null;
           shifting_type?: ShiftingType | null;
           brake_type?: BrakeType | null;
           drivetrain_speed?: number | null;
@@ -139,7 +133,7 @@ export interface Database {
           is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
-          bike_type?: 'road' | 'mtb' | 'tt' | 'hybrid' | 'ebike' | null;
+          bike_type?: "road" | "mtb" | "tt" | "hybrid" | "ebike" | null;
           shifting_type?: ShiftingType | null;
           brake_type?: BrakeType | null;
           drivetrain_speed?: number | null;
@@ -375,12 +369,12 @@ export type BikeWithComponents = Bike & {
   components: Component[];
 };
 
-export type LubeType = 'wet_lube' | 'dry_lube' | 'drip_wax' | 'hot_wax';
+export type LubeType = "wet_lube" | "dry_lube" | "drip_wax" | "hot_wax";
 
-export type ShiftingType = 'mechanical' | 'electronic';
-export type BrakeType = 'disc' | 'rim';
-export type TireSystem = 'tubeless' | 'clincher' | 'tubular';
-export type ElectronicSystem = 'di2' | 'axs' | 'eps' | 'other';
+export type ShiftingType = "mechanical" | "electronic";
+export type BrakeType = "disc" | "rim";
+export type TireSystem = "tubeless" | "clincher" | "tubular";
+export type ElectronicSystem = "di2" | "axs" | "eps" | "other";
 
 export interface BikeConfig {
   shifting_type: ShiftingType;

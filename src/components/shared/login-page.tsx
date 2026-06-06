@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
 import {
-  Bike,
-  RefreshCw,
   Bell,
+  Bike,
+  CheckCircle2,
   History,
+  RefreshCw,
   ShieldCheck,
   TrendingUp,
-  CheckCircle2,
 } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { StravaIcon } from "./strava-icon";
 import { cn } from "@/lib/utils";
+import { StravaIcon } from "./strava-icon";
 
 const features = [
   {
@@ -83,12 +83,8 @@ export function LoginPage() {
           </div>
         </div>
 
-        <p className="text-2xl font-bold tracking-tight text-white">
-          Connecting to Strava
-        </p>
-        <p className="mt-2 animate-pulse text-sm text-white/70">
-          Getting your bikes and rides…
-        </p>
+        <p className="text-2xl font-bold tracking-tight text-white">Connecting to Strava</p>
+        <p className="mt-2 animate-pulse text-sm text-white/70">Getting your bikes and rides…</p>
       </div>
 
       {/* ── Main page ──────────────────────────────────────────── */}
@@ -115,13 +111,13 @@ export function LoginPage() {
             <span className="text-muted-foreground">components.</span>
           </h1>
           <p className="mb-8 max-w-lg text-base text-muted-foreground">
-            Connect Strava and get automatic wear tracking for every component —
-            so you always know what needs attention before it becomes a problem.
+            Connect Strava and get automatic wear tracking for every component — so you always know
+            what needs attention before it becomes a problem.
           </p>
 
           {/* Features */}
           <ul className="mb-8 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-            {features.map(({ icon: Icon, title, description }) => (
+            {features.map(({ title, description }) => (
               <li key={title} className="flex items-start gap-2.5">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span className="text-sm">
@@ -152,8 +148,7 @@ export function LoginPage() {
             </Button>
             <p className="text-xs text-muted-foreground">
               Read-only access to rides and gear.
-              <br className="hidden sm:block" />
-              {" "}We never post on your behalf.
+              <br className="hidden sm:block" /> We never post on your behalf.
             </p>
           </div>
         </div>
