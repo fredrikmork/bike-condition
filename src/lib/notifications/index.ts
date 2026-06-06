@@ -14,8 +14,8 @@ const CRITICAL_THRESHOLD = 100;
  * component install. The log is cleared when a component is replaced.
  */
 export async function checkAndSendNotifications(userId: string): Promise<void> {
-  // Paused — re-enable when email delivery (Resend domain / dedup) is sorted.
-  return;
+  // Paused — set NOTIFICATIONS_ENABLED=true in env once Resend delivery is sorted.
+  if (process.env.NOTIFICATIONS_ENABLED !== "true") return;
 
   // Fetch user email
   const { data: user } = await supabaseAdmin
