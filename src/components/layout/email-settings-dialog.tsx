@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,11 +23,13 @@ interface Props {
 
 export function EmailSettingsDialog({ open, onOpenChange, currentEmail }: Props) {
   const [email, setEmail] = useState(currentEmail ?? "");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [prevCurrentEmail, setPrevCurrentEmail] = useState(currentEmail);
+  if (prevCurrentEmail !== currentEmail) {
+    setPrevCurrentEmail(currentEmail);
     setEmail(currentEmail ?? "");
-  }, [currentEmail]);
+  }
+
+  const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -47,7 +49,12 @@ export function EmailSettingsDialog({ open, onOpenChange, currentEmail }: Props)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent
+        className="sm:max-w-sm"
+        onOpenAutoFocus={(e) => {
+          if (currentEmail) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
