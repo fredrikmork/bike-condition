@@ -12,6 +12,8 @@ import { getUserEmail } from "@/app/actions/user";
 import { useSyncStrava } from "@/hooks/use-sync-strava";
 import { cn } from "@/lib/utils";
 
+const NOTIFICATIONS_ENABLED = false;
+
 interface DashboardHeaderProps {
   userEmail: string | null;
 }
@@ -44,38 +46,42 @@ export function DashboardHeader({ userEmail: initialEmail }: DashboardHeaderProp
             Strava automatically triggers a sync after each ride. Use this manually if something looks off or after editing a component.
           </TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setDialogOpen(true)}
-              className="relative"
-            >
-              {hasEmail ? (
-                <Bell className="h-4 w-4" />
-              ) : (
-                <BellOff className="h-4 w-4 text-muted-foreground" />
-              )}
-              {!hasEmail && (
-                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {hasEmail ? `Varsler: ${currentEmail}` : "Sett opp e-postvarsler"}
-          </TooltipContent>
-        </Tooltip>
+        {NOTIFICATIONS_ENABLED && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDialogOpen(true)}
+                className="relative"
+              >
+                {hasEmail ? (
+                  <Bell className="h-4 w-4" />
+                ) : (
+                  <BellOff className="h-4 w-4 text-muted-foreground" />
+                )}
+                {!hasEmail && (
+                  <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {hasEmail ? `Varsler: ${currentEmail}` : "Sett opp e-postvarsler"}
+            </TooltipContent>
+          </Tooltip>
+        )}
         <ThemeToggle />
       </div>
-      <EmailSettingsDialog
-        open={dialogOpen}
-        onOpenChange={async (open) => {
-          setDialogOpen(open);
-          if (!open) setCurrentEmail(await getUserEmail());
-        }}
-        currentEmail={currentEmail}
-      />
+      {NOTIFICATIONS_ENABLED && (
+        <EmailSettingsDialog
+          open={dialogOpen}
+          onOpenChange={async (open) => {
+            setDialogOpen(open);
+            if (!open) setCurrentEmail(await getUserEmail());
+          }}
+          currentEmail={currentEmail}
+        />
+      )}
     </header>
   );
 }
