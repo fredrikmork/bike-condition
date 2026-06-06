@@ -230,15 +230,25 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
               </Tooltip>
             )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setConfigOpen(true)}
-              aria-label={bike.config_complete ? "Re-configure bike" : "Configure bike"}
-            >
-              <Settings2 className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setConfigOpen(true)}
+                  aria-label={bike.config_complete ? "Re-configure bike" : "Configure bike"}
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="max-w-xs">
+                  Configure your bike setup — shifting, brakes, drivetrain speed, and tire system.
+                  This determines which components and replacement intervals are shown.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -283,6 +293,7 @@ export function BikeDetail({ bike, typesWithHistory = new Set(), lastSync, virtu
       </div>
 
       <BikeConfigDialog
+        key={bike.id}
         bike={bike}
         open={configOpen}
         onOpenChange={setConfigOpen}
