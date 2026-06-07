@@ -1,10 +1,10 @@
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
-import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
 import { migrateDefaultDistances } from "@/lib/components/migrate-defaults";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { BikeInsert } from "@/lib/supabase/types";
+import { computeComponentDistance } from "@/lib/sync/compute-distance";
 
 interface SyncBikesResult {
   synced: number;
@@ -144,16 +144,9 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
 }
 
 /**
- * Update all active component distances.
- *
- * TRAINER_PAUSE_TYPES (wheels + brake cables): sum only outdoor (non-VirtualRide)
- * activities. The gear-based fallback is skipped ONLY when the bike has at least
- * one VirtualRide on record — Strava's total_distance would then include virtual
- * km and defeat the exclusion. When the bike has no virtual rides, the fallback
- * is safe and lets pre-existing Strava mileage propagate to wheel components on
- * first sync.
- *
- * All other components: MAX(activity sum, gear distance) as before.
+ * Update all active component distances from the bike's activity history.
+ * Pure decision logic lives in `computeComponentDistance` (see that module for
+ * the rules around TRAINER_PAUSE_TYPES, virtual rides, and gear fallback).
  */
 async function updateComponentDistancesFromActivities(
   bikeId: string,
@@ -167,32 +160,16 @@ async function updateComponentDistancesFromActivities(
 
   if (!components || components.length === 0) return;
 
-  // Fetch activities once for the whole bike (with type and date for filtering)
   const { data: allActivities } = await supabaseAdmin
     .from("activities")
     .select("distance, activity_type, start_date")
     .eq("bike_id", bikeId);
 
-  const hasVirtualRides = (allActivities ?? []).some((a) => a.activity_type === "VirtualRide");
+  const activities = allActivities ?? [];
 
   await Promise.all(
     components.map(async (component) => {
-      const relevantActivities = (allActivities ?? []).filter(
-        (a) => new Date(a.start_date).getTime() >= new Date(component.installed_at).getTime()
-      );
-
-      const isOutdoorOnly = TRAINER_PAUSE_TYPES.has(component.type);
-
-      const activityDistance = relevantActivities
-        .filter((a) => !isOutdoorOnly || a.activity_type !== "VirtualRide")
-        .reduce((sum, a) => sum + a.distance, 0);
-
-      const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
-      const skipGearFallback = isOutdoorOnly && hasVirtualRides;
-      const current_distance = skipGearFallback
-        ? activityDistance
-        : Math.max(activityDistance, gearDistance);
-
+      const current_distance = computeComponentDistance(component, activities, bikeTotalDistance);
       await supabaseAdmin.from("components").update({ current_distance }).eq("id", component.id);
     })
   );
