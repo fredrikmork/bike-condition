@@ -2,6 +2,15 @@
 
 All notable changes for this project in this file.
 
+## 2026-06-07: Wheel components stuck at 0 km on first sync
+
+### Bug fix
+
+- **Wheels missing historical Strava distance**: When a user signed up with a bike that already had mileage on Strava but no rides logged in the app yet, wheel-type components (tires, inner tubes, brake pads, brake rotors, brake cables) showed 0 km while drivetrain components correctly inherited the bike's total distance. Root cause: `updateComponentDistancesFromActivities` skipped the gear-distance fallback unconditionally for `TRAINER_PAUSE_TYPES` to keep trainer km off road wheels — but this also blocked legitimate first-sync propagation. Fix: the fallback is now skipped only when the bike has at least one `VirtualRide` on record; otherwise wheels accumulate distance the same way as every other component.
+
+### Files changed
+- `src/lib/sync/bikes.ts` — `updateComponentDistancesFromActivities` computes `hasVirtualRides` per bike and uses it to gate the gear-distance fallback for wheel components
+
 ## 2026-03-23: Strava webhook, email notifications & header toolbar
 
 ### New features
