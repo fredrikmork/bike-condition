@@ -147,8 +147,11 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
  * Update all active component distances.
  *
  * TRAINER_PAUSE_TYPES (wheels + brake cables): sum only outdoor (non-VirtualRide)
- * activities. The gear-based fallback is skipped because Strava's total_distance
- * includes virtual km, which would defeat the exclusion.
+ * activities. The gear-based fallback is skipped ONLY when the bike has at least
+ * one VirtualRide on record — Strava's total_distance would then include virtual
+ * km and defeat the exclusion. When the bike has no virtual rides, the fallback
+ * is safe and lets pre-existing Strava mileage propagate to wheel components on
+ * first sync.
  *
  * All other components: MAX(activity sum, gear distance) as before.
  */
@@ -170,6 +173,8 @@ async function updateComponentDistancesFromActivities(
     .select("distance, activity_type, start_date")
     .eq("bike_id", bikeId);
 
+  const hasVirtualRides = (allActivities ?? []).some((a) => a.activity_type === "VirtualRide");
+
   await Promise.all(
     components.map(async (component) => {
       const relevantActivities = (allActivities ?? []).filter(
@@ -182,9 +187,9 @@ async function updateComponentDistancesFromActivities(
         .filter((a) => !isOutdoorOnly || a.activity_type !== "VirtualRide")
         .reduce((sum, a) => sum + a.distance, 0);
 
-      // For outdoor-only components skip the gear fallback — Strava total includes virtual km
       const gearDistance = bikeTotalDistance - component.bike_distance_at_install;
-      const current_distance = isOutdoorOnly
+      const skipGearFallback = isOutdoorOnly && hasVirtualRides;
+      const current_distance = skipGearFallback
         ? activityDistance
         : Math.max(activityDistance, gearDistance);
 
