@@ -10,6 +10,7 @@ import {
   getUserEmail,
   getVirtualKmForBikes,
 } from "@/lib/db/queries";
+import { canUseEmailNotifications } from "@/lib/notifications/access";
 
 // Allow up to 60 s for server actions (sync) on this route — takes effect on Pro.
 // On Hobby the hard cap is 10 s; sync is designed to fit within that limit.
@@ -29,10 +30,11 @@ export default async function Home() {
   ]);
 
   const lastSync = syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null;
+  const notificationsEnabled = canUseEmailNotifications(session.userId);
 
   if (bikes.length === 0) {
     return (
-      <AppShell bikes={[]} userEmail={userEmail}>
+      <AppShell bikes={[]} userEmail={userEmail} notificationsEnabled={notificationsEnabled}>
         <EmptyState />
       </AppShell>
     );
@@ -45,7 +47,7 @@ export default async function Home() {
   ]);
 
   return (
-    <AppShell bikes={bikes} userEmail={userEmail}>
+    <AppShell bikes={bikes} userEmail={userEmail} notificationsEnabled={notificationsEnabled}>
       <Dashboard
         bikes={bikes}
         lastSync={lastSync}

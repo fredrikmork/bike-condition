@@ -6,15 +6,19 @@ import { DashboardHeader } from "./dashboard-header";
 interface AppShellProps {
   bikes: BikeWithComponents[];
   userEmail?: string | null;
+  notificationsEnabled?: boolean;
   children: React.ReactNode;
 }
 
-export function AppShell({ bikes, userEmail, children }: AppShellProps) {
+export function AppShell({ bikes, userEmail, notificationsEnabled, children }: AppShellProps) {
   return (
     <SidebarProvider>
       <AppSidebar bikes={bikes} />
       <SidebarInset>
-        <DashboardHeader userEmail={userEmail ?? null} />
+        <DashboardHeader
+          userEmail={userEmail ?? null}
+          notificationsEnabled={notificationsEnabled ?? false}
+        />
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="mx-auto w-full max-w-5xl">{children}</div>
         </main>

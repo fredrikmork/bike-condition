@@ -12,13 +12,15 @@ import { useSyncStrava } from "@/hooks/use-sync-strava";
 import { cn } from "@/lib/utils";
 import { EmailSettingsDialog } from "./email-settings-dialog";
 
-const NOTIFICATIONS_ENABLED = false;
-
 interface DashboardHeaderProps {
   userEmail: string | null;
+  notificationsEnabled: boolean;
 }
 
-export function DashboardHeader({ userEmail: initialEmail }: DashboardHeaderProps) {
+export function DashboardHeader({
+  userEmail: initialEmail,
+  notificationsEnabled,
+}: DashboardHeaderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentEmail, setCurrentEmail] = useState<string | null>(initialEmail);
   const { syncing, handleSync } = useSyncStrava();
@@ -42,7 +44,7 @@ export function DashboardHeader({ userEmail: initialEmail }: DashboardHeaderProp
             looks off or after editing a component.
           </TooltipContent>
         </Tooltip>
-        {NOTIFICATIONS_ENABLED && (
+        {notificationsEnabled && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -68,7 +70,7 @@ export function DashboardHeader({ userEmail: initialEmail }: DashboardHeaderProp
         )}
         <ThemeToggle />
       </div>
-      {NOTIFICATIONS_ENABLED && (
+      {notificationsEnabled && (
         <EmailSettingsDialog
           open={dialogOpen}
           onOpenChange={async (open) => {

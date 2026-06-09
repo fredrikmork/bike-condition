@@ -3,6 +3,7 @@
 import { track } from "@vercel/analytics/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
+import { canUseEmailNotifications } from "@/lib/notifications/access";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 const EmailSchema = z.object({
@@ -13,6 +14,9 @@ export async function saveUserEmail(email: string): Promise<{ success: boolean; 
   const session = await auth();
   const stravaId = session?.stravaId;
   if (!stravaId) return { success: false, error: "Not authenticated" };
+  if (!canUseEmailNotifications(session.userId)) {
+    return { success: false, error: "Email notifications are not available for this account" };
+  }
 
   const parsed = EmailSchema.safeParse({ email });
   if (!parsed.success) {

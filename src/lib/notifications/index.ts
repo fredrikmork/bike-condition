@@ -1,5 +1,6 @@
 import { track } from "@vercel/analytics/server";
 import { sendCriticalEmail, sendWarnEmail } from "@/lib/email";
+import { canUseEmailNotifications } from "@/lib/notifications/access";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 const WARN_THRESHOLD = 80;
@@ -14,8 +15,7 @@ const CRITICAL_THRESHOLD = 100;
  * component install. The log is cleared when a component is replaced.
  */
 export async function checkAndSendNotifications(userId: string): Promise<void> {
-  // Paused — set NOTIFICATIONS_ENABLED=true in env once Resend delivery is sorted.
-  if (process.env.NOTIFICATIONS_ENABLED !== "true") return;
+  if (!canUseEmailNotifications(userId)) return;
 
   // Fetch user email
   const { data: user } = await supabaseAdmin
