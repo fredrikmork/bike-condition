@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "description": "Hold react-day-picker on v9: v10 removed ClassNames keys (e.g. `table`) that the shadcn Calendar component still uses. Revisit when the shadcn calendar supports v10.",
+      "matchPackageNames": ["react-day-picker"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
 }
