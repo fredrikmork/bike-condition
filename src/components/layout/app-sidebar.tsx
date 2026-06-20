@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, Github } from "lucide-react";
+import { Bike, Bug } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -77,7 +77,7 @@ export function AppSidebar({ bikes }: AppSidebarProps) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Github className="h-4 w-4 shrink-0" />
+                <Bug className="h-4 w-4 shrink-0" />
                 <span>Something off? Let us know!</span>
               </a>
             </SidebarMenuButton>
