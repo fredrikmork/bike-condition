@@ -2,6 +2,22 @@
 
 All notable changes for this project in this file.
 
+## 2026-06-20: Dead-code cleanup & dependency upgrades
+
+### Removed (dead code, via knip + grep/Supabase cross-checks)
+- Files: `components/shared/sync-button.tsx`, `app/actions/virtual-periods.ts`, `components/ui/scroll-area.tsx` — all had zero importers. The `useSyncStrava` hook and the live `getVirtualKmForBikes` query are unaffected.
+- Packages: `@radix-ui/react-scroll-area`, `@supabase/ssr`, and the `shadcn` CLI devDep (invoked via `pnpm dlx`, not a build dep).
+- Narrowed over-exported internal-only helpers to module scope: `calculateWear`, `getEffectiveChargeRange`, `BatteryStatus`, `WHEEL_TYPES`, `getBikesForUser`.
+
+### Dependency upgrades (Renovate)
+- `lucide-react` 0.577.0, `next-auth` 5.0.0-beta.31, plus in-range refresh of `postcss` 8.5.15, `tailwindcss` 4.3.1, `vitest` 4.1.9, `@biomejs/biome` 2.5.0.
+- `biome.json`: `$schema` → 2.5.0; migrated deprecated `rules.recommended` to `rules.preset: "recommended"`.
+- ~16 stale `renovate/*` branches (pre–Next 16 / React 19 / Auth.js v5) left unmerged — they would downgrade the app and should be closed.
+
+### Flagged, not changed
+- `getComponentIcon` (+ `ICON_MAP`/`CUSTOM_ICON_MAP`) in `lib/components/icons.ts` is unused, yet the icon **picker** (`CUSTOM_ICON_OPTIONS`) is live — a picked icon is stored but never rendered. Likely an unwired feature to either connect or remove deliberately.
+- `bikes.pause_wheels_on_virtual` column exists but no code reads it (vestigial).
+
 ## 2026-06-20: Strava communication review — trainer flag, retired gear & resilient sync
 
 Triggered by connecting `strava-mcp`, which let us verify the app's assumptions against live Strava data.
