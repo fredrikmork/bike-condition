@@ -9,7 +9,7 @@ export interface WearInfo {
   isOverdue: boolean;
 }
 
-export function calculateWear(currentDistance: number, recommendedDistance: number): WearInfo {
+function calculateWear(currentDistance: number, recommendedDistance: number): WearInfo {
   const percentage = (currentDistance / recommendedDistance) * 100;
   const remainingDistance = Math.max(0, recommendedDistance - currentDistance);
   const isOverdue = currentDistance >= recommendedDistance;

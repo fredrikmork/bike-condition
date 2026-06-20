@@ -1,4 +1,4 @@
-export type BatteryStatus = "healthy" | "warning" | "critical";
+type BatteryStatus = "healthy" | "warning" | "critical";
 
 interface BatterySystemDef {
   baseChargeKm: number; // km per charge for a new battery
@@ -17,7 +17,7 @@ const MIN_CAPACITY_FACTOR = 0.5; // Never drop below 50 % of rated range
 const WARNING_FRACTION = 0.8; // Warn at 80 % of effective range
 
 /** km per charge, adjusted for battery age (using bike creation date as proxy) */
-export function getEffectiveChargeRange(system: string | null, bikeCreatedAt: string): number {
+function getEffectiveChargeRange(system: string | null, bikeCreatedAt: string): number {
   const base = system
     ? (BATTERY_SYSTEMS[system]?.baseChargeKm ?? DEFAULT_BASE_KM)
     : DEFAULT_BASE_KM;

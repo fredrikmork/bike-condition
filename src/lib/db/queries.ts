@@ -9,7 +9,7 @@ import type {
 } from "@/lib/supabase/types";
 
 // Bike queries
-export async function getBikesForUser(userId: string): Promise<Bike[]> {
+async function getBikesForUser(userId: string): Promise<Bike[]> {
   const { data } = await supabaseAdmin
     .from("bikes")
     .select("*")
