@@ -15,7 +15,6 @@ export async function getBikesForUser(userId: string): Promise<Bike[]> {
     .select("*")
     .eq("user_id", userId)
     .eq("retired", false)
-    .order("is_primary", { ascending: false })
     .order("total_distance", { ascending: false });
 
   return data || [];

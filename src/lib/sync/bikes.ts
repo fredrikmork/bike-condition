@@ -68,7 +68,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
                 frame_type: gearDetails.frame_type ?? null,
                 description: gearDetails.description ?? null,
                 total_distance: gearDetails.distance,
-                is_primary: gearDetails.primary,
+                retired: gearDetails.retired ?? false,
                 weight: gearDetails.weight ?? null,
               })
               .eq("id", existingBike.id),
@@ -86,7 +86,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             frame_type: gearDetails.frame_type ?? null,
             description: gearDetails.description ?? null,
             total_distance: gearDetails.distance,
-            is_primary: gearDetails.primary,
+            retired: gearDetails.retired ?? false,
             weight: gearDetails.weight ?? null,
           };
 
@@ -162,7 +162,7 @@ async function updateComponentDistancesFromActivities(
 
   const { data: allActivities } = await supabaseAdmin
     .from("activities")
-    .select("distance, activity_type, start_date")
+    .select("distance, activity_type, start_date, trainer")
     .eq("bike_id", bikeId);
 
   const activities = allActivities ?? [];

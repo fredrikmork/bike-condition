@@ -31,6 +31,13 @@ function virtualRide(distance: number, daysFromInstall = 1): ActivityDistanceInp
   return { distance, activity_type: "VirtualRide", start_date: start.toISOString() };
 }
 
+// Indoor ride recorded as a plain "Ride" but flagged by Strava as a trainer ride.
+function trainerRide(distance: number, daysFromInstall = 1): ActivityDistanceInput {
+  const start = new Date(INSTALL_DATE);
+  start.setDate(start.getDate() + daysFromInstall);
+  return { distance, activity_type: "Ride", start_date: start.toISOString(), trainer: true };
+}
+
 describe("computeComponentDistance — wheel components on bikes without VirtualRide", () => {
   // Regression: commit 7ed5f7d (re-)introduced an unconditional gear-fallback
   // skip for TRAINER_PAUSE_TYPES, which left wheel components at 0 km whenever
@@ -76,6 +83,41 @@ describe("computeComponentDistance — wheel components on bikes WITH VirtualRid
     const activities = [virtualRide(50_000)];
     const distance = computeComponentDistance(tire, activities, 38_704_000);
     expect(distance).toBe(0);
+  });
+});
+
+describe("computeComponentDistance — trainer-flagged indoor rides", () => {
+  // Strava marks stationary-trainer rides with trainer:true even when the sport
+  // type is a plain "Ride" (not VirtualRide). These must behave like VirtualRide
+  // for wheel/cable components: excluded from the sum and skipping the fallback.
+
+  it("wheels exclude trainer rides AND skip the gear fallback", () => {
+    const tire = makeComponent("tire_front");
+    const activities = [ride(100_000), trainerRide(500_000)];
+    // Outdoor 100 km counts; trainer 500 km excluded; gear fallback skipped.
+    const distance = computeComponentDistance(tire, activities, 600_000);
+    expect(distance).toBe(100_000);
+  });
+
+  it("a single trainer ride is enough to skip the fallback for wheels", () => {
+    const tire = makeComponent("tire_rear");
+    const distance = computeComponentDistance(tire, [trainerRide(50_000)], 38_704_000);
+    expect(distance).toBe(0);
+  });
+
+  it("brake_cables also exclude trainer rides", () => {
+    const cables = makeComponent("brake_cables");
+    const activities = [ride(80_000), trainerRide(300_000)];
+    const distance = computeComponentDistance(cables, activities, 380_000);
+    expect(distance).toBe(80_000);
+  });
+
+  it("drivetrain still counts trainer rides", () => {
+    const cassette = makeComponent("cassette");
+    const activities = [ride(100_000), trainerRide(500_000)];
+    // Both ride types count for drivetrain; MAX(600k activity, 600k gear) = 600k.
+    const distance = computeComponentDistance(cassette, activities, 600_000);
+    expect(distance).toBe(600_000);
   });
 });
 

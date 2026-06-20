@@ -15,16 +15,15 @@ interface DashboardProps {
 export function Dashboard({ bikes, lastSync, historyByBike, virtualKmByBike }: DashboardProps) {
   const { selectedBikeId, setSelectedBikeId } = useBikeStore();
 
-  // Initialize with primary or most-ridden bike
+  // Initialize with the most-ridden bike, preferring a real-ride bike over
+  // virtual-only bikes (bikes are already sorted by distance desc from the query)
   useEffect(() => {
     if (selectedBikeId && bikes.some((b) => b.id === selectedBikeId)) return;
     if (bikes.length === 0) return;
 
-    // Prefer a real-ride bike over virtual-only bikes
     const rideBike = bikes.find((b) => b.default_sport_type === "Ride");
-    const primary = bikes.find((b) => b.is_primary);
-    const fallback = bikes[0]; // Already sorted by distance desc from query
-    setSelectedBikeId((rideBike ?? primary ?? fallback).id);
+    const fallback = bikes[0];
+    setSelectedBikeId((rideBike ?? fallback).id);
   }, [bikes, selectedBikeId, setSelectedBikeId]);
 
   const selectedBike = bikes.find((b) => b.id === selectedBikeId);

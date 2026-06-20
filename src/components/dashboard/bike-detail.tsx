@@ -202,7 +202,6 @@ export function BikeDetail({
             )}
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            {bike.is_primary && <Badge variant="secondary">Primary</Badge>}
             <Badge variant="outline">{formatDistance(bike.total_distance ?? 0)}</Badge>
             {hasVirtualRides && (
               <Tooltip>

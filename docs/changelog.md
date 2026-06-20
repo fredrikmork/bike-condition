@@ -2,6 +2,33 @@
 
 All notable changes for this project in this file.
 
+## 2026-06-20: Strava communication review — trainer flag, retired gear & resilient sync
+
+Triggered by connecting `strava-mcp`, which let us verify the app's assumptions against live Strava data.
+
+### New features / fixes
+
+- **Indoor trainer rides excluded from wheel wear**: Strava marks stationary-trainer rides with `trainer: true` even when the sport type is a plain `Ride` (not `VirtualRide`). Previously only `VirtualRide` activities were excluded from wheel/cable wear, so trainer rides logged as `Ride` inflated tire/wheel distance. New nullable `activities.trainer` column stores the flag; `computeComponentDistance` now treats `trainer === true` OR `VirtualRide` as "indoor". The `VirtualRide` check is retained for activities synced before the flag existed.
+  - **Backfill note**: existing activities default to `trainer = false`. A full re-sync (Sync → full) repopulates the flag for historical rides.
+- **Retired bikes now synced**: The `bikes.retired` column existed but was never written. `StravaGearSchema` now captures Strava's `retired` field and `syncBikes` persists it on insert and update.
+- **Resilient activity parsing**: `StravaClient.fetchArray` now parses each item independently with `safeParse` and skips (with a logged count) any malformed item, instead of letting a single bad activity abort the entire sync.
+- **Schema coverage**: `StravaActivitySchema` gained `trainer` and `commute`; `StravaGearSchema` gained `retired`.
+- **Removed dead `primary` logic**: Strava's `gear.primary` is permanently broken (always `false` — confirmed across all 21 bikes), so `is_primary` never drove any behaviour. Removed the column, the "Primary" badge, the selection branch, the query ordering, and the schema captures. Default-bike selection now relies on `default_sport_type` + distance ordering (unchanged in practice).
+
+### Files changed
+- `src/lib/sync/compute-distance.ts` — `isIndoorRide()` helper; indoor = trainer flag OR VirtualRide
+- `src/lib/sync/compute-distance.test.ts` — trainer-flag test suite (4 new cases)
+- `src/lib/sync/activities.ts` — stores `trainer` on insert
+- `src/lib/sync/bikes.ts` — selects `trainer` for wear calc; persists `retired`
+- `src/lib/strava/schemas.ts` — `trainer`/`commute` on activity, `retired` on gear
+- `src/lib/strava/client.ts` — `fetchArray` skips unparseable items
+- `src/lib/supabase/types.ts` — `activities.trainer` added; `bikes.is_primary` removed
+- `src/components/dashboard/dashboard.tsx` — dropped `is_primary` from bike selection
+- `src/components/dashboard/bike-detail.tsx` — removed "Primary" badge
+- `src/lib/db/queries.ts` — removed `.order("is_primary")`
+- DB migration `add_trainer_flag_to_activities` — `activities.trainer boolean NOT NULL DEFAULT false`
+- DB migration `drop_unused_is_primary_from_bikes` — dropped `bikes.is_primary`
+
 ## 2026-06-07: Wheel components stuck at 0 km on first sync
 
 ### Bug fix

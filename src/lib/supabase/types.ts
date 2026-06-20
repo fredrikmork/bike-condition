@@ -74,7 +74,6 @@ export interface Database {
           frame_type: number | null;
           description: string | null;
           total_distance: number | null;
-          is_primary: boolean;
           retired: boolean;
           deleted_defaults: string[];
           bike_type: "road" | "mtb" | "tt" | "hybrid" | "ebike" | null;
@@ -102,7 +101,6 @@ export interface Database {
           frame_type?: number | null;
           description?: string | null;
           total_distance?: number | null;
-          is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
           bike_type?: "road" | "mtb" | "tt" | "hybrid" | "ebike" | null;
@@ -130,7 +128,6 @@ export interface Database {
           frame_type?: number | null;
           description?: string | null;
           total_distance?: number | null;
-          is_primary?: boolean;
           retired?: boolean;
           deleted_defaults?: string[];
           bike_type?: "road" | "mtb" | "tt" | "hybrid" | "ebike" | null;
@@ -224,6 +221,7 @@ export interface Database {
           moving_time: number | null;
           start_date: string;
           activity_type: string | null;
+          trainer: boolean;
           created_at: string;
         };
         Insert: {
@@ -236,6 +234,7 @@ export interface Database {
           moving_time?: number | null;
           start_date: string;
           activity_type?: string | null;
+          trainer?: boolean;
           created_at?: string;
         };
         Update: {
@@ -248,6 +247,7 @@ export interface Database {
           moving_time?: number | null;
           start_date?: string;
           activity_type?: string | null;
+          trainer?: boolean;
           created_at?: string;
         };
         Relationships: [];

@@ -17,7 +17,6 @@ export const StravaAthleteSchema = z.object({
     .array(
       z.object({
         id: z.string(),
-        primary: z.boolean(),
         name: z.string(),
         distance: z.number(),
       })
@@ -27,7 +26,6 @@ export const StravaAthleteSchema = z.object({
 
 export const StravaGearSchema = z.object({
   id: z.string(),
-  primary: z.boolean(),
   name: z.string(),
   distance: z.number(), // in meters
   brand_name: z.string().nullable().optional(),
@@ -35,6 +33,7 @@ export const StravaGearSchema = z.object({
   frame_type: z.number().nullable().optional(),
   description: z.string().nullable().optional(),
   weight: z.number().nullable().optional(), // kg
+  retired: z.boolean().optional(), // gear retired on Strava
 });
 
 export const StravaActivitySchema = z.object({
@@ -48,6 +47,8 @@ export const StravaActivitySchema = z.object({
   type: z.string(),
   sport_type: z.string().optional(),
   gear_id: z.string().nullable(),
+  trainer: z.boolean().optional(), // recorded on a stationary trainer (indoor)
+  commute: z.boolean().optional(),
 });
 
 export const StravaTokenResponseSchema = z.object({

@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import {
   type StravaActivity,
   StravaActivitySchema,
@@ -38,15 +39,31 @@ export class StravaClient {
     return schema.parse(await this.request(endpoint));
   }
 
-  private async fetchArray<T>(
-    endpoint: string,
-    schema: { parse: (data: unknown) => T }
-  ): Promise<T[]> {
+  private async fetchArray<T>(endpoint: string, schema: z.ZodType<T>): Promise<T[]> {
     const data = await this.request(endpoint);
     if (!Array.isArray(data)) {
       throw new Error("Expected array response from Strava API");
     }
-    return data.map((item) => schema.parse(item));
+
+    // Parse each item independently: a single malformed activity must not abort
+    // the whole sync. Strava occasionally returns items with unexpected shapes,
+    // and dropping one ride is far better than leaving the user with no data.
+    const parsed: T[] = [];
+    let skipped = 0;
+    for (const item of data) {
+      const result = schema.safeParse(item);
+      if (result.success) {
+        parsed.push(result.data);
+      } else {
+        skipped++;
+      }
+    }
+
+    if (skipped > 0) {
+      console.warn(`[strava] skipped ${skipped} unparseable item(s) from ${endpoint}`);
+    }
+
+    return parsed;
   }
 
   async getAthlete(): Promise<StravaAthlete> {

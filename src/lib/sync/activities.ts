@@ -124,6 +124,7 @@ export async function syncActivities(
         moving_time: activity.moving_time,
         start_date: activity.start_date,
         activity_type: activityType,
+        trainer: activity.trainer ?? false,
       });
     }
 
