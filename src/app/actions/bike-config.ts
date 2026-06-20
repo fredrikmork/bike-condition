@@ -77,7 +77,8 @@ export async function saveBikeConfigAction(
 
 export async function markChargedAction(
   bikeId: string,
-  chargedAt: string
+  chargedAt: string,
+  rangeKm?: number | null
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Not authenticated" };
@@ -85,6 +86,12 @@ export async function markChargedAction(
   const chargedDate = new Date(chargedAt);
   if (Number.isNaN(chargedDate.getTime())) {
     return { success: false, error: "Invalid date" };
+  }
+
+  // Normalise the optional warn-distance: positive integer km, or null to clear.
+  let battery_range_km: number | null | undefined;
+  if (rangeKm !== undefined) {
+    battery_range_km = rangeKm != null && rangeKm > 0 ? Math.round(rangeKm) : null;
   }
 
   // Fetch current total_distance for this bike
@@ -102,6 +109,7 @@ export async function markChargedAction(
     .update({
       last_charge_distance: bike.total_distance ?? 0,
       last_charge_date: chargedDate.toISOString(),
+      ...(battery_range_km !== undefined ? { battery_range_km } : {}),
     })
     .eq("id", bikeId)
     .eq("user_id", session.userId);

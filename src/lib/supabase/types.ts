@@ -85,6 +85,7 @@ export interface Database {
           electronic_system: ElectronicSystem | null;
           last_charge_distance: number | null;
           last_charge_date: string | null;
+          battery_range_km: number | null;
           default_sport_type: string | null;
           weight: number | null;
           pause_wheels_on_virtual: boolean;
@@ -112,6 +113,7 @@ export interface Database {
           electronic_system?: ElectronicSystem | null;
           last_charge_distance?: number | null;
           last_charge_date?: string | null;
+          battery_range_km?: number | null;
           default_sport_type?: string | null;
           weight?: number | null;
           pause_wheels_on_virtual?: boolean;
@@ -139,6 +141,7 @@ export interface Database {
           electronic_system?: ElectronicSystem | null;
           last_charge_distance?: number | null;
           last_charge_date?: string | null;
+          battery_range_km?: number | null;
           default_sport_type?: string | null;
           weight?: number | null;
           pause_wheels_on_virtual?: boolean;

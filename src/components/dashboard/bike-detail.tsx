@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { CalendarIcon, Settings2, Zap } from "lucide-react";
+import { CalendarIcon, Settings2 } from "lucide-react";
 import { startTransition, useOptimistic, useState } from "react";
 import { markChargedAction } from "@/app/actions/bike-config";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { getBatteryHealth } from "@/lib/wear/battery";
 import { formatDistance } from "@/lib/wear/calculator";
 import { AddComponentDialog } from "./add-component-dialog";
+import { BatteryIcon } from "./battery-icon";
 import { BikeConfigDialog } from "./bike-config-dialog";
 import { ComponentList } from "./component-list";
 import { MutedComponentsSheet } from "./muted-components-sheet";
@@ -88,15 +90,31 @@ export function BikeDetail({
 
   const [optimisticKm, setOptimisticKm] = useOptimistic<number | null>(kmSinceCharge);
 
-  const batteryHealth = getBatteryHealth(optimisticKm, bike.electronic_system, bike.created_at);
+  // User-set warn distance (km per charge) — empty string means "use auto-estimate".
+  const [warnKm, setWarnKm] = useState<string>(
+    bike.battery_range_km != null ? String(bike.battery_range_km) : ""
+  );
+
+  const batteryHealth = getBatteryHealth(
+    optimisticKm,
+    bike.electronic_system,
+    bike.created_at,
+    bike.battery_range_km
+  );
 
   function handleConfirmCharge() {
     setChargeDialogOpen(false);
     setCharging(true);
+    const trimmed = warnKm.trim();
+    const rangeKm = trimmed === "" ? null : Number(trimmed);
     startTransition(async () => {
       setOptimisticKm(0);
       try {
-        await markChargedAction(bike.id, chargeDate.toISOString());
+        await markChargedAction(
+          bike.id,
+          chargeDate.toISOString(),
+          Number.isFinite(rangeKm as number) ? rangeKm : null
+        );
       } finally {
         setCharging(false);
       }
@@ -232,7 +250,7 @@ export function BikeDetail({
                     aria-label="Mark battery charged"
                     className={chipClass}
                   >
-                    <Zap className="h-3 w-3" />
+                    <BatteryIcon health={batteryHealth} className="h-3.5 w-3.5" />
                     <span>{systemLabel}</span>
                     <span className="opacity-50">·</span>
                     <span>
@@ -359,6 +377,23 @@ export function BikeDetail({
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="grid gap-2 py-2">
+            <Label htmlFor="warn-km">Warn after (km)</Label>
+            <Input
+              id="warn-km"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              placeholder={`Auto (${batteryHealth.effectiveRange} km)`}
+              value={warnKm}
+              onChange={(e) => setWarnKm(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Distance per charge before the battery indicator warns you. Leave empty to estimate
+              automatically from your drivetrain.
+            </p>
           </div>
 
           <DialogFooter>

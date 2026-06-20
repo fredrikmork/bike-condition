@@ -2,6 +2,17 @@
 
 All notable changes for this project in this file.
 
+## 2026-06-20: Battery indicator with user-set warn distance (Trello #17)
+
+### New feature
+- **Phone-style battery glyph** on the electronic-drivetrain charge chip (`BatteryIcon`): a Lucide `Battery*` icon whose fill (full → medium → low → warning) reflects the remaining charge since the last top-up, depleting as you ride.
+- **User-set warn distance**: a new "Warn after (km)" field in the charge dialog lets the rider set their expected km-per-charge; the battery indicator and the charge warning derive from it. Leaving it empty falls back to the age-based auto-estimate.
+
+### Implementation
+- DB migration `add_battery_range_km_to_bikes` — nullable `bikes.battery_range_km`.
+- `lib/wear/battery.ts` — `getEffectiveChargeRange` honors the user range (skips age degradation); `getBatteryHealth` now returns `percent` (0–100) for the icon. New `battery.test.ts` (6 cases).
+- `markChargedAction` persists the range; `bike-detail.tsx` renders the dynamic icon and the new field.
+
 ## 2026-06-20: Dead-code cleanup & dependency upgrades
 
 ### Removed (dead code, via knip + grep/Supabase cross-checks)
