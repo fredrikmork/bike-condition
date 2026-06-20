@@ -7,6 +7,12 @@
       "matchPackageNames": ["react-day-picker"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Hold pnpm on v10: Vercel ignores packageManager (uses pnpm 9), so a major bump has no production effect, and pnpm 11's default minimumReleaseAge policy blocks installs of freshly published deps. Revisit if Vercel adopts corepack.",
+      "matchDepNames": ["pnpm"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
