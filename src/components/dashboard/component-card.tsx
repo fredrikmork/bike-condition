@@ -2,10 +2,12 @@
 
 import { format } from "date-fns";
 import {
+  ArrowLeftRight,
   BellOff,
   ChevronDown,
   History,
   MoreHorizontal,
+  PackageOpen,
   Pencil,
   RefreshCw,
   RotateCw,
@@ -15,7 +17,9 @@ import { useEffect, useOptimistic, useRef, useState, useTransition } from "react
 import { toast } from "sonner";
 import {
   deleteComponentAction,
+  mountComponentAction,
   muteComponentAction,
+  unmountComponentAction,
   updateComponentAction,
 } from "@/app/actions/components";
 import { replaceComponentAction } from "@/app/actions/replace";
@@ -37,6 +41,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
@@ -70,8 +77,9 @@ export function ComponentCard({
   outdoorOnly = false,
   readOnly = false,
 }: ComponentCardProps) {
-  const { focusedComponentId, setFocusedComponentId } = useBikeStore();
+  const { focusedComponentId, setFocusedComponentId, bikes } = useBikeStore();
   const focused = focusedComponentId === component.id;
+  const otherBikes = bikes.filter((b) => b.id !== component.bike_id);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [, startTransition] = useTransition();
@@ -121,6 +129,42 @@ export function ComponentCard({
     });
   }
 
+  function handleMount(bikeId: string, bikeName: string) {
+    startTransition(async () => {
+      setOptimisticHidden(true);
+      try {
+        const result = await mountComponentAction(component.id, bikeId);
+        if (result.success) {
+          toast.success(`${component.name} moved to ${bikeName}`, {
+            description: result.displacedName
+              ? `${result.displacedName} went to the parts bank`
+              : undefined,
+          });
+        } else {
+          toast.error("Failed to move component", { description: result.error });
+        }
+      } catch {
+        toast.error("Failed to move component");
+      }
+    });
+  }
+
+  function handleUnmount() {
+    startTransition(async () => {
+      setOptimisticHidden(true);
+      try {
+        const result = await unmountComponentAction(component.id);
+        if (result.success) {
+          toast.success(`${component.name} moved to the parts bank`);
+        } else {
+          toast.error("Failed to remove component", { description: result.error });
+        }
+      } catch {
+        toast.error("Failed to remove component");
+      }
+    });
+  }
+
   function handleDelete() {
     setDeleteDialogOpen(false);
     startTransition(async () => {
@@ -145,6 +189,7 @@ export function ComponentCard({
     startTransition(async () => {
       applyOptimisticUpdate({
         name: data.name,
+        nickname: data.nickname,
         brand: data.brand,
         model: data.model,
         spec: data.spec,
@@ -240,7 +285,9 @@ export function ComponentCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
               <h4 className="text-sm font-medium truncate">
-                {displayName ?? optimisticComponent.name}
+                {/* A nickname wins over the group's shortened label — it is the
+                    whole point of naming a part you rotate between bikes. */}
+                {optimisticComponent.nickname ?? displayName ?? optimisticComponent.name}
               </h4>
               {isCustom && (
                 <Badge variant="secondary" className="text-[10px] shrink-0">
@@ -328,6 +375,35 @@ export function ComponentCard({
                         <TooltipContent side="right">See past replacements</TooltipContent>
                       </Tooltip>
                     )}
+
+                    <DropdownMenuSeparator />
+                    {otherBikes.length > 0 && (
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <ArrowLeftRight className="mr-2 h-3.5 w-3.5" />
+                          Move to bike
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {otherBikes.map((b) => (
+                            <DropdownMenuItem key={b.id} onClick={() => handleMount(b.id, b.name)}>
+                              {b.name}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem onClick={handleUnmount}>
+                          <PackageOpen className="mr-2 h-3.5 w-3.5" />
+                          Remove to bank
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        Take it off without retiring it — the wear follows the part
+                      </TooltipContent>
+                    </Tooltip>
+
                     <DropdownMenuSeparator />
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -511,7 +587,7 @@ export function ComponentCard({
         </>
       )}
 
-      {hasHistory && (
+      {hasHistory && component.bike_id && (
         <ComponentHistorySheet
           bikeId={component.bike_id}
           componentType={component.type}

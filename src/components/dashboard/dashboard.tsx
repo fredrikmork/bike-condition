@@ -20,7 +20,13 @@ export function Dashboard({
   historyByBike,
   virtualKmByBike,
 }: DashboardProps) {
-  const { selectedBikeId, setSelectedBikeId } = useBikeStore();
+  const { selectedBikeId, setSelectedBikeId, setBikes } = useBikeStore();
+
+  // Share the mountable bikes so component cards can offer a bike picker.
+  // Retired bikes are excluded — nothing new gets mounted on them.
+  useEffect(() => {
+    setBikes(bikes.map((b) => ({ id: b.id, name: b.name })));
+  }, [bikes, setBikes]);
 
   // Initialize with the most-ridden bike, preferring a real-ride bike over
   // virtual-only bikes (bikes are already sorted by distance desc from the query).

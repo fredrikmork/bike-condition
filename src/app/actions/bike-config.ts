@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
 import { createConfiguredComponents } from "@/lib/components/defaults";
+import { createComponentsWithMounts } from "@/lib/components/mounts";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { BikeConfig } from "@/lib/supabase/types";
 
@@ -62,14 +63,17 @@ export async function saveBikeConfigAction(
   const deletedDefaults = new Set(bike.deleted_defaults ?? []);
 
   // Generate config-aware defaults and insert only missing types
-  const allConfigured = createConfiguredComponents(bikeId, bike.total_distance ?? 0, parsed.data);
+  const allConfigured = createConfiguredComponents(
+    bikeId,
+    session.userId,
+    bike.total_distance ?? 0,
+    parsed.data
+  );
   const toInsert = allConfigured.filter(
     (c) => !existingTypes.has(c.type) && !deletedDefaults.has(c.type)
   );
 
-  if (toInsert.length > 0) {
-    await supabaseAdmin.from("components").insert(toInsert);
-  }
+  await createComponentsWithMounts(toInsert);
 
   revalidatePath("/");
   return { success: true };

@@ -106,11 +106,13 @@ function buildConfiguredComponentList(config: BikeConfig): DefaultComponent[] {
  */
 export function createConfiguredComponents(
   bikeId: string,
+  userId: string,
   bikeDistance: number,
   config: BikeConfig
 ): ComponentInsert[] {
   return buildConfiguredComponentList(config).map((c) => ({
     bike_id: bikeId,
+    user_id: userId,
     name: c.name,
     type: c.type,
     recommended_distance: c.recommended_distance,
@@ -148,9 +150,14 @@ export const DEFAULT_COMPONENTS: DefaultComponent[] = [
 ];
 
 /** Legacy factory — used only for unconfigured bikes during sync */
-export function createDefaultComponents(bikeId: string, bikeDistance: number): ComponentInsert[] {
+export function createDefaultComponents(
+  bikeId: string,
+  userId: string,
+  bikeDistance: number
+): ComponentInsert[] {
   return DEFAULT_COMPONENTS.map((component) => ({
     bike_id: bikeId,
+    user_id: userId,
     name: component.name,
     type: component.type,
     recommended_distance: component.recommended_distance,

@@ -2,6 +2,34 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-21: Rotatable components — parts bank and mount periods (Trello #3)
+
+### New feature
+- A part is now an **independent thing**, not a property of one bike. Chains, cassettes and everything else can be moved between bikes and keep their accumulated wear.
+- **Parts bank**: "Remove to bank" takes a part off without retiring it. Banked parts stop accumulating distance and are listed in a sidebar sheet with their wear, ready to be mounted again.
+- **"Move to bike"** submenu on each component card. Mounting a part displaces whatever part of the same type was on that bike — it goes to the bank, exactly as the card describes.
+- **Nicknames** (`components.nickname`) so two otherwise identical cassettes are distinguishable; shown instead of the component name.
+- "Replace" keeps its old meaning — the part is worn out and goes to history. Moving is the separate action for parts that are still good.
+
+### Data model
+- New `component_mounts` table: one row per period a part sat on a bike (`mounted_at`/`unmounted_at`, `bike_distance_at_mount`/`bike_distance_at_unmount`). Wear is the sum over these periods rather than a function of one bike.
+- `components.bike_id` is now nullable (NULL = in the bank) and `components.user_id` was added, so ownership no longer hangs off the bike. Every ownership check moved to `getOwnedComponent`, which also covers banked parts.
+- A partial unique index (`idx_component_mounts_one_open`) enforces one open mount per part — the backstop against `components.bike_id` drifting from the mount rows. All transitions go through `lib/components/mounts.ts`, and all four component-creation sites now route through `createComponentsWithMounts`.
+- `bike_distance_at_unmount` snapshots the bike's Strava total when a part comes off. Without it a moved part loses the gear-distance fallback that carries pre-app mileage, and its wear would visibly drop the first time it was moved.
+- Backfill created one mount per existing component mirroring `installed_at`/`bike_distance_at_install`. A component with no mount rows falls back to that same synthetic shape, so a missed write degrades to the old behaviour instead of zeroing wear.
+
+### Bug found while verifying: PostgREST's silent 1000-row cap
+Verifying the migration surfaced a **pre-existing production bug**. PostgREST caps every response at 1000 rows without erroring, so wear calculations on bikes with more than 1000 activities were silently under-counting. Fredrik's GT GTR (2346 activities) had its components stored ~722 km too low; they correct upward on the next sync.
+- New `lib/supabase/paginate.ts` (`fetchAllRows`) pages through the cap. Applied to the wear recomputation and to `getVirtualKmForBikes`, which had the same latent flaw.
+
+### Implementation
+- `computeComponentDistance` kept as the single-mount primitive; `computeComponentDistanceAcrossMounts` composes it per period. All 51 pre-existing tests still pass unchanged, plus 7 new ones for rotation.
+- Sync restructured from a per-bike loop to one `recomputeComponentDistances(userId)` pass — a rotated part draws distance from several bikes and cannot be computed from one bike's data.
+- **Equivalence verified**: for all 223 active components, the old and new algorithms produce identical results on the same data. The write path (mount, displace, bank, cascade) was verified end-to-end against the real database using throwaway parts that were deleted afterwards; components/mounts returned to 256/256 with zero drift.
+
+### Not included
+- Indoor/outdoor split per mount. The `usage_scope` column exists and is constrained to `all|indoor|outdoor`, but only `'all'` is ever written. Separate card.
+
 ## 2026-07-21: Read-only view of retired bikes (Trello #23)
 
 ### New feature

@@ -2,6 +2,7 @@
 
 import { Archive, Bike, Bug, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { PartsBankTrigger } from "@/components/dashboard/parts-bank-sheet";
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +26,10 @@ import { SidebarUserMenu } from "./sidebar-user-menu";
 interface AppSidebarProps {
   bikes: BikeWithComponents[];
   retiredBikes?: BikeWithComponents[];
+  bankedPartsCount?: number;
 }
 
-export function AppSidebar({ bikes, retiredBikes = [] }: AppSidebarProps) {
+export function AppSidebar({ bikes, retiredBikes = [], bankedPartsCount = 0 }: AppSidebarProps) {
   const [showRetired, setShowRetired] = useState(false);
   const totalDistance = bikes.reduce((sum, b) => sum + (b.total_distance ?? 0), 0);
 
@@ -92,6 +94,10 @@ export function AppSidebar({ bikes, retiredBikes = [] }: AppSidebarProps) {
                 {showRetired && <SidebarBikeList bikes={retiredBikes} readOnly />}
               </>
             )}
+
+            <div className="mt-1 group-data-[collapsible=icon]:hidden">
+              <PartsBankTrigger count={bankedPartsCount} />
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
 

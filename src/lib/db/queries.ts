@@ -1,3 +1,5 @@
+import { closeOpenMount, createComponentsWithMounts } from "@/lib/components/mounts";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type {
   Bike,
@@ -38,6 +40,7 @@ export async function getBikesWithComponents(
 
   const componentsByBike = new Map<string, Component[]>();
   for (const component of allComponents || []) {
+    if (!component.bike_id) continue; // in the bank — no bike to group under
     const list = componentsByBike.get(component.bike_id) || [];
     list.push(component);
     componentsByBike.set(component.bike_id, list);
@@ -58,6 +61,39 @@ export async function getComponentById(componentId: string): Promise<Component |
     .single();
 
   return data;
+}
+
+/**
+ * Fetch a component only if it belongs to the user.
+ *
+ * Ownership hangs off the component itself rather than its bike, so this also
+ * covers parts sitting in the bank with no bike attached.
+ */
+export async function getOwnedComponent(
+  componentId: string,
+  userId: string
+): Promise<Component | null> {
+  const { data } = await supabaseAdmin
+    .from("components")
+    .select("*")
+    .eq("id", componentId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return data;
+}
+
+/** A user's parts that are not mounted on any bike. */
+export async function getBankedComponents(userId: string): Promise<Component[]> {
+  const { data } = await supabaseAdmin
+    .from("components")
+    .select("*")
+    .eq("user_id", userId)
+    .is("bike_id", null)
+    .is("replaced_at", null)
+    .order("type");
+
+  return data || [];
 }
 
 export async function replaceComponent(
@@ -83,35 +119,40 @@ export async function replaceComponent(
 
   if (retireErr) throw new Error(`Failed to retire component: ${retireErr.message}`);
 
+  // The worn part stops accumulating at the replacement date, but stays
+  // attached to the bike so it remains visible in that bike's history.
+  await closeOpenMount(componentId, replacedDate);
+
   // Create new component — distance = bike.total_distance - bike_distance_at_install
-  const { data: newComponent } = await supabaseAdmin
-    .from("components")
-    .insert({
+  const [newComponent] = await createComponentsWithMounts([
+    {
       bike_id: existing.bike_id,
+      user_id: existing.user_id,
       name: existing.name,
+      nickname: existing.nickname,
       type: existing.type,
       icon: existing.icon,
       recommended_distance: existing.recommended_distance,
       current_distance: 0,
       bike_distance_at_install: bikeDistance,
       installed_at: replacedIso,
-    })
-    .select()
-    .single();
+    },
+  ]);
 
-  return newComponent;
+  return newComponent ?? null;
 }
 
 export async function addComponent(insert: ComponentInsert): Promise<Component | null> {
-  const { data } = await supabaseAdmin.from("components").insert(insert).select().single();
+  const [created] = await createComponentsWithMounts([insert]);
 
-  return data;
+  return created ?? null;
 }
 
 export async function updateComponent(
   componentId: string,
   data: {
     name: string;
+    nickname?: string | null;
     brand?: string | null;
     model?: string | null;
     spec?: string | null;
@@ -124,6 +165,7 @@ export async function updateComponent(
     .from("components")
     .update({
       name: data.name,
+      nickname: data.nickname ?? null,
       brand: data.brand ?? null,
       model: data.model ?? null,
       spec: data.spec ?? null,
@@ -203,6 +245,7 @@ export async function getTypesWithHistoryForBikes(
 
   const result: Record<string, string[]> = {};
   for (const row of data || []) {
+    if (!row.bike_id) continue;
     if (!result[row.bike_id]) result[row.bike_id] = [];
     if (!result[row.bike_id].includes(row.type)) {
       result[row.bike_id].push(row.type);
@@ -215,14 +258,19 @@ export async function getTypesWithHistoryForBikes(
 export async function getVirtualKmForBikes(bikeIds: string[]): Promise<Record<string, number>> {
   if (bikeIds.length === 0) return {};
 
-  const { data } = await supabaseAdmin
-    .from("activities")
-    .select("bike_id, distance")
-    .in("bike_id", bikeIds)
-    .eq("activity_type", "VirtualRide");
+  // Paged: a Zwift-heavy rider can pass PostgREST's 1000-row cap, which would
+  // silently under-report the virtual total.
+  const data = await fetchAllRows<{ bike_id: string | null; distance: number }>((from, to) =>
+    supabaseAdmin
+      .from("activities")
+      .select("bike_id, distance")
+      .in("bike_id", bikeIds)
+      .eq("activity_type", "VirtualRide")
+      .range(from, to)
+  );
 
   const result: Record<string, number> = {};
-  for (const row of data || []) {
+  for (const row of data) {
     if (!row.bike_id) continue;
     result[row.bike_id] = (result[row.bike_id] ?? 0) + row.distance;
   }

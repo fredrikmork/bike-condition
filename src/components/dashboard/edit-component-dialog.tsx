@@ -30,6 +30,7 @@ import { formatDistance, getSuggestedDistance, LUBE_LABELS } from "@/lib/wear/ca
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(100).optional(),
+  nickname: z.string().max(100).optional(),
   brand: z.string().max(100).optional(),
   model: z.string().max(100).optional(),
   spec: z.string().max(200).optional(),
@@ -45,6 +46,7 @@ type FormValues = z.infer<typeof schema>;
 
 export type UpdateComponentData = {
   name: string;
+  nickname: string | null;
   brand: string | null;
   model: string | null;
   spec: string | null;
@@ -77,6 +79,7 @@ export function EditComponentDialog({
     resolver: zodResolver(schema),
     defaultValues: {
       name: component.name,
+      nickname: component.nickname ?? "",
       brand: component.brand ?? "",
       model: component.model ?? "",
       spec: component.spec ?? "",
@@ -90,6 +93,7 @@ export function EditComponentDialog({
   useEffect(() => {
     reset({
       name: component.name,
+      nickname: component.nickname ?? "",
       brand: component.brand ?? "",
       model: component.model ?? "",
       spec: component.spec ?? "",
@@ -108,6 +112,7 @@ export function EditComponentDialog({
   function onSubmit(values: FormValues) {
     onSave({
       name: isCustom ? (values.name ?? component.name) : component.name,
+      nickname: values.nickname?.trim() || null,
       brand: values.brand || null,
       model: values.model || null,
       spec: values.spec || null,
@@ -137,6 +142,16 @@ export function EditComponentDialog({
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
           )}
+
+          {/* Nickname — how you tell two of the same part apart when rotating */}
+          <div className="grid gap-1.5">
+            <Label htmlFor="ec-nickname">Nickname</Label>
+            <Input id="ec-nickname" placeholder="e.g. Winter cassette" {...register("nickname")} />
+            <p className="text-xs text-muted-foreground">
+              Shown instead of the component name. Useful when you rotate several of the same part
+              between bikes.
+            </p>
+          </div>
 
           {/* Brand + Model */}
           <div className="grid grid-cols-2 gap-3">

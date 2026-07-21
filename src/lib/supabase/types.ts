@@ -153,8 +153,12 @@ export interface Database {
       components: {
         Row: {
           id: string;
-          bike_id: string;
+          /** NULL when the part sits in the bank, unmounted */
+          bike_id: string | null;
+          user_id: string;
           name: string;
+          /** User-chosen label, shown instead of `name` when set */
+          nickname: string | null;
           type: string;
           icon: string | null;
           brand: string | null;
@@ -173,8 +177,10 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          bike_id: string;
+          bike_id?: string | null;
+          user_id: string;
           name: string;
+          nickname?: string | null;
           type: string;
           icon?: string | null;
           brand?: string | null;
@@ -193,8 +199,10 @@ export interface Database {
         };
         Update: {
           id?: string;
-          bike_id?: string;
+          bike_id?: string | null;
+          user_id?: string;
           name?: string;
+          nickname?: string | null;
           type?: string;
           icon?: string | null;
           brand?: string | null;
@@ -312,6 +320,42 @@ export interface Database {
         };
         Relationships: [];
       };
+      component_mounts: {
+        Row: {
+          id: string;
+          component_id: string;
+          bike_id: string;
+          mounted_at: string;
+          unmounted_at: string | null;
+          bike_distance_at_mount: number;
+          bike_distance_at_unmount: number | null;
+          usage_scope: UsageScope;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          component_id: string;
+          bike_id: string;
+          mounted_at: string;
+          unmounted_at?: string | null;
+          bike_distance_at_mount?: number;
+          bike_distance_at_unmount?: number | null;
+          usage_scope?: UsageScope;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          component_id?: string;
+          bike_id?: string;
+          mounted_at?: string;
+          unmounted_at?: string | null;
+          bike_distance_at_mount?: number;
+          bike_distance_at_unmount?: number | null;
+          usage_scope?: UsageScope;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       virtual_periods: {
         Row: {
           id: string;
@@ -365,6 +409,9 @@ export type Activity = Database["public"]["Tables"]["activities"]["Row"];
 export type ActivityInsert = Database["public"]["Tables"]["activities"]["Insert"];
 export type SyncStatus = Database["public"]["Tables"]["sync_status"]["Row"];
 
+export type ComponentMount = Database["public"]["Tables"]["component_mounts"]["Row"];
+export type ComponentMountInsert = Database["public"]["Tables"]["component_mounts"]["Insert"];
+
 export type VirtualPeriod = Database["public"]["Tables"]["virtual_periods"]["Row"];
 
 // Extended types with relations
@@ -373,6 +420,13 @@ export type BikeWithComponents = Bike & {
 };
 
 export type LubeType = "wet_lube" | "dry_lube" | "drip_wax" | "hot_wax";
+
+/**
+ * Which rides a mount period accumulates distance from. Only "all" is written
+ * today — "indoor"/"outdoor" back the planned virtual/outdoor split, where two
+ * parts of the same type can sit on one bike and each take its share of rides.
+ */
+export type UsageScope = "all" | "indoor" | "outdoor";
 
 export type ShiftingType = "mechanical" | "electronic";
 export type BrakeType = "disc" | "rim";

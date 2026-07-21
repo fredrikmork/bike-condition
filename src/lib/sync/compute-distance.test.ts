@@ -3,6 +3,8 @@ import {
   type ActivityDistanceInput,
   type ComponentDistanceInput,
   computeComponentDistance,
+  computeComponentDistanceAcrossMounts,
+  type MountDistanceInput,
 } from "./compute-distance";
 
 const INSTALL_DATE = "2026-05-16T00:00:00Z";
@@ -157,6 +159,177 @@ describe("computeComponentDistance — installed_at filtering", () => {
     // Gear distance = 2,051 - 1,885 = 166k. Activity = 166k. MAX = 166k.
     const distance = computeComponentDistance(chain, activities, 2_051_281);
     expect(distance).toBe(166_290);
+  });
+});
+
+describe("computeComponentDistanceAcrossMounts — parts moved between bikes", () => {
+  const BIKE_A = "bike-a";
+  const BIKE_B = "bike-b";
+
+  function rideOn(distance: number, daysFromInstall: number): ActivityDistanceInput {
+    return ride(distance, daysFromInstall);
+  }
+
+  function mount(overrides: Partial<MountDistanceInput> = {}): MountDistanceInput {
+    return {
+      bike_id: BIKE_A,
+      mounted_at: INSTALL_DATE,
+      unmounted_at: null,
+      bike_distance_at_mount: 0,
+      bike_distance_at_unmount: null,
+      ...overrides,
+    };
+  }
+
+  function component(type: string, overrides: Partial<ComponentDistanceInput> = {}) {
+    return { ...makeComponent(type, overrides), bike_id: BIKE_A, replaced_at: null };
+  }
+
+  it("a never-moved part matches the single-bike calculation exactly", () => {
+    const chain = component("chain");
+    const activities = [rideOn(166_290, 1)];
+
+    const viaMounts = computeComponentDistanceAcrossMounts(
+      chain,
+      [mount()],
+      new Map([[BIKE_A, activities]]),
+      new Map([[BIKE_A, 2_051_281]])
+    );
+
+    expect(viaMounts).toBe(computeComponentDistance(chain, activities, 2_051_281));
+  });
+
+  it("sums distance from both bikes a part has sat on", () => {
+    // 100 km on bike A, then moved to bike B where it did 250 km more.
+    const mounts = [
+      mount({
+        unmounted_at: ride(0, 10).start_date,
+        bike_distance_at_unmount: 100_000,
+      }),
+      mount({
+        bike_id: BIKE_B,
+        mounted_at: ride(0, 10).start_date,
+        bike_distance_at_mount: 5_000_000,
+      }),
+    ];
+
+    const distance = computeComponentDistanceAcrossMounts(
+      component("cassette"),
+      mounts,
+      new Map([
+        [BIKE_A, [rideOn(100_000, 1)]],
+        [BIKE_B, [rideOn(250_000, 15)]],
+      ]),
+      new Map([
+        [BIKE_A, 100_000],
+        [BIKE_B, 5_250_000],
+      ])
+    );
+
+    expect(distance).toBe(350_000);
+  });
+
+  it("rides on a bike outside the mount window do not count", () => {
+    // The part left bike A on day 10; A kept being ridden afterwards.
+    const mounts = [
+      mount({ unmounted_at: ride(0, 10).start_date, bike_distance_at_unmount: 100_000 }),
+    ];
+
+    const distance = computeComponentDistanceAcrossMounts(
+      component("chain"),
+      mounts,
+      new Map([
+        [
+          BIKE_A,
+          [
+            rideOn(100_000, 1), // during the mount — counts
+            rideOn(900_000, 30), // after it came off — must not count
+          ],
+        ],
+      ]),
+      new Map([[BIKE_A, 1_000_000]])
+    );
+
+    expect(distance).toBe(100_000);
+  });
+
+  it("keeps pre-app Strava mileage after a move via bike_distance_at_unmount", () => {
+    // Regression guard: the bike had 2,051 km on Strava but only 166 km of
+    // synced activities. Before the snapshot column existed, moving the part
+    // dropped it from 2,051 km to 166 km.
+    const mounts = [
+      mount({
+        unmounted_at: ride(0, 10).start_date,
+        bike_distance_at_unmount: 2_051_281,
+      }),
+    ];
+
+    const distance = computeComponentDistanceAcrossMounts(
+      component("chain"),
+      mounts,
+      new Map([[BIKE_A, [rideOn(166_290, 1)]]]),
+      new Map([[BIKE_A, 2_051_281]])
+    );
+
+    expect(distance).toBe(2_051_281);
+  });
+
+  it("a banked part (no open mount) stops accumulating", () => {
+    const mounts = [
+      mount({ unmounted_at: ride(0, 10).start_date, bike_distance_at_unmount: 100_000 }),
+    ];
+
+    const banked = { ...component("chain"), bike_id: null };
+    const distance = computeComponentDistanceAcrossMounts(
+      banked,
+      mounts,
+      new Map([[BIKE_A, [rideOn(100_000, 1), rideOn(900_000, 30)]]]),
+      new Map([[BIKE_A, 1_000_000]])
+    );
+
+    expect(distance).toBe(100_000);
+  });
+
+  it("wheels still exclude indoor rides across every mount", () => {
+    const mounts = [
+      mount({ unmounted_at: ride(0, 10).start_date, bike_distance_at_unmount: 600_000 }),
+      mount({
+        bike_id: BIKE_B,
+        mounted_at: ride(0, 10).start_date,
+        bike_distance_at_mount: 0,
+      }),
+    ];
+
+    const distance = computeComponentDistanceAcrossMounts(
+      component("tire_front"),
+      mounts,
+      new Map([
+        [BIKE_A, [rideOn(100_000, 1), virtualRide(500_000, 2)]],
+        [BIKE_B, [rideOn(80_000, 15), virtualRide(400_000, 16)]],
+      ]),
+      new Map([
+        [BIKE_A, 600_000],
+        [BIKE_B, 480_000],
+      ])
+    );
+
+    // Outdoor only: 100 km on A + 80 km on B. Both bikes have indoor rides, so
+    // the gear fallback is skipped on both.
+    expect(distance).toBe(180_000);
+  });
+
+  it("falls back to the pre-rotation shape when a part has no mount rows", () => {
+    const chain = component("chain");
+    const activities = [rideOn(166_290, 1)];
+
+    const distance = computeComponentDistanceAcrossMounts(
+      chain,
+      [],
+      new Map([[BIKE_A, activities]]),
+      new Map([[BIKE_A, 2_051_281]])
+    );
+
+    expect(distance).toBe(computeComponentDistance(chain, activities, 2_051_281));
   });
 });
 

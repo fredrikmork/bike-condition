@@ -1,10 +1,16 @@
 import { createDefaultComponents, DEFAULT_COMPONENTS } from "@/lib/components/defaults";
 import { migrateDefaultDistances } from "@/lib/components/migrate-defaults";
+import { createComponentsWithMounts } from "@/lib/components/mounts";
 import { StravaClient } from "@/lib/strava/client";
 import { getValidAccessToken } from "@/lib/strava/tokens";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { BikeInsert } from "@/lib/supabase/types";
-import { computeComponentDistance } from "@/lib/sync/compute-distance";
+import {
+  type ActivityDistanceInput,
+  computeComponentDistanceAcrossMounts,
+  type MountDistanceInput,
+} from "@/lib/sync/compute-distance";
 
 interface SyncBikesResult {
   synced: number;
@@ -76,8 +82,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
                 weight: gearDetails.weight ?? null,
               })
               .eq("id", existingBike.id),
-            updateComponentDistancesFromActivities(existingBike.id, gearDetails.distance),
-            addMissingDefaultComponents(existingBike.id, gearDetails.distance),
+            addMissingDefaultComponents(existingBike.id, userId, gearDetails.distance),
           ]);
           return "updated" as const;
         } else {
@@ -104,8 +109,9 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             throw new Error(`Failed to create bike ${gearDetails.name}: ${insertError?.message}`);
           }
 
-          const defaultComponents = createDefaultComponents(newBike.id, gearDetails.distance);
-          await supabaseAdmin.from("components").insert(defaultComponents);
+          await createComponentsWithMounts(
+            createDefaultComponents(newBike.id, userId, gearDetails.distance)
+          );
 
           return "created" as const;
         }
@@ -131,6 +137,11 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       existingBikes ?? [],
       new Set(athlete.bikes.map((b) => b.id))
     );
+
+    // Recompute wear for every part the user owns. This runs once per sync
+    // rather than per bike: a rotated part draws distance from each bike it has
+    // sat on, so it cannot be computed from a single bike's data.
+    await recomputeComponentDistances(userId);
 
     // Compute dominant sport type per bike from activity history
     await updateDominantSportTypes(userId);
@@ -190,32 +201,81 @@ async function retireMissingBikes(
 }
 
 /**
- * Update all active component distances from the bike's activity history.
- * Pure decision logic lives in `computeComponentDistance` (see that module for
- * the rules around TRAINER_PAUSE_TYPES, virtual rides, and gear fallback).
+ * Recompute current_distance for all of a user's active parts.
+ *
+ * A part accumulates distance over every bike it has been mounted on, so the
+ * unit of work is the user, not the bike. Everything is fetched once and
+ * combined in memory — at realistic volumes (hundreds of components, thousands
+ * of activities) this is cheaper than the per-bike queries it replaced.
+ *
+ * Pure decision logic lives in `computeComponentDistanceAcrossMounts` (see that
+ * module for the rules around TRAINER_PAUSE_TYPES, indoor rides and the
+ * gear-distance fallback).
  */
-async function updateComponentDistancesFromActivities(
-  bikeId: string,
-  bikeTotalDistance: number
-): Promise<void> {
-  const { data: components } = await supabaseAdmin
-    .from("components")
-    .select("id, type, bike_distance_at_install, installed_at")
-    .eq("bike_id", bikeId)
-    .is("replaced_at", null);
+async function recomputeComponentDistances(userId: string): Promise<void> {
+  const [{ data: components }, { data: bikes }] = await Promise.all([
+    supabaseAdmin
+      .from("components")
+      .select("id, type, bike_id, bike_distance_at_install, installed_at, replaced_at")
+      .eq("user_id", userId)
+      .is("replaced_at", null),
+    supabaseAdmin.from("bikes").select("id, total_distance").eq("user_id", userId),
+  ]);
 
   if (!components || components.length === 0) return;
 
-  const { data: allActivities } = await supabaseAdmin
-    .from("activities")
-    .select("distance, activity_type, start_date, trainer")
-    .eq("bike_id", bikeId);
+  const bikeIds = (bikes ?? []).map((b) => b.id);
+  const bikeTotalDistanceById = new Map((bikes ?? []).map((b) => [b.id, b.total_distance ?? 0]));
 
-  const activities = allActivities ?? [];
+  // Both of these can exceed PostgREST's 1000-row cap for an active rider, and
+  // a truncated activity list silently under-reports wear — hence fetchAllRows.
+  const [allActivities, allMounts] = await Promise.all([
+    bikeIds.length > 0
+      ? fetchAllRows<ActivityDistanceInput & { bike_id: string | null }>((from, to) =>
+          supabaseAdmin
+            .from("activities")
+            .select("bike_id, distance, activity_type, start_date, trainer")
+            .in("bike_id", bikeIds)
+            .range(from, to)
+        )
+      : Promise.resolve([]),
+    fetchAllRows<MountDistanceInput & { component_id: string }>((from, to) =>
+      supabaseAdmin
+        .from("component_mounts")
+        .select(
+          "component_id, bike_id, mounted_at, unmounted_at, bike_distance_at_mount, bike_distance_at_unmount"
+        )
+        .in(
+          "component_id",
+          components.map((c) => c.id)
+        )
+        .range(from, to)
+    ),
+  ]);
+
+  const activitiesByBike = new Map<string, ActivityDistanceInput[]>();
+  for (const activity of allActivities) {
+    if (!activity.bike_id) continue;
+    const list = activitiesByBike.get(activity.bike_id) ?? [];
+    list.push(activity);
+    activitiesByBike.set(activity.bike_id, list);
+  }
+
+  const mountsByComponent = new Map<string, MountDistanceInput[]>();
+  for (const mount of allMounts) {
+    const list = mountsByComponent.get(mount.component_id) ?? [];
+    list.push(mount);
+    mountsByComponent.set(mount.component_id, list);
+  }
 
   await Promise.all(
     components.map(async (component) => {
-      const current_distance = computeComponentDistance(component, activities, bikeTotalDistance);
+      const current_distance = computeComponentDistanceAcrossMounts(
+        component,
+        mountsByComponent.get(component.id) ?? [],
+        activitiesByBike,
+        bikeTotalDistanceById
+      );
       await supabaseAdmin.from("components").update({ current_distance }).eq("id", component.id);
     })
   );
@@ -228,6 +288,7 @@ async function updateComponentDistancesFromActivities(
  */
 async function addMissingDefaultComponents(
   bikeId: string,
+  userId: string,
   bikeTotalDistance: number
 ): Promise<void> {
   const { data: existingComponents } = await supabaseAdmin
@@ -265,18 +326,17 @@ async function addMissingDefaultComponents(
     (d) => !existingTypes.has(d.type) && !deletedDefaults.has(d.type)
   );
 
-  if (missingDefaults.length > 0) {
-    const inserts = missingDefaults.map((d) => ({
+  await createComponentsWithMounts(
+    missingDefaults.map((d) => ({
       bike_id: bikeId,
+      user_id: userId,
       name: d.name,
       type: d.type,
       recommended_distance: d.recommended_distance,
       current_distance: bikeTotalDistance,
       bike_distance_at_install: 0, // assumed on since beginning
-    }));
-
-    await supabaseAdmin.from("components").insert(inserts);
-  }
+    }))
+  );
 }
 
 /**

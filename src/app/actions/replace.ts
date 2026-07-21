@@ -27,6 +27,11 @@ export async function replaceComponentAction(
     return { success: false, error: "Invalid date" };
   }
 
+  // A part in the bank has no bike to measure a replacement against
+  if (!component.bike_id) {
+    return { success: false, error: "Component is not mounted on a bike" };
+  }
+
   // Fetch the bike (also verifies ownership)
   const bike = await getBikeById(component.bike_id, session.userId);
   if (!bike) {

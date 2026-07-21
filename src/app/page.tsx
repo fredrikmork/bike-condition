@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { LoginPage } from "@/components/shared/login-page";
 import { auth } from "@/lib/auth/config";
 import {
+  getBankedComponents,
   getBikesWithComponents,
   getSyncStatus,
   getTypesWithHistoryForBikes,
@@ -23,9 +24,10 @@ export default async function Home() {
     return <LoginPage />;
   }
 
-  const [bikes, retiredBikes, syncStatus, userEmail] = await Promise.all([
+  const [bikes, retiredBikes, bankedParts, syncStatus, userEmail] = await Promise.all([
     getBikesWithComponents(session.userId),
     getBikesWithComponents(session.userId, { retired: true }),
+    getBankedComponents(session.userId),
     getSyncStatus(session.userId),
     getUserEmail(session.userId),
   ]);
@@ -33,9 +35,14 @@ export default async function Home() {
   const lastSync = syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null;
   const notificationsEnabled = canUseEmailNotifications(session.userId);
 
-  if (bikes.length === 0 && retiredBikes.length === 0) {
+  if (bikes.length === 0 && retiredBikes.length === 0 && bankedParts.length === 0) {
     return (
-      <AppShell bikes={[]} userEmail={userEmail} notificationsEnabled={notificationsEnabled}>
+      <AppShell
+        bikes={[]}
+        bankedParts={bankedParts}
+        userEmail={userEmail}
+        notificationsEnabled={notificationsEnabled}
+      >
         <EmptyState />
       </AppShell>
     );
@@ -51,6 +58,7 @@ export default async function Home() {
     <AppShell
       bikes={bikes}
       retiredBikes={retiredBikes}
+      bankedParts={bankedParts}
       userEmail={userEmail}
       notificationsEnabled={notificationsEnabled}
     >
