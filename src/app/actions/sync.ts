@@ -12,6 +12,7 @@ export interface SyncResult {
     synced: number;
     created: number;
     updated: number;
+    retired: number;
   };
   activities?: {
     synced: number;
@@ -55,6 +56,7 @@ export async function syncStravaData(fullSync = false): Promise<SyncResult> {
       synced: bikeResult.synced,
       created: bikeResult.created,
       updated: bikeResult.updated,
+      retired: bikeResult.retired,
     },
     activities: {
       synced: activityResult.synced,

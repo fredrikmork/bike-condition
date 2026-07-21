@@ -23,8 +23,9 @@ export default async function Home() {
     return <LoginPage />;
   }
 
-  const [bikes, syncStatus, userEmail] = await Promise.all([
+  const [bikes, retiredBikes, syncStatus, userEmail] = await Promise.all([
     getBikesWithComponents(session.userId),
+    getBikesWithComponents(session.userId, { retired: true }),
     getSyncStatus(session.userId),
     getUserEmail(session.userId),
   ]);
@@ -32,7 +33,7 @@ export default async function Home() {
   const lastSync = syncStatus?.last_bike_sync || syncStatus?.last_activity_sync || null;
   const notificationsEnabled = canUseEmailNotifications(session.userId);
 
-  if (bikes.length === 0) {
+  if (bikes.length === 0 && retiredBikes.length === 0) {
     return (
       <AppShell bikes={[]} userEmail={userEmail} notificationsEnabled={notificationsEnabled}>
         <EmptyState />
@@ -40,16 +41,22 @@ export default async function Home() {
     );
   }
 
-  const bikeIds = bikes.map((b) => b.id);
+  const bikeIds = [...bikes, ...retiredBikes].map((b) => b.id);
   const [historyByBike, virtualKmByBike] = await Promise.all([
     getTypesWithHistoryForBikes(bikeIds),
     getVirtualKmForBikes(bikeIds),
   ]);
 
   return (
-    <AppShell bikes={bikes} userEmail={userEmail} notificationsEnabled={notificationsEnabled}>
+    <AppShell
+      bikes={bikes}
+      retiredBikes={retiredBikes}
+      userEmail={userEmail}
+      notificationsEnabled={notificationsEnabled}
+    >
       <Dashboard
         bikes={bikes}
+        retiredBikes={retiredBikes}
         lastSync={lastSync}
         historyByBike={historyByBike}
         virtualKmByBike={virtualKmByBike}

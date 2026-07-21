@@ -9,19 +9,22 @@ import type {
 } from "@/lib/supabase/types";
 
 // Bike queries
-async function getBikesForUser(userId: string): Promise<Bike[]> {
+async function getBikesForUser(userId: string, retired: boolean): Promise<Bike[]> {
   const { data } = await supabaseAdmin
     .from("bikes")
     .select("*")
     .eq("user_id", userId)
-    .eq("retired", false)
+    .eq("retired", retired)
     .order("total_distance", { ascending: false });
 
   return data || [];
 }
 
-export async function getBikesWithComponents(userId: string): Promise<BikeWithComponents[]> {
-  const bikes = await getBikesForUser(userId);
+export async function getBikesWithComponents(
+  userId: string,
+  { retired = false }: { retired?: boolean } = {}
+): Promise<BikeWithComponents[]> {
+  const bikes = await getBikesForUser(userId, retired);
   if (bikes.length === 0) return [];
 
   const bikeIds = bikes.map((b) => b.id);

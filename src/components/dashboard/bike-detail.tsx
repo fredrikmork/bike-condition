@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { CalendarIcon, Settings2 } from "lucide-react";
+import { Archive, CalendarIcon, Settings2 } from "lucide-react";
 import { startTransition, useOptimistic, useState } from "react";
 import { markChargedAction } from "@/app/actions/bike-config";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +59,8 @@ interface BikeDetailProps {
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
   virtualKm?: number;
+  /** Retired bike — values are shown but nothing can be edited */
+  readOnly?: boolean;
 }
 
 export function BikeDetail({
@@ -66,6 +68,7 @@ export function BikeDetail({
   typesWithHistory = new Set(),
   lastSync,
   virtualKm = 0,
+  readOnly = false,
 }: BikeDetailProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
@@ -129,10 +132,17 @@ export function BikeDetail({
     "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     batteryHealth.status === "critical"
-      ? "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/20"
+      ? "border-destructive/50 bg-destructive/10 text-destructive"
       : batteryHealth.status === "warning"
-        ? "border-amber-500/50 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
-        : "border-border hover:bg-muted"
+        ? "border-amber-500/50 bg-amber-500/10 text-amber-600"
+        : "border-border",
+    readOnly
+      ? "cursor-default"
+      : batteryHealth.status === "critical"
+        ? "hover:bg-destructive/20"
+        : batteryHealth.status === "warning"
+          ? "hover:bg-amber-500/20"
+          : "hover:bg-muted"
   );
 
   const lastChargeLabel = bike.last_charge_date
@@ -163,7 +173,25 @@ export function BikeDetail({
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-semibold">{bike.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">{bike.name}</h2>
+              {readOnly && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="secondary" className="gap-1 text-xs font-normal">
+                      <Archive className="h-3 w-3" />
+                      Retired
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="max-w-xs">
+                      This bike is retired on Strava. Its wear data is kept for reference, but it
+                      can no longer be edited or synced.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
             {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
             {/* Bike metadata chips */}
             {(frameLabel || sportLabel || weightLabel) && (
@@ -241,63 +269,78 @@ export function BikeDetail({
             {isElectronic && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    onClick={() => {
-                      setChargeDate(new Date());
-                      setChargeDialogOpen(true);
-                    }}
-                    disabled={charging}
-                    aria-label="Mark battery charged"
-                    className={chipClass}
-                  >
-                    <BatteryIcon health={batteryHealth} className="h-3.5 w-3.5" />
-                    <span>{systemLabel}</span>
-                    <span className="opacity-50">·</span>
-                    <span>
-                      {optimisticKm != null ? `${optimisticKm.toLocaleString()} km` : "— km"}
+                  {readOnly ? (
+                    <span className={chipClass}>
+                      <BatteryIcon health={batteryHealth} className="h-3.5 w-3.5" />
+                      <span>{systemLabel}</span>
+                      <span className="opacity-50">·</span>
+                      <span>
+                        {optimisticKm != null ? `${optimisticKm.toLocaleString()} km` : "— km"}
+                      </span>
                     </span>
-                    {batteryHealth.status === "critical" && (
-                      <span className="font-semibold">· Charge now</span>
-                    )}
-                    {batteryHealth.status === "warning" && (
-                      <span className="opacity-80">· Charge soon</span>
-                    )}
-                  </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setChargeDate(new Date());
+                        setChargeDialogOpen(true);
+                      }}
+                      disabled={charging}
+                      aria-label="Mark battery charged"
+                      className={chipClass}
+                    >
+                      <BatteryIcon health={batteryHealth} className="h-3.5 w-3.5" />
+                      <span>{systemLabel}</span>
+                      <span className="opacity-50">·</span>
+                      <span>
+                        {optimisticKm != null ? `${optimisticKm.toLocaleString()} km` : "— km"}
+                      </span>
+                      {batteryHealth.status === "critical" && (
+                        <span className="font-semibold">· Charge now</span>
+                      )}
+                      {batteryHealth.status === "warning" && (
+                        <span className="opacity-80">· Charge soon</span>
+                      )}
+                    </button>
+                  )}
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
                   <p className="max-w-xs">{tooltipDetails}</p>
                   {lastChargeLabel && (
                     <p className="text-muted-foreground mt-0.5">{lastChargeLabel}</p>
                   )}
-                  <p className="text-muted-foreground mt-0.5">Tap to mark battery charged</p>
+                  {!readOnly && (
+                    <p className="text-muted-foreground mt-0.5">Tap to mark battery charged</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             )}
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setConfigOpen(true)}
-                  aria-label={bike.config_complete ? "Re-configure bike" : "Configure bike"}
-                >
-                  <Settings2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p className="max-w-xs">
-                  Configure your bike setup — shifting, brakes, drivetrain speed, and tire system.
-                  This determines which components and replacement intervals are shown.
-                </p>
-              </TooltipContent>
-            </Tooltip>
+            {!readOnly && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setConfigOpen(true)}
+                    aria-label={bike.config_complete ? "Re-configure bike" : "Configure bike"}
+                  >
+                    <Settings2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p className="max-w-xs">
+                    Configure your bike setup — shifting, brakes, drivetrain speed, and tire system.
+                    This determines which components and replacement intervals are shown.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
 
         {/* Config prompt — shown only when not yet configured */}
-        {!bike.config_complete && (
+        {!bike.config_complete && !readOnly && (
           <button
             onClick={() => setConfigOpen(true)}
             className="w-full mb-4 flex items-start gap-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-left transition-colors hover:border-muted-foreground/50 hover:bg-muted/50"
@@ -315,7 +358,7 @@ export function BikeDetail({
 
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium">Components</h3>
-          <AddComponentDialog bike={bike} />
+          {!readOnly && <AddComponentDialog bike={bike} />}
         </div>
         <ComponentList
           components={bike.components}
@@ -323,9 +366,10 @@ export function BikeDetail({
           bikeConfig={config}
           lastSync={lastSync}
           hasVirtualRides={hasVirtualRides}
+          readOnly={readOnly}
         />
 
-        {mutedComponents.length > 0 && (
+        {mutedComponents.length > 0 && !readOnly && (
           <button
             onClick={() => setMutedSheetOpen(true)}
             className="mt-3 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"

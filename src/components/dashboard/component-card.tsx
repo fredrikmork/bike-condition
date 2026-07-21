@@ -58,6 +58,8 @@ interface ComponentCardProps {
   displayName?: string;
   /** True when this component excludes virtual ride km (wheels, brake cables on a trainer bike) */
   outdoorOnly?: boolean;
+  /** Retired bike — values only, no edit/replace/mute/delete actions */
+  readOnly?: boolean;
 }
 
 export function ComponentCard({
@@ -66,6 +68,7 @@ export function ComponentCard({
   lastSync,
   displayName,
   outdoorOnly = false,
+  readOnly = false,
 }: ComponentCardProps) {
   const { focusedComponentId, setFocusedComponentId } = useBikeStore();
   const focused = focusedComponentId === component.id;
@@ -197,9 +200,8 @@ export function ComponentCard({
   const installedDate = format(new Date(optimisticComponent.installed_at), "d MMM yyyy");
 
   // True when the component was installed after the last sync — distances are stale
-  const needsSync = lastSync
-    ? new Date(optimisticComponent.installed_at) > new Date(lastSync)
-    : false;
+  const needsSync =
+    lastSync && !readOnly ? new Date(optimisticComponent.installed_at) > new Date(lastSync) : false;
 
   const indicatorColor =
     wear.status === "critical"
@@ -218,8 +220,9 @@ export function ComponentCard({
   // Lube type → lives behind expand toggle at the bottom
   const canExpand = !!optimisticComponent.lube_type;
 
-  // All metadata null → show ghost CTA
-  const isUnedited = !hasFaceInfo && !optimisticComponent.lube_type && !optimisticComponent.notes;
+  // All metadata null → show ghost CTA (never on a retired bike — nothing to edit)
+  const isUnedited =
+    !readOnly && !hasFaceInfo && !optimisticComponent.lube_type && !optimisticComponent.notes;
 
   const focusRingClass = focused
     ? wear.status === "critical"
@@ -255,75 +258,94 @@ export function ComponentCard({
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <StatusIndicator status={wear.status} isOverdue={wear.isOverdue} />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    aria-label="Component actions"
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+              {readOnly ? (
+                hasHistory && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                        <Pencil className="mr-2 h-3.5 w-3.5" />
-                        Edit
-                      </DropdownMenuItem>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        aria-label="View history"
+                        onClick={() => setHistoryOpen(true)}
+                      >
+                        <History className="h-3.5 w-3.5" />
+                      </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="right">Update brand, model and notes</TooltipContent>
+                    <TooltipContent side="left">See past replacements</TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
-                        <RotateCw className="mr-2 h-3.5 w-3.5" />
-                        Replace
-                      </DropdownMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Log a replacement and reset wear</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuItem onClick={handleMute}>
-                        <BellOff className="mr-2 h-3.5 w-3.5" />
-                        Mute
-                      </DropdownMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      Hide wear alerts for this component
-                    </TooltipContent>
-                  </Tooltip>
-                  {hasHistory && (
+                )
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      aria-label="Component actions"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
-                          <History className="mr-2 h-3.5 w-3.5" />
-                          View history
+                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" />
+                          Edit
                         </DropdownMenuItem>
                       </TooltipTrigger>
-                      <TooltipContent side="right">See past replacements</TooltipContent>
+                      <TooltipContent side="right">Update brand, model and notes</TooltipContent>
                     </Tooltip>
-                  )}
-                  <DropdownMenuSeparator />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => setDeleteDialogOpen(true)}
-                      >
-                        <Trash2 className="mr-2 h-3.5 w-3.5" />
-                        Delete
-                      </DropdownMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      Remove this component from tracking
-                    </TooltipContent>
-                  </Tooltip>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
+                          <RotateCw className="mr-2 h-3.5 w-3.5" />
+                          Replace
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Log a replacement and reset wear</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem onClick={handleMute}>
+                          <BellOff className="mr-2 h-3.5 w-3.5" />
+                          Mute
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        Hide wear alerts for this component
+                      </TooltipContent>
+                    </Tooltip>
+                    {hasHistory && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
+                            <History className="mr-2 h-3.5 w-3.5" />
+                            View history
+                          </DropdownMenuItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">See past replacements</TooltipContent>
+                      </Tooltip>
+                    )}
+                    <DropdownMenuSeparator />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteDialogOpen(true)}
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" />
+                          Delete
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        Remove this component from tracking
+                      </TooltipContent>
+                    </Tooltip>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
 
@@ -471,19 +493,23 @@ export function ComponentCard({
       </Card>
 
       {/* Dialogs — rendered outside the DropdownMenu tree */}
-      <EditComponentDialog
-        component={component}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSave={handleSaveEdit}
-      />
+      {!readOnly && (
+        <>
+          <EditComponentDialog
+            component={component}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSave={handleSaveEdit}
+          />
 
-      <ReplaceDialog
-        componentName={component.name}
-        open={replaceOpen}
-        onOpenChange={setReplaceOpen}
-        onReplace={handleReplace}
-      />
+          <ReplaceDialog
+            componentName={component.name}
+            open={replaceOpen}
+            onOpenChange={setReplaceOpen}
+            onReplace={handleReplace}
+          />
+        </>
+      )}
 
       {hasHistory && (
         <ComponentHistorySheet
@@ -495,7 +521,7 @@ export function ComponentCard({
         />
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={!readOnly && deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove {component.name}?</AlertDialogTitle>

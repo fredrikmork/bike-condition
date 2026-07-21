@@ -10,6 +10,7 @@ interface SyncBikesResult {
   synced: number;
   created: number;
   updated: number;
+  retired: number;
   errors: string[];
 }
 
@@ -18,6 +19,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
     synced: 0,
     created: 0,
     updated: 0,
+    retired: 0,
     errors: [],
   };
 
@@ -68,7 +70,9 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
                 frame_type: gearDetails.frame_type ?? null,
                 description: gearDetails.description ?? null,
                 total_distance: gearDetails.distance,
-                retired: gearDetails.retired ?? false,
+                // Present in `/athlete` ⇒ not retired. Un-retires a bike the
+                // user brought back on Strava. See retireMissingBikes().
+                retired: false,
                 weight: gearDetails.weight ?? null,
               })
               .eq("id", existingBike.id),
@@ -86,7 +90,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
             frame_type: gearDetails.frame_type ?? null,
             description: gearDetails.description ?? null,
             total_distance: gearDetails.distance,
-            retired: gearDetails.retired ?? false,
+            retired: false, // only non-retired gear reaches us via `/athlete`
             weight: gearDetails.weight ?? null,
           };
 
@@ -118,6 +122,16 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       }
     }
 
+    // Retire bikes that vanished from Strava. `/athlete` only returns non-retired
+    // gear, so a bike disappearing from the list IS the retirement signal — the
+    // `retired` field on gear details never comes back true through this path.
+    // Bikes still in the list are un-retired above via `retired: ... ?? false`.
+    result.retired = await retireMissingBikes(
+      userId,
+      existingBikes ?? [],
+      new Set(athlete.bikes.map((b) => b.id))
+    );
+
     // Compute dominant sport type per bike from activity history
     await updateDominantSportTypes(userId);
 
@@ -141,6 +155,38 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
     result.errors.push(`Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     return result;
   }
+}
+
+/**
+ * Mark bikes as retired when they no longer appear in the athlete's gear list.
+ *
+ * Strava's `/athlete` endpoint omits retired gear entirely, so absence is the
+ * only signal we get — `DetailedGear.retired` is unreachable for those bikes
+ * because we can never learn their ids again. A bike deleted on Strava also
+ * disappears; treating that as retired keeps its wear history readable.
+ *
+ * Returns the number of bikes newly retired.
+ */
+async function retireMissingBikes(
+  userId: string,
+  existingBikes: { id: string; strava_gear_id: string }[],
+  stravaGearIds: Set<string>
+): Promise<number> {
+  const missingIds = existingBikes
+    .filter((b) => !stravaGearIds.has(b.strava_gear_id))
+    .map((b) => b.id);
+
+  if (missingIds.length === 0) return 0;
+
+  const { data } = await supabaseAdmin
+    .from("bikes")
+    .update({ retired: true })
+    .eq("user_id", userId)
+    .eq("retired", false)
+    .in("id", missingIds)
+    .select("id");
+
+  return data?.length ?? 0;
 }
 
 /**

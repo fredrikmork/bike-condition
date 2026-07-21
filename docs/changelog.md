@@ -2,6 +2,23 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-21: Read-only view of retired bikes (Trello #23)
+
+### New feature
+- **"Show retired bikes (n)"** toggle at the bottom of the sidebar's Bikes group, shown only when the user has retired bikes. Retired bikes render with an archive icon and muted text, and are excluded from the bike count and the "total" distance.
+- Selecting one opens the normal detail view in **read-only mode**: a "Retired" badge next to the name, and no config button, no add-component, no batch replace, no edit/replace/mute/delete menu, no muted-components sheet, and no "sync to update" hints. Wear bars, distances, dates and replacement history stay fully visible.
+
+### Strava: retirement is detected by absence
+`/athlete` omits retired gear entirely, so `DetailedGear.retired` never comes back `true` through our sync path — the same dead-field trap as `primary`. A bike retired on Strava simply vanished from the sync loop and stayed `retired = false` forever, still showing as active.
+- `retireMissingBikes()` in `lib/sync/bikes.ts` now marks any of the user's bikes absent from `athlete.bikes` as retired after a successful sync; bikes still present are un-retired, so bringing one back on Strava restores it. Guarded by the existing early-return on an empty gear list and scoped to `user_id`.
+- The two `retired: gearDetails.retired ?? false` writes became explicit `retired: false` with comments; `StravaGearSchema.retired` carries a warning not to trust it.
+- Historical bikes retired *before* first sync (6 on the author's account) are not backfilled — `activities` stores no `gear_id`, so their ids are unrecoverable without re-fetching activities from Strava.
+
+### Implementation
+- `getBikesWithComponents(userId, { retired })` replaces the hardcoded `retired = false` filter; `page.tsx` fetches both sets and resolves history/virtual km across all of them.
+- `readOnly` threads from `Dashboard` → `BikeDetail` → `ComponentList` → `ComponentGroup` → `ComponentCard`. Retired bikes are never auto-selected unless they are all the user has.
+- Server actions still do not check `bike.retired` — read-only is enforced in the UI only.
+
 ## 2026-06-20: Battery indicator with user-set warn distance (Trello #17)
 
 ### New feature

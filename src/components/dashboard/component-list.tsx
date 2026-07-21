@@ -11,6 +11,8 @@ interface ComponentListProps {
   bikeConfig?: BikeConfig | null;
   lastSync?: string | null;
   hasVirtualRides?: boolean;
+  /** Retired bike — values only, no edit/replace/delete actions */
+  readOnly?: boolean;
 }
 
 export function ComponentList({
@@ -19,6 +21,7 @@ export function ComponentList({
   bikeConfig = null,
   lastSync,
   hasVirtualRides = false,
+  readOnly = false,
 }: ComponentListProps) {
   // Filter by visibility rules and mute state
   const visible = components.filter((c) => !c.muted && isComponentVisible(c.type, bikeConfig));
@@ -26,16 +29,19 @@ export function ComponentList({
   if (visible.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4">
-        No components tracked yet. Sync with Strava to get started.
+        {readOnly
+          ? "No components were tracked on this bike."
+          : "No components tracked yet. Sync with Strava to get started."}
       </p>
     );
   }
 
   const byType = new Map(visible.map((c) => [c.type, c]));
 
-  const needsSyncCount = lastSync
-    ? visible.filter((c) => new Date(c.installed_at) > new Date(lastSync)).length
-    : 0;
+  const needsSyncCount =
+    lastSync && !readOnly
+      ? visible.filter((c) => new Date(c.installed_at) > new Date(lastSync)).length
+      : 0;
 
   return (
     <div className="space-y-3">
@@ -56,6 +62,7 @@ export function ComponentList({
             typesWithHistory={typesWithHistory}
             lastSync={lastSync}
             hasVirtualRides={hasVirtualRides}
+            readOnly={readOnly}
           />
         );
       })}
@@ -73,6 +80,7 @@ export function ComponentList({
                 hasHistory={typesWithHistory.has(component.type)}
                 lastSync={lastSync}
                 outdoorOnly={TRAINER_PAUSE_TYPES.has(component.type) && hasVirtualRides}
+                readOnly={readOnly}
               />
             ))}
           </div>

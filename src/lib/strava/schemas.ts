@@ -33,7 +33,10 @@ export const StravaGearSchema = z.object({
   frame_type: z.number().nullable().optional(),
   description: z.string().nullable().optional(),
   weight: z.number().nullable().optional(), // kg
-  retired: z.boolean().optional(), // gear retired on Strava
+  // Never true in practice: `/athlete` omits retired gear, so we only ever
+  // request details for active bikes. Retirement is detected by absence
+  // instead — see retireMissingBikes() in src/lib/sync/bikes.ts.
+  retired: z.boolean().optional(),
 });
 
 export const StravaActivitySchema = z.object({

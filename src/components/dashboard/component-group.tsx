@@ -20,6 +20,7 @@ interface ComponentGroupProps {
   typesWithHistory?: Set<string>;
   lastSync?: string | null;
   hasVirtualRides?: boolean;
+  readOnly?: boolean;
 }
 
 export function ComponentGroup({
@@ -28,6 +29,7 @@ export function ComponentGroup({
   typesWithHistory = new Set(),
   lastSync,
   hasVirtualRides = false,
+  readOnly = false,
 }: ComponentGroupProps) {
   const [expanded, setExpanded] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -118,7 +120,7 @@ export function ComponentGroup({
           {/* Expanded contents */}
           {expanded && (
             <div className="px-4 pb-4 border-t pt-3 space-y-3">
-              {group.canBatchReplace && (
+              {group.canBatchReplace && !readOnly && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -139,6 +141,7 @@ export function ComponentGroup({
                     lastSync={lastSync}
                     displayName={shortName(component.name)}
                     outdoorOnly={false}
+                    readOnly={readOnly}
                   />
                 ))}
               </div>
@@ -147,7 +150,7 @@ export function ComponentGroup({
         </CardContent>
       </Card>
 
-      {group.canBatchReplace && (
+      {group.canBatchReplace && !readOnly && (
         <BatchReplaceDialog
           group={group}
           components={components}

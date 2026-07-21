@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Bike, Settings2 } from "lucide-react";
+import { AlertTriangle, Archive, Bike, Settings2 } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuBadge,
@@ -14,9 +14,11 @@ import { calculateComponentWear } from "@/lib/wear/calculator";
 
 interface SidebarBikeListProps {
   bikes: BikeWithComponents[];
+  /** Retired bikes — no config/warning badges, muted styling */
+  readOnly?: boolean;
 }
 
-export function SidebarBikeList({ bikes }: SidebarBikeListProps) {
+export function SidebarBikeList({ bikes, readOnly = false }: SidebarBikeListProps) {
   const { selectedBikeId, setSelectedBikeId } = useBikeStore();
   const { setOpenMobile } = useSidebar();
 
@@ -36,17 +38,18 @@ export function SidebarBikeList({ bikes }: SidebarBikeListProps) {
                 setSelectedBikeId(bike.id);
                 setOpenMobile(false);
               }}
-              tooltip={bike.name}
+              tooltip={readOnly ? `${bike.name} (retired)` : bike.name}
+              className={readOnly ? "text-muted-foreground" : undefined}
             >
-              <Bike className="h-4 w-4" />
+              {readOnly ? <Archive className="h-4 w-4" /> : <Bike className="h-4 w-4" />}
               <span className="truncate">{bike.name}</span>
             </SidebarMenuButton>
-            {!bike.config_complete && (
+            {!readOnly && !bike.config_complete && (
               <SidebarMenuBadge>
                 <Settings2 className="h-3 w-3 text-muted-foreground" />
               </SidebarMenuBadge>
             )}
-            {bike.config_complete && hasWarning && (
+            {!readOnly && bike.config_complete && hasWarning && (
               <SidebarMenuBadge>
                 <AlertTriangle className="h-3 w-3 text-status-warning" />
               </SidebarMenuBadge>

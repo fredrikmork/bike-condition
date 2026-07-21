@@ -5,15 +5,22 @@ import { DashboardHeader } from "./dashboard-header";
 
 interface AppShellProps {
   bikes: BikeWithComponents[];
+  retiredBikes?: BikeWithComponents[];
   userEmail?: string | null;
   notificationsEnabled?: boolean;
   children: React.ReactNode;
 }
 
-export function AppShell({ bikes, userEmail, notificationsEnabled, children }: AppShellProps) {
+export function AppShell({
+  bikes,
+  retiredBikes = [],
+  userEmail,
+  notificationsEnabled,
+  children,
+}: AppShellProps) {
   return (
     <SidebarProvider>
-      <AppSidebar bikes={bikes} />
+      <AppSidebar bikes={bikes} retiredBikes={retiredBikes} />
       <SidebarInset>
         <DashboardHeader
           userEmail={userEmail ?? null}
