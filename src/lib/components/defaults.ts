@@ -21,9 +21,9 @@ export type ComponentType =
   | "shifter_cables"
   | "brake_cables"
   // Contact points
-  | "bar_tape"
   | "cleats"
   // Legacy (kept for existing data, not generated for new bikes)
+  | "bar_tape"
   | "brake_rotors"
   | "cables"
   // Custom
@@ -50,7 +50,6 @@ const UNIVERSAL_COMPONENTS: DefaultComponent[] = [
   { name: "Pulley Wheels", type: "pulley_wheels", recommended_distance: 15_000_000 }, // OEM plastic: 8,000–20,000 km
   { name: "Front Tire", type: "tire_front", recommended_distance: 10_000_000 }, // GP5000 front: 8,000–14,000 km (BicycleRollingResistance endurance test)
   { name: "Rear Tire", type: "tire_rear", recommended_distance: 6_000_000 }, // GP5000 rear: 4,000–8,000 km
-  { name: "Bar Tape", type: "bar_tape", recommended_distance: 8_000_000 }, // 5,000–10,000 km depending on material and sweat exposure
   { name: "Cleats", type: "cleats", recommended_distance: 10_000_000 }, // SPD-SL: 10,000–20,000 km (walking-dependent)
 ];
 

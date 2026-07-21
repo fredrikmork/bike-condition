@@ -161,7 +161,7 @@ export function AddComponentDialog({ bike }: AddComponentDialogProps) {
               <Label htmlFor="component-name">Name</Label>
               <Input
                 id="component-name"
-                placeholder="e.g. Handlebar Tape"
+                placeholder="e.g. Saddle"
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
               />

@@ -23,7 +23,6 @@ const MIGRATIONS: Array<{ type: string; oldDistance: number; newDistance: number
   { type: "shifter_cables", oldDistance: 5_000_000, newDistance: 10_000_000 },
   { type: "inner_tube_front", oldDistance: 3_000_000, newDistance: 5_000_000 },
   { type: "inner_tube_rear", oldDistance: 2_000_000, newDistance: 4_000_000 },
-  { type: "bar_tape", oldDistance: 5_000_000, newDistance: 8_000_000 },
 ];
 
 /**
