@@ -120,6 +120,7 @@ All backend logic runs as Next.js server components and server actions.
 - `component_mounts` - One row per period a part sat on a bike; wear is the sum over these periods. Distance snapshots at mount/unmount make closed periods self-contained.
 - `activities` - Synced Strava cycling activities (linked to bike via `bike_id`; `trainer` flag marks indoor rides)
 - `bike_shares` - Public share-link tokens per bike (revocable; token is the access control)
+- `bike_transfers` - Bike handover invites: token, 7-day expiry, accepted/cancelled state, and the seller's gear id (guards their next sync against recreating the sold bike)
 - `user_tokens` - Strava access/refresh tokens with expiry
 - `sync_status` - Last sync timestamps per user
 - `notification_log` - Sent wear alerts, deduped per component install
@@ -136,7 +137,11 @@ A part's wear is the **sum over its mount periods**. For each period on a bike:
 
 `period_distance = MAX(activity_based, gear_based)` — wear is never under-reported. Exception: components in `TRAINER_PAUSE_TYPES` (tires, tubes, rotors, brake pads, brake cables — an explicit list, deliberately decoupled from UI grouping) exclude indoor rides (trainer flag or VirtualRide), and skip the gear fallback when the bike has indoor rides on record, since Strava's total includes indoor km. Logic lives in `lib/sync/compute-distance.ts` (unit-tested).
 
-### 4.3 Public Share Links
+### 4.3 Bike Transfer
+
+A bike can be handed to another user with its full history: the bike row, every component that ever sat on it, and its virtual periods change `user_id`; the seller's activities never move (wear is computed by `bike_id`, and closed mount periods are self-contained via their distance snapshots). The bike arrives **unlinked** (`strava_gear_id NULL`) — sync skips unlinked bikes entirely, and the seller's sync skips gear recorded on accepted transfers. The buyer links the bike to their own Strava gear via the in-app banner; linking closes all open mounts on the frozen seller-era distance scale and opens new ones at the buyer's gear distance, preserving accumulated wear exactly. Accept writes are ordered to fail safe without transactions: the bike row flips owner last, and every step is idempotent.
+
+### 4.4 Public Share Links
 
 `/share/<token>` renders a read-only summary of one bike (components, wear, user-entered brand/model/notes, replacement history) with no auth — the unguessable 128-bit token is the access control. Built for sale listings. One active link per bike; revoking keeps the row so the page can answer "no longer available". Rendered `force-dynamic`, `noindex`, with OG tags for link previews. The summary view (`components/share/share-summary.tsx`) is pure presentation, intended for reuse as the transfer preview when bike transfer ships.
 

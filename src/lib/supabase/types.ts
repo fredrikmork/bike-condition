@@ -67,7 +67,8 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          strava_gear_id: string;
+          /** NULL = not linked to the owner's Strava (freshly transferred bike) */
+          strava_gear_id: string | null;
           name: string;
           brand_name: string | null;
           model_name: string | null;
@@ -95,7 +96,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          strava_gear_id: string;
+          strava_gear_id?: string | null;
           name: string;
           brand_name?: string | null;
           model_name?: string | null;
@@ -123,7 +124,7 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          strava_gear_id?: string;
+          strava_gear_id?: string | null;
           name?: string;
           brand_name?: string | null;
           model_name?: string | null;
@@ -363,6 +364,46 @@ export interface Database {
         };
         Relationships: [];
       };
+      bike_transfers: {
+        Row: {
+          id: string;
+          bike_id: string;
+          seller_user_id: string;
+          buyer_user_id: string | null;
+          /** Gear id the bike had in the seller's Strava — guards seller's sync against recreating it */
+          seller_strava_gear_id: string | null;
+          token: string;
+          created_at: string;
+          expires_at: string;
+          accepted_at: string | null;
+          cancelled_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          bike_id: string;
+          seller_user_id: string;
+          buyer_user_id?: string | null;
+          seller_strava_gear_id?: string | null;
+          token: string;
+          created_at?: string;
+          expires_at?: string;
+          accepted_at?: string | null;
+          cancelled_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          bike_id?: string;
+          seller_user_id?: string;
+          buyer_user_id?: string | null;
+          seller_strava_gear_id?: string | null;
+          token?: string;
+          created_at?: string;
+          expires_at?: string;
+          accepted_at?: string | null;
+          cancelled_at?: string | null;
+        };
+        Relationships: [];
+      };
       bike_shares: {
         Row: {
           id: string;
@@ -449,6 +490,7 @@ export type ComponentMountInsert = Database["public"]["Tables"]["component_mount
 export type VirtualPeriod = Database["public"]["Tables"]["virtual_periods"]["Row"];
 
 export type BikeShare = Database["public"]["Tables"]["bike_shares"]["Row"];
+export type BikeTransfer = Database["public"]["Tables"]["bike_transfers"]["Row"];
 
 // Extended types with relations
 export type BikeWithComponents = Bike & {

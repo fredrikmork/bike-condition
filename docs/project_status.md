@@ -62,9 +62,11 @@ Clickable SVG components showing detailed wear information.
 - **Component rotation & parts bank**: parts move between bikes with their wear; wear sums over `component_mounts` periods
 - **Containers**: wheels and drivetrain are parts that hold other parts (`parent_component_id`), carrying user-entered brand/model/notes shown as group descriptions; new Frame catch-all group
 - **Public share links**: read-only bike summary at `/share/<token>` for sale listings — wear, service history, OG preview, revocable
+- **Bike transfer**: hand a bike to another user with full history via an invite link; buyer links it to their own Strava afterwards, guided by an in-app banner
 
 ### Recent changes (2026-07-22)
-- **Share links for sale listings** (Trello #21 part 1): `bike_shares` table, share button beside +, public `force-dynamic` page reusable as the transfer preview in part 2. Landing page gained the "Sell with proof" selling point.
+- **Bike transfer** (Trello #21 part 2): `bike_transfers` table, transfer dialog behind the share dialog, public accept page at `/transfer/<token>`, unlinked-bike banner with live Strava gear picker, sync guards for unlinked/sold gear. `bikes.strava_gear_id` now nullable.
+- **Share links for sale listings** (Trello #21 part 1): `bike_shares` table, share button beside +, public `force-dynamic` page reused as the transfer preview in part 2. Landing page gained the "Sell with proof" selling point.
 - **Containers & Frame group** (Trello #24 part 1): wheels/drivetrain as container rows, explicit `TRAINER_PAUSE_TYPES` decoupled from grouping, muted-components entry moved beside the + button.
 
 ### Recent changes (2026-03-23)
@@ -85,5 +87,4 @@ Clickable SVG components showing detailed wear information.
 - Handle cases where users edit past Strava activities (recalculate wear)
 - User preferences for replacement intervals
 - Manual bike selection as "featured" bike
-- Bike transfer to another user with full history (Trello #21 part 2 — share summary view already built for the preview)
 - Wheel swapping between bikes as a unit (Trello #25 — container model already in place)

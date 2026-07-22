@@ -1,6 +1,7 @@
-import { ArrowRight, Bike as BikeIcon } from "lucide-react";
+import { Bike as BikeIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PublicHeader } from "@/components/share/public-header";
 import { ShareSummary } from "@/components/share/share-summary";
 import { Button } from "@/components/ui/button";
 import { getSharedBike } from "@/lib/db/shares";
@@ -20,28 +21,6 @@ export const dynamic = "force-dynamic";
 
 interface SharePageProps {
   params: Promise<{ token: string }>;
-}
-
-/** Logo lockup linking into the app — the share page's only navigation. */
-function ShareHeader() {
-  return (
-    <header className="border-b">
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-3">
-        <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BikeIcon className="h-4 w-4" />
-          </div>
-          <span className="font-semibold tracking-tight">Bike Condition</span>
-        </Link>
-        <Button size="sm" variant="outline" asChild>
-          <Link href="/">
-            Track your bike
-            <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-          </Link>
-        </Button>
-      </div>
-    </header>
-  );
 }
 
 export async function generateMetadata({ params }: SharePageProps): Promise<Metadata> {
@@ -77,7 +56,7 @@ export default async function SharePage({ params }: SharePageProps) {
   if (!shared || "revoked" in shared) {
     return (
       <div className="flex min-h-screen flex-col">
-        <ShareHeader />
+        <PublicHeader />
         <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
           <BikeIcon aria-hidden="true" className="mb-4 h-10 w-10 text-muted-foreground/50" />
           <h1 className="text-lg font-semibold">This listing is no longer available</h1>
@@ -94,7 +73,7 @@ export default async function SharePage({ params }: SharePageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <ShareHeader />
+      <PublicHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
         <ShareSummary bike={shared.bike} components={shared.components} history={shared.history} />
 

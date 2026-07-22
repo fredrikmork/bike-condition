@@ -41,13 +41,31 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
       return result;
     }
 
-    // Fetch existing bikes
+    // Fetch existing bikes. Unlinked bikes (strava_gear_id NULL — freshly
+    // transferred in) live outside Strava's world entirely: they can't be
+    // matched, updated or retired by anything in this loop.
     const { data: existingBikes } = await supabaseAdmin
       .from("bikes")
       .select("id, strava_gear_id, total_distance")
       .eq("user_id", userId);
 
-    const existingBikeMap = new Map(existingBikes?.map((b) => [b.strava_gear_id, b]) || []);
+    const linkedBikes = (existingBikes ?? []).filter(
+      (b): b is { id: string; strava_gear_id: string; total_distance: number | null } =>
+        b.strava_gear_id !== null
+    );
+    const existingBikeMap = new Map(linkedBikes.map((b) => [b.strava_gear_id, b]));
+
+    // Gear the user has SOLD through a transfer still sits in their Strava
+    // until they retire it there. Without this guard the next sync would
+    // recreate the sold bike from that gear, defaults and all.
+    const { data: soldTransfers } = await supabaseAdmin
+      .from("bike_transfers")
+      .select("seller_strava_gear_id")
+      .eq("seller_user_id", userId)
+      .not("accepted_at", "is", null);
+    const soldGearIds = new Set(
+      (soldTransfers ?? []).map((t) => t.seller_strava_gear_id).filter((g) => g !== null)
+    );
 
     // Fetch all gear details in parallel instead of sequentially
     const gearResults = await Promise.allSettled(athlete.bikes.map((b) => client.getGear(b.id)));
@@ -63,6 +81,11 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
         }
         const gearDetails = gearResult.value;
         const existingBike = existingBikeMap.get(stravaBike.id);
+
+        // Sold and handed over — do not resurrect it from the seller's Strava.
+        if (!existingBike && soldGearIds.has(stravaBike.id)) {
+          return "skipped" as const;
+        }
 
         if (existingBike) {
           // Run bike update and component operations in parallel
@@ -120,6 +143,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
 
     for (const r of bikeResults) {
       if (r.status === "fulfilled") {
+        if (r.value === "skipped") continue; // sold gear, deliberately ignored
         result.synced++;
         if (r.value === "updated") result.updated++;
         else result.created++;
@@ -134,7 +158,7 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
     // Bikes still in the list are un-retired above via `retired: ... ?? false`.
     result.retired = await retireMissingBikes(
       userId,
-      existingBikes ?? [],
+      linkedBikes,
       new Set(athlete.bikes.map((b) => b.id))
     );
 
@@ -176,6 +200,10 @@ export async function syncBikes(userId: string): Promise<SyncBikesResult> {
  * because we can never learn their ids again. A bike deleted on Strava also
  * disappears; treating that as retired keeps its wear history readable.
  *
+ * Callers must pass only LINKED bikes: an unlinked (transferred-in) bike is
+ * absent from the owner's Strava by definition, and retiring it here would
+ * kill every freshly received bike on its first sync.
+ *
  * Returns the number of bikes newly retired.
  */
 async function retireMissingBikes(
@@ -212,7 +240,7 @@ async function retireMissingBikes(
  * module for the rules around TRAINER_PAUSE_TYPES, indoor rides and the
  * gear-distance fallback).
  */
-async function recomputeComponentDistances(userId: string): Promise<void> {
+export async function recomputeComponentDistances(userId: string): Promise<void> {
   const [{ data: components }, { data: bikes }] = await Promise.all([
     supabaseAdmin
       .from("components")

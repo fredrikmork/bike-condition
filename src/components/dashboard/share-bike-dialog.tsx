@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, ExternalLink, Link2Off, Share2 } from "lucide-react";
+import { ArrowRightLeft, Check, Copy, ExternalLink, Link2Off, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createShareAction, getShareAction, revokeShareAction } from "@/app/actions/shares";
@@ -19,13 +19,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 interface ShareBikeDialogProps {
   bikeId: string;
   bikeName: string;
+  /** Opens the transfer dialog — the share dialog closes itself first */
+  onTransferClick?: () => void;
 }
 
 /**
  * Create and manage the public sale link for a bike. One active link per
  * bike; revoking it makes the public page answer "no longer available".
  */
-export function ShareBikeDialog({ bikeId, bikeName }: ShareBikeDialogProps) {
+export function ShareBikeDialog({ bikeId, bikeName, onTransferClick }: ShareBikeDialogProps) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -149,6 +151,28 @@ export function ShareBikeDialog({ bikeId, bikeName }: ShareBikeDialogProps) {
                 {loading ? "Creating…" : "Create share link"}
               </Button>
             </DialogFooter>
+          )}
+
+          {/* Transfer is the sibling flow: not a listing link but the handover
+              itself. Lives behind its own dialog — it moves the bike. */}
+          {onTransferClick && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onTransferClick();
+              }}
+              className="mt-1 flex w-full items-center gap-2 rounded-lg border border-dashed p-3 text-left transition-colors hover:bg-muted/50"
+            >
+              <ArrowRightLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="text-xs">
+                <span className="font-medium">Sold it? Transfer ownership</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  — the bike moves to the buyer's account with its full history.
+                </span>
+              </span>
+            </button>
           )}
         </DialogContent>
       </Dialog>

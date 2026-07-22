@@ -2,6 +2,25 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-22: Bike transfer to another user (Trello #21, part 2)
+
+### New feature
+- **Transfer a bike — history and all.** In the share dialog: "Sold it? Transfer ownership" mints a private invite link (7-day expiry). The buyer opens it, sees the same summary a sale listing shows, signs in with Strava and accepts. The bike, every component that ever sat on it (replaced ones included — that IS the service history) and its trainer periods move to the buyer. The seller's rides stay the seller's.
+- **Guided Strava linking for the buyer.** A transferred bike arrives *unlinked* (`strava_gear_id NULL`) with a banner that walks through the three steps: add the bike under Strava → Settings → My Gear (direct link), come back and pick it in the gear picker (fetched live from `/athlete`, already-tracked gear disabled), ride on. The same steps are shown on the accept page *before* committing, so the buyer knows the plan. Linking cycles every active part's mount — close on the frozen seller-era scale, reopen at the buyer's gear distance — so accumulated wear is preserved exactly and future rides accrue on the buyer's own scale.
+- If the buyer synced before linking and the gear became its own fresh bike row, linking absorbs it: its activities (rides on this physical bike) move over, the pristine default components and the duplicate row are deleted.
+
+### Sync guards (what would have broken without them)
+- `retireMissingBikes` now sees only linked bikes — an unlinked transferred bike is absent from the owner's Strava by definition and would have been retired on the buyer's first sync.
+- The seller's next sync skips gear recorded on an accepted transfer (`seller_strava_gear_id`) — the gear still sits in their Strava until they retire it there, and would otherwise have been recreated as a fresh bike with default components.
+- `bikes.strava_gear_id` is now nullable; the `(user_id, strava_gear_id)` unique constraint tolerates NULLs.
+
+### Data model & writes
+- New `bike_transfers` table (token, expiry, accepted/cancelled timestamps, `seller_strava_gear_id` for the recreate guard). RLS on, service-role only.
+- Accept order is chosen to fail safe without transactions: notification log cleared (buyer gets fresh alerts), components, virtual periods, sale-share revocation — and the bike row flips owner **last**, so an interruption is invisible to the buyer and repaired by accepting again. Every step is idempotent.
+- Verified end-to-end against the real database with a sandboxed seller/buyer/bike (12 checks: ownership, history, unlinking, log clearing, share revocation, token states, mount continuity) — sandbox deleted afterwards. The transfer page's open/invalid states verified against the running dev server.
+
+## 2026-07-22: Public share links for sale listings (Trello #21, part 1)
+
 ## 2026-07-22: Public share links for sale listings (Trello #21, part 1)
 
 ### New feature

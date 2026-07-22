@@ -30,6 +30,8 @@ import { BikeConfigDialog } from "./bike-config-dialog";
 import { ComponentList } from "./component-list";
 import { MutedComponentsSheet } from "./muted-components-sheet";
 import { ShareBikeDialog } from "./share-bike-dialog";
+import { TransferBikeDialog } from "./transfer-bike-dialog";
+import { UnlinkedBikeBanner } from "./unlinked-bike-banner";
 
 const ELECTRONIC_LABELS: Record<ElectronicSystem, string> = {
   di2: "Di2",
@@ -74,6 +76,7 @@ export function BikeDetail({
   const [configOpen, setConfigOpen] = useState(false);
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
   const [mutedSheetOpen, setMutedSheetOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
 
   const hasVirtualRides = virtualKm > 0;
 
@@ -340,6 +343,11 @@ export function BikeDetail({
           </div>
         </div>
 
+        {/* Freshly transferred bike — walk the new owner through Strava linking */}
+        {bike.strava_gear_id === null && !readOnly && (
+          <UnlinkedBikeBanner bikeId={bike.id} bikeName={bike.name} />
+        )}
+
         {/* Config prompt — shown only when not yet configured */}
         {!bike.config_complete && !readOnly && (
           <button
@@ -389,7 +397,11 @@ export function BikeDetail({
                   </TooltipContent>
                 </Tooltip>
               )}
-              <ShareBikeDialog bikeId={bike.id} bikeName={bike.name} />
+              <ShareBikeDialog
+                bikeId={bike.id}
+                bikeName={bike.name}
+                onTransferClick={() => setTransferOpen(true)}
+              />
               <AddComponentDialog bike={bike} />
             </div>
           )}
@@ -406,6 +418,13 @@ export function BikeDetail({
       </div>
 
       <BikeConfigDialog key={bike.id} bike={bike} open={configOpen} onOpenChange={setConfigOpen} />
+
+      <TransferBikeDialog
+        bikeId={bike.id}
+        bikeName={bike.name}
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+      />
 
       <MutedComponentsSheet
         components={mutedComponents}
