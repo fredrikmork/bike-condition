@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Archive, CalendarIcon, Settings2 } from "lucide-react";
+import { Archive, BellOff, CalendarIcon, Settings2 } from "lucide-react";
 import { startTransition, useOptimistic, useState } from "react";
 import { markChargedAction } from "@/app/actions/bike-config";
 import { Badge } from "@/components/ui/badge";
@@ -358,7 +358,39 @@ export function BikeDetail({
 
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium">Components</h3>
-          {!readOnly && <AddComponentDialog bike={bike} />}
+          {!readOnly && (
+            <div className="flex items-center gap-0.5">
+              {/* Muted components sit beside the add button rather than in a
+                  faint line under the list — hidden parts are easy to forget
+                  entirely, and forgetting them is what makes wear go unnoticed. */}
+              {mutedComponents.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setMutedSheetOpen(true)}
+                      aria-label={`${mutedComponents.length} hidden component${
+                        mutedComponents.length !== 1 ? "s" : ""
+                      }`}
+                    >
+                      <BellOff className="h-3.5 w-3.5" />
+                      {mutedComponents.length}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="max-w-xs">
+                      {mutedComponents.length} hidden component
+                      {mutedComponents.length !== 1 ? "s" : ""} — muted, so they raise no warnings.
+                      Tap to review or unmute.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <AddComponentDialog bike={bike} />
+            </div>
+          )}
         </div>
         <ComponentList
           components={bike.components}
@@ -369,15 +401,6 @@ export function BikeDetail({
           bikeLabel={subtitle || null}
           readOnly={readOnly}
         />
-
-        {mutedComponents.length > 0 && !readOnly && (
-          <button
-            onClick={() => setMutedSheetOpen(true)}
-            className="mt-3 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-          >
-            {mutedComponents.length} hidden component{mutedComponents.length !== 1 ? "s" : ""}
-          </button>
-        )}
       </div>
 
       <BikeConfigDialog key={bike.id} bike={bike} open={configOpen} onOpenChange={setConfigOpen} />
