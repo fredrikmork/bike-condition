@@ -2,12 +2,15 @@ export type ComponentCategory = "Drivetrain" | "Wheels" | "Brakes" | "Other";
 
 const CATEGORY_MAP: Record<string, ComponentCategory> = {
   // Drivetrain
+  drivetrain: "Drivetrain",
   chain: "Drivetrain",
   cassette: "Drivetrain",
   chainrings: "Drivetrain",
   bottom_bracket: "Drivetrain",
   pulley_wheels: "Drivetrain",
   // Wheels
+  wheel_front: "Wheels",
+  wheel_rear: "Wheels",
   tire_front: "Wheels",
   tire_rear: "Wheels",
   inner_tube_front: "Wheels",

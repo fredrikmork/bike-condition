@@ -127,6 +127,8 @@ export async function replaceComponent(
   const [newComponent] = await createComponentsWithMounts([
     {
       bike_id: existing.bike_id,
+      // A new tire goes back on the same wheel the worn one came off.
+      parent_component_id: existing.parent_component_id,
       user_id: existing.user_id,
       name: existing.name,
       nickname: existing.nickname,

@@ -8,6 +8,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { isContainerType } from "@/lib/components/containers";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 import { calculateComponentWear } from "@/lib/wear/calculator";
@@ -26,6 +27,7 @@ export function SidebarBikeList({ bikes, readOnly = false }: SidebarBikeListProp
     <SidebarMenu>
       {bikes.map((bike) => {
         const hasWarning = bike.components.some((c) => {
+          if (isContainerType(c.type)) return false; // wheels carry no wear of their own
           const wear = calculateComponentWear(c);
           return wear.status === "warning" || wear.status === "critical";
         });

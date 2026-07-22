@@ -1,3 +1,4 @@
+import { getContainerTypeFor, isContainerType } from "@/lib/components/containers";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { Component, ComponentInsert } from "@/lib/supabase/types";
 
@@ -49,7 +50,50 @@ export async function createComponentsWithMounts(inserts: ComponentInsert[]): Pr
     await supabaseAdmin.from("component_mounts").insert(mounts);
   }
 
+  // A tire created here belongs on its bike's front or rear wheel. Resolving
+  // that afterwards keeps every creation site free of parent bookkeeping.
+  const touchedBikeIds = new Set(
+    created.map((c) => c.bike_id).filter((id): id is string => id !== null)
+  );
+  await Promise.all([...touchedBikeIds].map(linkPartsToContainers));
+
   return created;
+}
+
+/**
+ * Point a bike's wheel parts at the wheel they sit on.
+ *
+ * The parent of a tire is fully determined by its type and its bike, so it can
+ * always be resolved after the fact rather than threaded through every insert.
+ * Only fills blanks — a part already assigned to a container is left alone.
+ */
+export async function linkPartsToContainers(bikeId: string): Promise<void> {
+  const { data: components } = await supabaseAdmin
+    .from("components")
+    .select("id, type, parent_component_id")
+    .eq("bike_id", bikeId)
+    .is("replaced_at", null);
+
+  if (!components) return;
+
+  const containerIdByType = new Map(
+    components.filter((c) => isContainerType(c.type)).map((c) => [c.type, c.id])
+  );
+
+  const updates = components.flatMap((component) => {
+    if (component.parent_component_id) return [];
+    const containerType = getContainerTypeFor(component.type);
+    if (!containerType) return [];
+    const containerId = containerIdByType.get(containerType);
+    if (!containerId) return [];
+    return [{ id: component.id, containerId }];
+  });
+
+  await Promise.all(
+    updates.map((u) =>
+      supabaseAdmin.from("components").update({ parent_component_id: u.containerId }).eq("id", u.id)
+    )
+  );
 }
 
 /**
@@ -85,7 +129,11 @@ export async function closeOpenMount(componentId: string, at: Date = new Date())
 export async function unmountComponent(componentId: string, at: Date = new Date()): Promise<void> {
   await closeOpenMount(componentId, at);
 
-  await supabaseAdmin.from("components").update({ bike_id: null }).eq("id", componentId);
+  // A part in the bank sits on no wheel; it picks up a new one when mounted.
+  await supabaseAdmin
+    .from("components")
+    .update({ bike_id: null, parent_component_id: null })
+    .eq("id", componentId);
 }
 
 /**
@@ -133,6 +181,9 @@ export async function mountComponent(
   });
 
   await supabaseAdmin.from("components").update({ bike_id: bikeId }).eq("id", componentId);
+
+  // The part landed on a different bike, so it hangs off that bike's wheel now.
+  await linkPartsToContainers(bikeId);
 
   return { displaced };
 }

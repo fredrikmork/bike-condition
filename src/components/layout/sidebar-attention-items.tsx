@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { isContainerType } from "@/lib/components/containers";
 import { getBikeConfig, isComponentVisible } from "@/lib/components/visibility";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { BikeWithComponents } from "@/lib/supabase/types";
@@ -39,7 +40,7 @@ export function SidebarAttentionItems({ bikes }: SidebarAttentionItemsProps) {
   const items: AttentionItem[] = bikes.flatMap((bike) => {
     const config = getBikeConfig(bike);
     return bike.components
-      .filter((c) => !c.muted && isComponentVisible(c.type, config))
+      .filter((c) => !c.muted && !isContainerType(c.type) && isComponentVisible(c.type, config))
       .flatMap((c) => {
         const wear = calculateComponentWear(c);
         if (wear.status !== "warning" && wear.status !== "critical") return [];

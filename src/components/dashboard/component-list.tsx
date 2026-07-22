@@ -1,7 +1,7 @@
-import { COMPONENT_GROUPS, GROUPED_TYPES, TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
+import { isContainerType } from "@/lib/components/containers";
+import { COMPONENT_GROUPS, GROUPED_TYPES } from "@/lib/components/groups";
 import { isComponentVisible } from "@/lib/components/visibility";
 import type { BikeConfig, Component } from "@/lib/supabase/types";
-import { ComponentCard } from "./component-card";
 import { ComponentGroup } from "./component-group";
 import { SyncNudge } from "./sync-nudge";
 
@@ -11,6 +11,8 @@ interface ComponentListProps {
   bikeConfig?: BikeConfig | null;
   lastSync?: string | null;
   hasVirtualRides?: boolean;
+  /** Shown as the Frame group's subtitle — the frame is the bike */
+  bikeLabel?: string | null;
   /** Retired bike — values only, no edit/replace/delete actions */
   readOnly?: boolean;
 }
@@ -21,12 +23,17 @@ export function ComponentList({
   bikeConfig = null,
   lastSync,
   hasVirtualRides = false,
+  bikeLabel = null,
   readOnly = false,
 }: ComponentListProps) {
   // Filter by visibility rules and mute state
   const visible = components.filter((c) => !c.muted && isComponentVisible(c.type, bikeConfig));
 
-  if (visible.length === 0) {
+  // Containers hold parts but are not parts themselves — a wheel with nothing
+  // on it is an empty group, not a component to show.
+  const wearing = visible.filter((c) => !isContainerType(c.type));
+
+  if (wearing.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4">
         {readOnly
@@ -40,52 +47,41 @@ export function ComponentList({
 
   const needsSyncCount =
     lastSync && !readOnly
-      ? visible.filter((c) => new Date(c.installed_at) > new Date(lastSync)).length
+      ? wearing.filter((c) => new Date(c.installed_at) > new Date(lastSync)).length
       : 0;
 
   return (
     <div className="space-y-3">
       {needsSyncCount > 0 && <SyncNudge count={needsSyncCount} />}
-      {/* Grouped sections: Front Wheel, Rear Wheel, Drivetrain */}
       {COMPONENT_GROUPS.map((group) => {
-        const groupComponents = group.types
+        const claimed = group.types
           .map((t) => byType.get(t))
           .filter((c): c is Component => c !== undefined);
 
+        // The catch-all group also takes anything no group named: custom parts,
+        // legacy types, and anything added by a future sync we don't know yet.
+        const groupComponents = group.isCatchAll
+          ? [...claimed, ...wearing.filter((c) => !GROUPED_TYPES.has(c.type))]
+          : claimed;
+
         if (groupComponents.length === 0) return null;
+
+        const container = group.containerType ? (byType.get(group.containerType) ?? null) : null;
 
         return (
           <ComponentGroup
             key={group.id}
             group={group}
+            container={container}
             components={groupComponents}
             typesWithHistory={typesWithHistory}
             lastSync={lastSync}
             hasVirtualRides={hasVirtualRides}
+            subtitle={group.id === "frame" ? bikeLabel : null}
             readOnly={readOnly}
           />
         );
       })}
-
-      {/* Ungrouped leftovers: shifter_cables, brake_cables, bar_tape, cleats, custom, legacy */}
-      {(() => {
-        const ungrouped = visible.filter((c) => !GROUPED_TYPES.has(c.type));
-        if (ungrouped.length === 0) return null;
-        return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {ungrouped.map((component) => (
-              <ComponentCard
-                key={component.id}
-                component={component}
-                hasHistory={typesWithHistory.has(component.type)}
-                lastSync={lastSync}
-                outdoorOnly={TRAINER_PAUSE_TYPES.has(component.type) && hasVirtualRides}
-                readOnly={readOnly}
-              />
-            ))}
-          </div>
-        );
-      })()}
     </div>
   );
 }

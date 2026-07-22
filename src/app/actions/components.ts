@@ -4,6 +4,7 @@ import { track } from "@vercel/analytics/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
+import { isContainerType } from "@/lib/components/containers";
 import { mountComponent, unmountComponent } from "@/lib/components/mounts";
 import {
   addComponent,
@@ -24,7 +25,9 @@ const UpdateComponentSchema = z.object({
   model: z.string().max(100).nullable().optional(),
   spec: z.string().max(200).nullable().optional(),
   lube_type: z.enum(["wet_lube", "dry_lube", "drip_wax", "hot_wax"]).nullable().optional(),
-  recommended_distance: z.number().int().positive("Distance must be greater than 0"),
+  // 0 is reserved for containers (wheels), which hold parts but wear out none
+  // of their own; every wearing part is validated as positive below.
+  recommended_distance: z.number().int().nonnegative("Distance cannot be negative"),
   notes: z.string().max(500).nullable().optional(),
 });
 
@@ -89,6 +92,10 @@ export async function updateComponentAction(
 
   const component = await getOwnedComponent(componentId, session.userId);
   if (!component) return { success: false, error: "Component not found" };
+
+  if (!isContainerType(component.type) && parsed.data.recommended_distance <= 0) {
+    return { success: false, error: "Distance must be greater than 0" };
+  }
 
   const updated = await updateComponent(componentId, parsed.data);
   if (!updated) return { success: false, error: "Failed to update component" };

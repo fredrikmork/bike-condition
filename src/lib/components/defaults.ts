@@ -1,6 +1,10 @@
+import { CONTAINER_DEFAULTS, isContainerType } from "@/lib/components/containers";
 import type { BikeConfig, BrakeType, ComponentInsert } from "@/lib/supabase/types";
 
 export type ComponentType =
+  // Containers — hold other parts, carry no wear of their own
+  | "wheel_front"
+  | "wheel_rear"
   // Drivetrain
   | "chain"
   | "cassette"
@@ -41,6 +45,17 @@ const BRAKE_PAD_DISTANCE: Record<BrakeType, number> = {
   rim: 5_000_000, // 5,000 km — alloy rim, dry conditions (3,000–7,000 km range)
 };
 
+/**
+ * Containers carry no wear, so they take a recommended distance of 0 — the
+ * value the notification query and the wear UI both read as "not a wearing
+ * part". Every bike gets both wheels.
+ */
+const CONTAINER_COMPONENTS: DefaultComponent[] = CONTAINER_DEFAULTS.map((c) => ({
+  name: c.name,
+  type: c.type as ComponentType,
+  recommended_distance: 0,
+}));
+
 // Always-present components regardless of bike config
 const UNIVERSAL_COMPONENTS: DefaultComponent[] = [
   { name: "Chain", type: "chain", recommended_distance: 3_000_000 }, // 11/12-speed at 0.5% stretch: 2,500–5,000 km
@@ -58,7 +73,7 @@ const UNIVERSAL_COMPONENTS: DefaultComponent[] = [
  * Used by both createConfiguredComponents and getAvailableComponentTypes.
  */
 function buildConfiguredComponentList(config: BikeConfig): DefaultComponent[] {
-  const components: DefaultComponent[] = [...UNIVERSAL_COMPONENTS];
+  const components: DefaultComponent[] = [...CONTAINER_COMPONENTS, ...UNIVERSAL_COMPONENTS];
 
   const padDistance = BRAKE_PAD_DISTANCE[config.brake_type];
   components.push(
@@ -124,6 +139,9 @@ export function createConfiguredComponents(
 /**
  * Returns the component types available to add for a given bike config,
  * excluding types that are already installed.
+ *
+ * Containers are left out: a wheel is not something you add from the component
+ * list, and the dialog's distance field has no meaning for one.
  */
 export function getAvailableComponentTypes(
   config: BikeConfig | null,
@@ -131,7 +149,9 @@ export function getAvailableComponentTypes(
 ): DefaultComponent[] {
   if (!config) return [];
   const existingTypes = new Set(existingComponents.map((c) => c.type));
-  return buildConfiguredComponentList(config).filter((c) => !existingTypes.has(c.type));
+  return buildConfiguredComponentList(config).filter(
+    (c) => !existingTypes.has(c.type) && !isContainerType(c.type)
+  );
 }
 
 /**
@@ -139,6 +159,7 @@ export function getAvailableComponentTypes(
  * Kept for backwards compatibility with existing data.
  */
 export const DEFAULT_COMPONENTS: DefaultComponent[] = [
+  ...CONTAINER_COMPONENTS,
   { name: "Chain", type: "chain", recommended_distance: 3_000_000 },
   { name: "Cassette", type: "cassette", recommended_distance: 15_000_000 },
   { name: "Front Tire", type: "tire_front", recommended_distance: 10_000_000 },

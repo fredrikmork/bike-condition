@@ -366,6 +366,7 @@ export function BikeDetail({
           bikeConfig={config}
           lastSync={lastSync}
           hasVirtualRides={hasVirtualRides}
+          bikeLabel={subtitle || null}
           readOnly={readOnly}
         />
 

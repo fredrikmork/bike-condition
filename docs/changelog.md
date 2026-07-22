@@ -2,6 +2,27 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-22: Wheels as containers, Frame group (Trello #24, part 1 of 2)
+
+### New feature
+- **Wheels and the drivetrain are things of their own.** Every bike has a `wheel_front`, a `wheel_rear` and a `drivetrain` — ordinary component rows that hold the parts (tire/tube/rotor, chain/cassette/chainrings/BB/pulleys) rather than wearing out themselves. Give one a brand, model and note and it becomes the group's description. Containers take no nickname: brand and model already identify them.
+- **Group summaries show what you entered**, not a wear readout: "Front Wheel — DT Swiss ARC 1100 · winter set" instead of "Tire — 87% · 640 km left". Notes trail brand and model so the identity reads first. The status dot and part count stay; the wear numbers live on the cards where they belong.
+- **New Frame group** for everything bolted to the frame rather than to a wheel: brake pads (they sit in the caliper and stay behind when a wheel comes off), cables, cleats. It is also the catch-all — custom, legacy and unknown types land here instead of floating below the groups with no heading. The Frame group is described by the bike's own brand and model.
+
+### Data model
+- `components.parent_component_id` — self-referencing, `ON DELETE SET NULL`, so deleting a wheel leaves its parts on the bike rather than taking them with it.
+- Containers are stored with `recommended_distance = 0`. That value is what keeps them out of the notification query, which already filtered `recommended_distance > 0`. Nothing may pass a container to `calculateComponentWear`: dividing by zero there reads as 100% and would show as a permanently critical component. The three call sites that iterate all components (both sidebar lists and the group summary) filter containers out explicitly.
+- Parent links are resolved after the fact by `linkPartsToContainers(bikeId)` rather than threaded through each insert — the parent of a tire is fully determined by its type and its bike. Called from `createComponentsWithMounts` and after any mount, so a part moved to another bike picks up that bike's wheel; unmounting to the bank clears it.
+- Backfill: 42 wheels and 21 drivetrains created across 21 bikes (retired ones included, or their groups would render without a heading), 189 existing parts linked, 0 left unlinked.
+- Adding a container is a one-line change to `CHILDREN_OF_CONTAINER` in `lib/components/containers.ts` plus a backfill migration — `CONTAINER_TYPES`, the defaults for new bikes and the group plumbing all derive from that map.
+
+### `TRAINER_PAUSE_TYPES` decoupled from grouping
+The set of parts that skip indoor km used to be *derived from group membership*. Moving brake pads to Frame would have silently stopped excluding virtual rides from pad wear. It is now an explicit list of the same nine types, so where a part is shown and how its wear is counted are independent questions. All 58 tests pass unchanged, which is the check that the two sets are identical.
+- The "Outdoor km only" badge follows the same split: it sits on the group only when every part in it skips indoor km, and on individual cards inside Frame, which mixes pads and cables (they do) with cleats and custom parts (they don't).
+
+### Not included
+- **Swapping wheels between bikes.** Deliberately deferred: the container model is the foundation, but moving a wheel means moving a set of parts without transactions, displacing the target bike's wheel and its parts, a disc/rim compatibility check, and a sync rule for a bike whose wheel sits in the bank. All of it is additive on top of this. Individual parts rotate exactly as before.
+
 ## 2026-07-21: Rotatable components — parts bank and mount periods (Trello #3)
 
 ### New feature

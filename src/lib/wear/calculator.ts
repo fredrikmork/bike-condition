@@ -10,6 +10,14 @@ export interface WearInfo {
 }
 
 function calculateWear(currentDistance: number, recommendedDistance: number): WearInfo {
+  // Containers (wheels) hold parts without wearing out themselves and store a
+  // recommended distance of 0. Dividing by that reads as 100% — a component
+  // stuck at critical that no replacement can fix — so answer "not a wearing
+  // part" here rather than relying on every caller to filter them out.
+  if (recommendedDistance <= 0) {
+    return { percentage: 0, status: "healthy", remainingDistance: 0, isOverdue: false };
+  }
+
   const percentage = (currentDistance / recommendedDistance) * 100;
   const remainingDistance = Math.max(0, recommendedDistance - currentDistance);
   const isOverdue = currentDistance >= recommendedDistance;

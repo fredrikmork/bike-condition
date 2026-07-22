@@ -155,6 +155,11 @@ export interface Database {
           id: string;
           /** NULL when the part sits in the bank, unmounted */
           bike_id: string | null;
+          /**
+           * Container part this one sits on — a tire points at its wheel.
+           * NULL for containers themselves and for parts bolted to the frame.
+           */
+          parent_component_id: string | null;
           user_id: string;
           name: string;
           /** User-chosen label, shown instead of `name` when set */
@@ -178,6 +183,7 @@ export interface Database {
         Insert: {
           id?: string;
           bike_id?: string | null;
+          parent_component_id?: string | null;
           user_id: string;
           name: string;
           nickname?: string | null;
@@ -200,6 +206,7 @@ export interface Database {
         Update: {
           id?: string;
           bike_id?: string | null;
+          parent_component_id?: string | null;
           user_id?: string;
           name?: string;
           nickname?: string | null;
