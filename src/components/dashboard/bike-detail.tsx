@@ -29,6 +29,7 @@ import { BatteryIcon } from "./battery-icon";
 import { BikeConfigDialog } from "./bike-config-dialog";
 import { ComponentList } from "./component-list";
 import { MutedComponentsSheet } from "./muted-components-sheet";
+import { ShareBikeDialog } from "./share-bike-dialog";
 
 const ELECTRONIC_LABELS: Record<ElectronicSystem, string> = {
   di2: "Di2",
@@ -388,6 +389,7 @@ export function BikeDetail({
                   </TooltipContent>
                 </Tooltip>
               )}
+              <ShareBikeDialog bikeId={bike.id} bikeName={bike.name} />
               <AddComponentDialog bike={bike} />
             </div>
           )}

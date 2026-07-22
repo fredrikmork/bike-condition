@@ -363,6 +363,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      bike_shares: {
+        Row: {
+          id: string;
+          bike_id: string;
+          user_id: string;
+          token: string;
+          created_at: string;
+          revoked_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          bike_id: string;
+          user_id: string;
+          token: string;
+          created_at?: string;
+          revoked_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          bike_id?: string;
+          user_id?: string;
+          token?: string;
+          created_at?: string;
+          revoked_at?: string | null;
+        };
+        Relationships: [];
+      };
       virtual_periods: {
         Row: {
           id: string;
@@ -420,6 +447,8 @@ export type ComponentMount = Database["public"]["Tables"]["component_mounts"]["R
 export type ComponentMountInsert = Database["public"]["Tables"]["component_mounts"]["Insert"];
 
 export type VirtualPeriod = Database["public"]["Tables"]["virtual_periods"]["Row"];
+
+export type BikeShare = Database["public"]["Tables"]["bike_shares"]["Row"];
 
 // Extended types with relations
 export type BikeWithComponents = Bike & {

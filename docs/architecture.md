@@ -115,30 +115,30 @@ All backend logic runs as Next.js server components and server actions.
 
 **Tables:**
 - `users` - User profiles linked to Strava
-- `bikes` - User's bikes synced from Strava (includes `deleted_defaults`)
-- `components` - Bike components with wear tracking (`current_distance`, `bike_distance_at_install`, `installed_at`, `replaced_at`)
-- `activities` - Synced Strava cycling activities (linked to bike via `bike_id`)
+- `bikes` - User's bikes synced from Strava (includes `deleted_defaults`, `retired`, config columns)
+- `components` - Parts owned by a user (`user_id`), currently mounted on a bike (`bike_id`, NULL = parts bank) and optionally hanging off a container part (`parent_component_id` — a tire on its wheel). Containers (`wheel_front`, `wheel_rear`, `drivetrain`) have `recommended_distance = 0` and carry no wear of their own.
+- `component_mounts` - One row per period a part sat on a bike; wear is the sum over these periods. Distance snapshots at mount/unmount make closed periods self-contained.
+- `activities` - Synced Strava cycling activities (linked to bike via `bike_id`; `trainer` flag marks indoor rides)
+- `bike_shares` - Public share-link tokens per bike (revocable; token is the access control)
 - `user_tokens` - Strava access/refresh tokens with expiry
 - `sync_status` - Last sync timestamps per user
+- `notification_log` - Sent wear alerts, deduped per component install
 
 **Security:**
-- Row Level Security (RLS) on all tables
-- Policies scope data to `auth.uid()`
+- Row Level Security (RLS) on all tables; the app accesses Supabase exclusively through the service role on the server
 
 ### 4.2 Component Distance Calculation
 
-Component wear distance uses the higher of two methods:
+A part's wear is the **sum over its mount periods**. For each period on a bike:
 
-1. **Activity-based:** `SUM(activities.distance) WHERE bike_id = X AND start_date >= component.installed_at`
-2. **Gear-based:** `bike.total_distance - component.bike_distance_at_install`
+1. **Activity-based:** sum of that bike's activities inside the period's time window
+2. **Gear-based:** bike Strava total at period end (snapshot or live) minus at period start
 
-`current_distance = MAX(activity_based, gear_based)`
+`period_distance = MAX(activity_based, gear_based)` — wear is never under-reported. Exception: components in `TRAINER_PAUSE_TYPES` (tires, tubes, rotors, brake pads, brake cables — an explicit list, deliberately decoupled from UI grouping) exclude indoor rides (trainer flag or VirtualRide), and skip the gear fallback when the bike has indoor rides on record, since Strava's total includes indoor km. Logic lives in `lib/sync/compute-distance.ts` (unit-tested).
 
-This ensures wear is never under-reported — if the gear API is stale, activity data wins; if activities are incomplete, gear data wins. This formula applies to **all** component types equally, including wheel and cable components.
+### 4.3 Public Share Links
 
-### 4.3 Trainer Periods (visual only)
-
-Users can configure date ranges when a bike was on an indoor trainer (`virtual_periods` table). These periods drive **only the visual display**: components in `TRAINER_PAUSE_TYPES` (currently wheel components + brake cables) receive a "Trainer" badge and a muted grey progress bar when a period is active today. Distance accumulation in the sync is unaffected — all activities count regardless of activity type.
+`/share/<token>` renders a read-only summary of one bike (components, wear, user-entered brand/model/notes, replacement history) with no auth — the unguessable 128-bit token is the access control. Built for sale listings. One active link per bike; revoking keeps the row so the page can answer "no longer available". Rendered `force-dynamic`, `noindex`, with OG tags for link previews. The summary view (`components/share/share-summary.tsx`) is pure presentation, intended for reuse as the transfer preview when bike transfer ships.
 
 ## 5. External Integrations
 

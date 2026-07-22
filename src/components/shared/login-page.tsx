@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   History,
   RefreshCw,
+  Share2,
   ShieldCheck,
   TrendingUp,
 } from "lucide-react";
@@ -45,6 +46,11 @@ const features = [
     icon: ShieldCheck,
     title: "Trainer-aware",
     description: "Indoor rides won't rack up false wear on your outdoor wheels.",
+  },
+  {
+    icon: Share2,
+    title: "Sell with proof",
+    description: "Share a read-only service-history link with any buyer.",
   },
 ];
 

@@ -59,6 +59,13 @@ Clickable SVG components showing detailed wear information.
 - Full re-sync capability to rebuild activity data from scratch
 - Electronic groupset tracker: km-since-charge chip for Di2/AXS/EPS bikes with per-system battery wear model (3 %/year degradation) and warning states
 - **Email notifications**: wear alerts at 80 % (warn) and 100 % (critical) via Resend — deduped per component install, reset on replacement
+- **Component rotation & parts bank**: parts move between bikes with their wear; wear sums over `component_mounts` periods
+- **Containers**: wheels and drivetrain are parts that hold other parts (`parent_component_id`), carrying user-entered brand/model/notes shown as group descriptions; new Frame catch-all group
+- **Public share links**: read-only bike summary at `/share/<token>` for sale listings — wear, service history, OG preview, revocable
+
+### Recent changes (2026-07-22)
+- **Share links for sale listings** (Trello #21 part 1): `bike_shares` table, share button beside +, public `force-dynamic` page reusable as the transfer preview in part 2. Landing page gained the "Sell with proof" selling point.
+- **Containers & Frame group** (Trello #24 part 1): wheels/drivetrain as container rows, explicit `TRAINER_PAUSE_TYPES` decoupled from grouping, muted-components entry moved beside the + button.
 
 ### Recent changes (2026-03-23)
 - **Strava webhook**: POST `/api/strava/webhook` auto-syncs after each activity. Responds immediately, runs sync in background via `after()`. GET handler responds to Strava hub challenge for subscription setup.
@@ -78,3 +85,5 @@ Clickable SVG components showing detailed wear information.
 - Handle cases where users edit past Strava activities (recalculate wear)
 - User preferences for replacement intervals
 - Manual bike selection as "featured" bike
+- Bike transfer to another user with full history (Trello #21 part 2 — share summary view already built for the preview)
+- Wheel swapping between bikes as a unit (Trello #25 — container model already in place)

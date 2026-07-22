@@ -2,6 +2,24 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-22: Public share links for sale listings (Trello #21, part 1)
+
+### New feature
+- **Share a bike as a read-only page** — a `Share2` button beside the + opens a dialog that mints a public link (`/share/<token>`), made for pasting into a sale listing (Finn.no and the like). The page shows the bike, its config chips, every component group with wear bars, the owner's own notes, and the service history rolled up per part ("Replaced 3 times — last Jun 2026"), with a "Service history tracked with Bike Condition" footer.
+- **One active link per bike** — sharing again returns the same URL, so a link already sitting in a listing never rotates behind the owner's back. Revoking flips the public page to "This listing is no longer available"; the row is kept, never deleted, so a revoked link answers rather than 404s.
+- **What never leaves the house**: email, Strava ids, activities, parts in the bank, muted components. Notes are included deliberately — they are usually sale-relevant ("new bearings 2026").
+- OG meta tags (`"GT GTR CARBON TEAM — 43 088 km"` / `"13 logged part replacements"`) for link previews, plus `noindex`.
+- New landing-page selling point: "Sell with proof — share a read-only service-history link with any buyer."
+
+### Implementation
+- `bike_shares` table (token 128-bit base64url, unique; RLS on, service-role only). The token is the entire access control.
+- `lib/db/shares.ts` + `app/actions/shares.ts` (create/get/revoke); public route `app/share/[token]/page.tsx` is `force-dynamic` so revocation and wear numbers are always current.
+- `components/share/share-summary.tsx` is pure presentation by design — part 2 of the card (transferring a bike to another user) will reuse it as the buyer's preview screen.
+- Verified end-to-end against the running dev server: valid token renders, bogus token and revoked share both answer "no longer available", OG tags present.
+
+### Not included (part 2, separate step)
+- Transferring a bike to another user with full history. Groundwork it needs from sync: skip-unlinked-bikes guard in `retireMissingBikes`, seller-side recreate guard, nullable `strava_gear_id`.
+
 ## 2026-07-22: Wheels as containers, Frame group (Trello #24, part 1 of 2)
 
 ### New feature
