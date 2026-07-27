@@ -65,6 +65,7 @@ Clickable SVG components showing detailed wear information.
 - **Bike transfer**: hand a bike to another user with full history via an invite link; buyer links it to their own Strava afterwards, guided by an in-app banner
 
 ### Recent changes (2026-07-27)
+- **Config-switch fix** (Trello #8): re-config-added components install at current distance (not full history); components a new config disallows are pruned rather than left as hidden zombies (pristine auto-defaults only — customized/replaced parts kept). 4 leftover rows repaired.
 - **Part-shaped icons** (Trello #14): hand-drawn SVGs per component type + bike silhouettes per bike type, replacing generic lucide placeholders. On cards, group headers, parts bank, share page, and sidebar.
 - **Backdated replacement fix** (Trello #5): replacements dated in the past now freeze at the distance ridden by that date, not at click time; 27 historical rows repaired.
 

@@ -2,6 +2,21 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-27: Config switching left zombie components with full distance (Trello #8)
+
+### Bug
+Changing a bike's config added the newly-valid components but never removed the ones the new config disallowed — they lingered as hidden rows (`isComponentVisible` filters them from the UI) that still accrued wear and would reappear if the config flipped back. And every config-added component inherited the bike's **full distance from zero** (`bike_distance_at_install: 0`), so a brake cable added to a 40 000 km bike showed 40 000 km of wear the moment it was added. In production: Winspace T1550 (rim + tubeless) still carried two brake rotors and two inner tubes from an earlier disc + clincher config, all at the full 2 081 km.
+
+### Fix (`saveBikeConfigAction`)
+- **New parts install at "now" on a re-config.** A component added when the bike was already configured starts at zero wear against the current total (`bike_distance_at_install = total_distance`), matching a manual add. First-ever configuration still assumes parts have been on since tracking began (full distance), like the sync-created defaults — gated on the prior `config_complete`.
+- **Invalid components are pruned, not hidden.** After a config change, components the new config disallows are deleted — but only pristine auto-defaults. A part the user renamed, branded, noted, muted, or replaced is kept (still hidden) so nothing they invested in is lost. Deletion cascades to `component_mounts` and `notification_log`.
+
+### Data repair (migration `prune_config_invalid_leftover_components`)
+Cleared the existing hidden leftovers with the same guard — 4 rows on Winspace T1550 (2 rotors, 2 tubes), all pristine. Zero config-invalid untouched components remain.
+
+### Verified
+Unit tests for the install-distance split (first-config vs re-config), plus a sandboxed e2e against the real database (7 checks): re-config adds brake cables at current distance with zero wear; a pristine rotor and front tube are pruned on switching to rim + tubeless; a noted rotor and a tube with replacement history are kept; the pruned rows' mounts cascade away. Sandbox deleted afterwards; 60/60 unit tests pass.
+
 ## 2026-07-27: Part-shaped icons (Trello #14)
 
 ### New feature

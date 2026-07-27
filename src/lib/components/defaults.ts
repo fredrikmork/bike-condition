@@ -118,12 +118,21 @@ function buildConfiguredComponentList(config: BikeConfig): DefaultComponent[] {
  * Generate the correct default component list for a configured bike.
  * Called when a user completes bike setup or when a new bike is created
  * after configuration is saved.
+ *
+ * `installedNow` decides where the new parts start counting:
+ * - false (first-ever configuration): the parts are assumed to have been on
+ *   the bike since tracking began, so they carry its full distance —
+ *   `bike_distance_at_install: 0`, matching the sync-created defaults.
+ * - true (a later re-configuration): switching to rim brakes, say, adds brake
+ *   cables that are genuinely new *now*. They must start at zero wear against
+ *   the bike's current total, not inherit its whole history.
  */
 export function createConfiguredComponents(
   bikeId: string,
   userId: string,
   bikeDistance: number,
-  config: BikeConfig
+  config: BikeConfig,
+  { installedNow = false }: { installedNow?: boolean } = {}
 ): ComponentInsert[] {
   return buildConfiguredComponentList(config).map((c) => ({
     bike_id: bikeId,
@@ -131,8 +140,8 @@ export function createConfiguredComponents(
     name: c.name,
     type: c.type,
     recommended_distance: c.recommended_distance,
-    current_distance: bikeDistance,
-    bike_distance_at_install: 0,
+    current_distance: installedNow ? 0 : bikeDistance,
+    bike_distance_at_install: installedNow ? bikeDistance : 0,
   }));
 }
 
