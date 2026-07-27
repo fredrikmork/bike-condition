@@ -1,6 +1,12 @@
 import { getContainerTypeFor, isContainerType } from "@/lib/components/containers";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { Component, ComponentInsert } from "@/lib/supabase/types";
+import {
+  type ActivityDistanceInput,
+  computeComponentDistanceAcrossMounts,
+  type MountDistanceInput,
+} from "@/lib/sync/compute-distance";
 
 /**
  * Every transition of a part between bikes and the bank goes through this
@@ -96,33 +102,147 @@ export async function linkPartsToContainers(bikeId: string): Promise<void> {
   );
 }
 
+/** A date this far before now counts as backdated for snapshot purposes. */
+const BACKDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Close a part's open mount period without moving the part itself.
  *
  * Snapshots the bike's Strava total onto the mount so the period keeps its
  * gear-distance fallback once the part has moved on.
  *
+ * When `at` is backdated, today's Strava total would be a lie — the bike had
+ * ridden less back then. The total at that date is reconstructed from the
+ * activity record instead: mount baseline plus every ride between mount and
+ * `at`. And if `at` predates the mount itself (a part that was "on since the
+ * beginning", replaced before tracking started), the mount start is moved back
+ * to the bike's first activity so the window covers the rides it actually saw.
+ *
  * Used on its own when a part is replaced: the worn part stays attached to the
  * bike so it still shows up in that bike's component history, but it stops
  * accumulating distance.
+ *
+ * Returns the distance snapshot written to the mount, so callers can put the
+ * new part's baseline on the same scale. Null when there was no open mount.
  */
-export async function closeOpenMount(componentId: string, at: Date = new Date()): Promise<void> {
+export async function closeOpenMount(
+  componentId: string,
+  at: Date = new Date()
+): Promise<number | null> {
   const { data: openMount } = await supabaseAdmin
     .from("component_mounts")
-    .select("id, bike_id")
+    .select("id, bike_id, mounted_at, bike_distance_at_mount")
     .eq("component_id", componentId)
     .is("unmounted_at", null)
     .maybeSingle();
 
-  if (!openMount) return;
+  if (!openMount) return null;
+
+  const backdated = Date.now() - at.getTime() > BACKDATE_THRESHOLD_MS;
+  let mountedAt = new Date(openMount.mounted_at);
+  let snapshot: number;
+
+  if (!backdated) {
+    snapshot = await getBikeTotalDistance(openMount.bike_id);
+  } else {
+    // Replaced before it was even mounted on paper — the mount row's start is
+    // tracking-start, not reality. Stretch the window back to the bike's first
+    // ride so the reconstruction sees the kilometres that came before.
+    if (at < mountedAt) {
+      const { data: firstActivity } = await supabaseAdmin
+        .from("activities")
+        .select("start_date")
+        .eq("bike_id", openMount.bike_id)
+        .order("start_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      mountedAt = firstActivity ? new Date(firstActivity.start_date) : at;
+    }
+
+    // Strava's gear total includes indoor rides, so the reconstruction does too.
+    const rides = await fetchAllRows<{ distance: number }>((from, to) =>
+      supabaseAdmin
+        .from("activities")
+        .select("distance")
+        .eq("bike_id", openMount.bike_id)
+        .gte("start_date", mountedAt.toISOString())
+        .lt("start_date", at.toISOString())
+        .range(from, to)
+    );
+    const ridden = rides.reduce((sum, r) => sum + r.distance, 0);
+    // Never claim more than the bike's present total.
+    snapshot = Math.min(
+      openMount.bike_distance_at_mount + ridden,
+      await getBikeTotalDistance(openMount.bike_id)
+    );
+  }
 
   await supabaseAdmin
     .from("component_mounts")
     .update({
+      mounted_at: mountedAt.toISOString(),
       unmounted_at: at.toISOString(),
-      bike_distance_at_unmount: await getBikeTotalDistance(openMount.bike_id),
+      bike_distance_at_unmount: snapshot,
     })
     .eq("id", openMount.id);
+
+  return snapshot;
+}
+
+/**
+ * Recompute and store a replaced part's final distance from its (now closed)
+ * mount periods. This is what freezes honestly: a replacement backdated to
+ * last autumn keeps only the kilometres ridden up to last autumn, not
+ * everything the sync had accumulated up to the moment the user clicked.
+ */
+export async function finalizeReplacedComponentDistance(componentId: string): Promise<void> {
+  const { data: component } = await supabaseAdmin
+    .from("components")
+    .select("id, type, bike_id, bike_distance_at_install, installed_at, replaced_at")
+    .eq("id", componentId)
+    .single();
+
+  if (!component) return;
+
+  const { data: mounts } = await supabaseAdmin
+    .from("component_mounts")
+    .select(
+      "component_id, bike_id, mounted_at, unmounted_at, bike_distance_at_mount, bike_distance_at_unmount"
+    )
+    .eq("component_id", componentId);
+
+  const bikeIds = [...new Set((mounts ?? []).map((m) => m.bike_id))];
+  if (component.bike_id) bikeIds.push(component.bike_id);
+
+  const [{ data: bikes }, allActivities] = await Promise.all([
+    supabaseAdmin.from("bikes").select("id, total_distance").in("id", bikeIds),
+    bikeIds.length > 0
+      ? fetchAllRows<ActivityDistanceInput & { bike_id: string | null }>((from, to) =>
+          supabaseAdmin
+            .from("activities")
+            .select("bike_id, distance, activity_type, start_date, trainer")
+            .in("bike_id", bikeIds)
+            .range(from, to)
+        )
+      : Promise.resolve([]),
+  ]);
+
+  const activitiesByBike = new Map<string, ActivityDistanceInput[]>();
+  for (const activity of allActivities) {
+    if (!activity.bike_id) continue;
+    const list = activitiesByBike.get(activity.bike_id) ?? [];
+    list.push(activity);
+    activitiesByBike.set(activity.bike_id, list);
+  }
+
+  const current_distance = computeComponentDistanceAcrossMounts(
+    component,
+    (mounts ?? []) as MountDistanceInput[],
+    activitiesByBike,
+    new Map((bikes ?? []).map((b) => [b.id, b.total_distance ?? 0]))
+  );
+
+  await supabaseAdmin.from("components").update({ current_distance }).eq("id", componentId);
 }
 
 /** Close the open mount of a part and send it to the bank. */

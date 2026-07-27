@@ -1,4 +1,8 @@
-import { closeOpenMount, createComponentsWithMounts } from "@/lib/components/mounts";
+import {
+  closeOpenMount,
+  createComponentsWithMounts,
+  finalizeReplacedComponentDistance,
+} from "@/lib/components/mounts";
 import { fetchAllRows } from "@/lib/supabase/paginate";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type {
@@ -120,10 +124,19 @@ export async function replaceComponent(
   if (retireErr) throw new Error(`Failed to retire component: ${retireErr.message}`);
 
   // The worn part stops accumulating at the replacement date, but stays
-  // attached to the bike so it remains visible in that bike's history.
-  await closeOpenMount(componentId, replacedDate);
+  // attached to the bike so it remains visible in that bike's history. For a
+  // backdated date the mount close reconstructs the bike's total at that date
+  // from the activity record — today's total would be a lie.
+  const snapshotAtReplacement = await closeOpenMount(componentId, replacedDate);
 
-  // Create new component — distance = bike.total_distance - bike_distance_at_install
+  // Freeze the worn part's distance honestly: recomputed over its now-closed
+  // mount windows, so a replacement backdated to last autumn keeps only the
+  // kilometres ridden by last autumn — not everything up to the click.
+  await finalizeReplacedComponentDistance(componentId);
+
+  // The new part starts on the same distance scale the old one ended on. With
+  // today's total as baseline, a backdated install would start its gear
+  // window in the future and undercount until the bike caught up.
   const [newComponent] = await createComponentsWithMounts([
     {
       bike_id: existing.bike_id,
@@ -136,7 +149,7 @@ export async function replaceComponent(
       icon: existing.icon,
       recommended_distance: existing.recommended_distance,
       current_distance: 0,
-      bike_distance_at_install: bikeDistance,
+      bike_distance_at_install: snapshotAtReplacement ?? bikeDistance,
       installed_at: replacedIso,
     },
   ]);

@@ -2,6 +2,23 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-27: Backdated replacements froze the wrong distance (Trello #5)
+
+### Bug
+Logging a replacement with a past date froze the old part's `current_distance` at whatever the sync had accumulated **up to the click**, not up to the stated date. Every first-generation default replaced this way showed the same number — the full bike total. In production: GT GTR brake pads "replaced 2021" showed 42 509 km (honest: 23 397), cassette "replaced 2023" the same 42 509 (honest: 32 957), and Rulle's shifter cables "replaced 2016" showed 38 647 km. The mount rows got today's total (or NULL) as their unmount snapshot, and gen-1 parts ended up with backwards windows (mounted 2026 → unmounted 2021).
+
+### Fix
+- `closeOpenMount` now reconstructs the bike's total **at the stated date** from the activity record when the date is backdated (>24 h): mount baseline + rides inside the window, capped at the present total. If the date predates the mount itself ("on the bike since before tracking"), the window is stretched back to the bike's first ride.
+- New `finalizeReplacedComponentDistance` recomputes the worn part's frozen distance over its now-closed mount windows — same rules as the live computation (indoor exclusion for trainer-pause types included).
+- The new part's `bike_distance_at_install` uses the reconstructed snapshot instead of today's total, so its gear window starts on the right scale instead of undercounting until the bike "catches up".
+- History sheet: a part replaced before tracking started now reads "On the bike until 30 Jul 2021" instead of the absurd "15 Feb 2026 → 30 Jul 2021".
+
+### Data repair (migration `repair_backdated_replacement_distances`)
+27 history rows across 5 bikes, scoped to `replaced_at < installed_at` — unambiguously backdated; `updated_at` heuristics were rejected because they'd catch correct rows. Their mounts got stretched windows and honest snapshots too. Note: Rulle's entries repaired to 0 km — its activity record has nothing before those dates (the mileage sits in the gear total), and 0-as-unknown beats 38 647-as-wrong.
+
+### Verified
+Sandboxed e2e against the real database (8 checks): backdated replacement freezes at the activity sum before the date, mount snapshot/window reconstructed, new part baselined on the reconstructed scale — and a same-day replacement still behaves exactly as before (gear and activity paths agree). Sandbox deleted afterwards; 58/58 unit tests unchanged.
+
 ## 2026-07-22: Bike transfer to another user (Trello #21, part 2)
 
 ### New feature

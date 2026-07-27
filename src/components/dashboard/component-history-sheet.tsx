@@ -89,6 +89,12 @@ function HistoryEntry({ entry }: { entry: Component }) {
   const installedDate = format(new Date(entry.installed_at), "d MMM yyyy");
   const replacedDate = entry.replaced_at ? format(new Date(entry.replaced_at), "d MMM yyyy") : null;
 
+  // A part logged as replaced before tracking began has no meaningful install
+  // date — its installed_at is just when tracking started. "2026 → 2021" reads
+  // as a bug; "until 2021" is what the user actually told us.
+  const replacedBeforeTracking =
+    entry.replaced_at !== null && new Date(entry.replaced_at) < new Date(entry.installed_at);
+
   const specParts = [entry.brand, entry.model, entry.spec].filter(Boolean);
 
   return (
@@ -102,8 +108,14 @@ function HistoryEntry({ entry }: { entry: Component }) {
       <div className="grid gap-1">
         {/* Date range */}
         <p className="text-xs text-muted-foreground">
-          {installedDate}
-          {replacedDate && <> → {replacedDate}</>}
+          {replacedBeforeTracking ? (
+            <>On the bike until {replacedDate}</>
+          ) : (
+            <>
+              {installedDate}
+              {replacedDate && <> → {replacedDate}</>}
+            </>
+          )}
         </p>
 
         {/* Spec */}
