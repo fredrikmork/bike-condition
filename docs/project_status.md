@@ -64,6 +64,10 @@ Clickable SVG components showing detailed wear information.
 - **Public share links**: read-only bike summary at `/share/<token>` for sale listings — wear, service history, OG preview, revocable
 - **Bike transfer**: hand a bike to another user with full history via an invite link; buyer links it to their own Strava afterwards, guided by an in-app banner
 
+### Recent changes (2026-07-27)
+- **Part-shaped icons** (Trello #14): hand-drawn SVGs per component type + bike silhouettes per bike type, replacing generic lucide placeholders. On cards, group headers, parts bank, share page, and sidebar.
+- **Backdated replacement fix** (Trello #5): replacements dated in the past now freeze at the distance ridden by that date, not at click time; 27 historical rows repaired.
+
 ### Recent changes (2026-07-22)
 - **Bike transfer** (Trello #21 part 2): `bike_transfers` table, transfer dialog behind the share dialog, public accept page at `/transfer/<token>`, unlinked-bike banner with live Strava gear picker, sync guards for unlinked/sold gear. `bikes.strava_gear_id` now nullable.
 - **Share links for sale listings** (Trello #21 part 1): `bike_shares` table, share button beside +, public `force-dynamic` page reused as the transfer preview in part 2. Landing page gained the "Sell with proof" selling point.

@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getBikeTypeIcon } from "@/lib/components/icons";
 import { getBikeConfig } from "@/lib/components/visibility";
 import type { BikeWithComponents, ElectronicSystem } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -413,6 +414,7 @@ export function BikeDetail({
           lastSync={lastSync}
           hasVirtualRides={hasVirtualRides}
           bikeLabel={subtitle || null}
+          bikeIcon={getBikeTypeIcon(bike.bike_type, bike.frame_type)}
           readOnly={readOnly}
         />
       </div>

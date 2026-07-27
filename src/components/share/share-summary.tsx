@@ -1,10 +1,12 @@
 import { format } from "date-fns";
-import { Bike as BikeIcon, CircleDot, Cog, History } from "lucide-react";
+import { History } from "lucide-react";
+import { DrivetrainIcon, SpokedWheelIcon } from "@/components/icons/component-icons";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { isContainerType } from "@/lib/components/containers";
 import { COMPONENT_GROUPS, GROUPED_TYPES } from "@/lib/components/groups";
+import { getBikeTypeIcon, getComponentIcon } from "@/lib/components/icons";
 import { getBikeConfig, isComponentVisible } from "@/lib/components/visibility";
 import type { Bike, Component, LubeType } from "@/lib/supabase/types";
 import { calculateComponentWear, formatDistance, LUBE_LABELS } from "@/lib/wear/calculator";
@@ -102,7 +104,11 @@ export function ShareSummary({ bike, components, history }: ShareSummaryProps) {
           const description = containerLabel ?? (group.id === "frame" ? subtitle || null : null);
 
           const Icon =
-            group.id === "drivetrain" ? Cog : group.id === "frame" ? BikeIcon : CircleDot;
+            group.id === "drivetrain"
+              ? DrivetrainIcon
+              : group.id === "frame"
+                ? getBikeTypeIcon(bike.bike_type, bike.frame_type)
+                : SpokedWheelIcon;
 
           return (
             <Card key={group.id}>
@@ -129,12 +135,14 @@ export function ShareSummary({ bike, components, history }: ShareSummaryProps) {
                       .join(" ")
                       .trim();
                     const replacements = historyByType.get(component.type)?.length ?? 0;
+                    const PartIcon = getComponentIcon(component.type, component.icon);
 
                     return (
                       <div key={component.id}>
                         <div className="flex items-baseline justify-between gap-3">
                           {/* div, not p: Badge renders a div and divs may not live inside p */}
-                          <div className="flex min-w-0 items-baseline gap-1.5 truncate text-sm">
+                          <div className="flex min-w-0 items-center gap-1.5 truncate text-sm">
+                            <PartIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             <span className="truncate">
                               {component.nickname ?? component.name}
                               {meta && <span className="text-muted-foreground"> — {meta}</span>}

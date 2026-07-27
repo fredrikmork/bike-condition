@@ -2,6 +2,19 @@
 
 All notable changes for this project in this file.
 
+## 2026-07-27: Part-shaped icons (Trello #14)
+
+### New feature
+Every component and group now carries an icon that looks like the thing, replacing the generic lucide placeholders (a chain link for everything, etc.).
+- **Hand-drawn part icons** (`components/icons/component-icons.tsx`): chain (interlocked links), cassette (sprocket cone), chainring (ring + crank arm), bottom bracket (bearing + axle), pulley wheels, tire (donut), inner tube (ring + valve), brake pads (caliper), brake rotor (disc + bolt holes), cable, cleat, bar tape — plus the two container assemblies: a spoked wheel for the wheel groups and a chainring-and-cog for the drivetrain.
+- **Bike silhouettes per type** (`components/icons/bike-icons.tsx`): road (drop bars), MTB (flat bar, sloping top tube), TT (aero extensions + rear disc), hybrid, e-bike. Shown on the Frame group (the frame *is* the bike) and in the sidebar bike list. Falls back to Strava `frame_type` when the user hasn't set a `bike_type`, and to the generic lucide bike when neither is known.
+- Icons appear on component cards, group headers, the parts bank, and the public share page.
+
+### Implementation
+- `getComponentIcon` / new `getBikeTypeIcon` in `lib/components/icons.ts` return an `AnyIcon` (either a lucide icon or one of our SVGs — both render as `<Icon className=… />`). Custom-component icon picker unchanged.
+- Icons follow lucide's drawing conventions (24×24, stroke 2, round caps, `currentColor`) so they inherit color and size everywhere they're dropped in.
+- The tire started as a treaded wheel but read as a settings-gear at 14 px; simplified to a plain donut, verified in the running app.
+
 ## 2026-07-27: Backdated replacements froze the wrong distance (Trello #5)
 
 ### Bug

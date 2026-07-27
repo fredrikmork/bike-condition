@@ -1,5 +1,6 @@
 import { isContainerType } from "@/lib/components/containers";
 import { COMPONENT_GROUPS, GROUPED_TYPES } from "@/lib/components/groups";
+import type { AnyIcon } from "@/lib/components/icons";
 import { isComponentVisible } from "@/lib/components/visibility";
 import type { BikeConfig, Component } from "@/lib/supabase/types";
 import { ComponentGroup } from "./component-group";
@@ -13,6 +14,8 @@ interface ComponentListProps {
   hasVirtualRides?: boolean;
   /** Shown as the Frame group's subtitle — the frame is the bike */
   bikeLabel?: string | null;
+  /** The bike's silhouette icon, shown on the Frame group */
+  bikeIcon?: AnyIcon | null;
   /** Retired bike — values only, no edit/replace/delete actions */
   readOnly?: boolean;
 }
@@ -24,6 +27,7 @@ export function ComponentList({
   lastSync,
   hasVirtualRides = false,
   bikeLabel = null,
+  bikeIcon = null,
   readOnly = false,
 }: ComponentListProps) {
   // Filter by visibility rules and mute state
@@ -78,6 +82,7 @@ export function ComponentList({
             lastSync={lastSync}
             hasVirtualRides={hasVirtualRides}
             subtitle={group.id === "frame" ? bikeLabel : null}
+            bikeIcon={group.id === "frame" ? bikeIcon : null}
             readOnly={readOnly}
           />
         );

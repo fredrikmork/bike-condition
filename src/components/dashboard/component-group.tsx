@@ -1,15 +1,17 @@
 "use client";
 
-import { Bike as BikeIcon, ChevronDown, CircleDot, Cog, Pencil, RotateCw } from "lucide-react";
+import { Bike as BikeIcon, ChevronDown, Pencil, RotateCw } from "lucide-react";
 import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateComponentAction } from "@/app/actions/components";
+import { DrivetrainIcon, SpokedWheelIcon } from "@/components/icons/component-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ComponentGroupDef } from "@/lib/components/groups";
 import { TRAINER_PAUSE_TYPES } from "@/lib/components/groups";
+import type { AnyIcon } from "@/lib/components/icons";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -29,6 +31,8 @@ interface ComponentGroupProps {
   hasVirtualRides?: boolean;
   /** Fallback description when the group has no container of its own */
   subtitle?: string | null;
+  /** The bike's silhouette icon — shown on the Frame group (the frame IS the bike) */
+  bikeIcon?: AnyIcon | null;
   readOnly?: boolean;
 }
 
@@ -40,6 +44,7 @@ export function ComponentGroup({
   lastSync,
   hasVirtualRides = false,
   subtitle = null,
+  bikeIcon = null,
   readOnly = false,
 }: ComponentGroupProps) {
   const [expanded, setExpanded] = useState(false);
@@ -71,7 +76,14 @@ export function ComponentGroup({
   }, "healthy");
   const worstIsOverdue = wears.some((w) => w.isOverdue);
 
-  const Icon = group.id === "drivetrain" ? Cog : group.id === "frame" ? BikeIcon : CircleDot;
+  // Part-shaped icons (Trello #14): a spoked wheel for the wheel groups, a
+  // chainring-and-cog for the drivetrain, the bike's own silhouette for Frame.
+  const Icon =
+    group.id === "drivetrain"
+      ? DrivetrainIcon
+      : group.id === "frame"
+        ? (bikeIcon ?? BikeIcon)
+        : SpokedWheelIcon;
 
   // Only badge the whole group when every part in it skips indoor km. The Frame
   // group mixes pads and cables (which do) with cleats and custom parts (which

@@ -20,6 +20,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { getComponentIcon } from "@/lib/components/icons";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -84,11 +85,16 @@ export function PartsBankSheet({ components }: PartsBankSheetProps) {
                     ? "bg-status-warning"
                     : "bg-status-healthy";
 
+              const PartIcon = getComponentIcon(part.type, part.icon);
+
               return (
                 <div key={part.id} className="rounded-lg border px-3 py-2.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{part.nickname ?? part.name}</p>
+                      <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                        <PartIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        {part.nickname ?? part.name}
+                      </p>
                       {part.nickname && (
                         <p className="truncate text-xs text-muted-foreground">{part.name}</p>
                       )}

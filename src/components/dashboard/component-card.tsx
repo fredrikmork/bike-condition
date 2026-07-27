@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getComponentIcon } from "@/lib/components/icons";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { Component, LubeType } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -237,6 +238,7 @@ export function ComponentCard({
   const wear = calculateComponentWear(optimisticComponent);
   const cappedPercentage = Math.min(wear.percentage, 100);
   const isCustom = component.type === "custom";
+  const TypeIcon = getComponentIcon(component.type, component.icon);
 
   const installed = new Date(optimisticComponent.installed_at).getTime();
   const created = new Date(component.created_at).getTime();
@@ -284,6 +286,7 @@ export function ComponentCard({
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
+              <TypeIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <h4 className="text-sm font-medium truncate">
                 {/* A nickname wins over the group's shortened label — it is the
                     whole point of naming a part you rotate between bikes. */}

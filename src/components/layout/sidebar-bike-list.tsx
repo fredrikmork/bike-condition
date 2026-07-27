@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Archive, Bike, Settings2 } from "lucide-react";
+import { AlertTriangle, Archive, Settings2 } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuBadge,
@@ -9,6 +9,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { isContainerType } from "@/lib/components/containers";
+import { getBikeTypeIcon } from "@/lib/components/icons";
 import { useBikeStore } from "@/lib/stores/bike-store";
 import type { BikeWithComponents } from "@/lib/supabase/types";
 import { calculateComponentWear } from "@/lib/wear/calculator";
@@ -26,6 +27,7 @@ export function SidebarBikeList({ bikes, readOnly = false }: SidebarBikeListProp
   return (
     <SidebarMenu>
       {bikes.map((bike) => {
+        const BikeTypeIcon = getBikeTypeIcon(bike.bike_type, bike.frame_type);
         const hasWarning = bike.components.some((c) => {
           if (isContainerType(c.type)) return false; // wheels carry no wear of their own
           const wear = calculateComponentWear(c);
@@ -43,7 +45,7 @@ export function SidebarBikeList({ bikes, readOnly = false }: SidebarBikeListProp
               tooltip={readOnly ? `${bike.name} (retired)` : bike.name}
               className={readOnly ? "text-muted-foreground" : undefined}
             >
-              {readOnly ? <Archive className="h-4 w-4" /> : <Bike className="h-4 w-4" />}
+              {readOnly ? <Archive className="h-4 w-4" /> : <BikeTypeIcon className="h-4 w-4" />}
               <span className="truncate">{bike.name}</span>
             </SidebarMenuButton>
             {!readOnly && !bike.config_complete && (
