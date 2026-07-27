@@ -47,7 +47,8 @@ export function ComponentGroup({
   bikeIcon = null,
   readOnly = false,
 }: ComponentGroupProps) {
-  const [expanded, setExpanded] = useState(false);
+  // The drivetrain is the group people check most often, so it starts open.
+  const [expanded, setExpanded] = useState(group.id === "drivetrain");
   const [batchOpen, setBatchOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const { focusedComponentId } = useBikeStore();
