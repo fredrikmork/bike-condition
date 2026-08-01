@@ -4,6 +4,7 @@ import { Bike, PackageOpen } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { mountComponentAction } from "@/app/actions/components";
+import { AddBankPartDialog } from "@/components/dashboard/add-bank-part-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,8 +65,8 @@ export function PartsBankSheet({ components }: PartsBankSheetProps) {
         <SheetHeader>
           <SheetTitle>Parts bank</SheetTitle>
           <SheetDescription>
-            Parts you have taken off a bike. They keep their accumulated wear and stop ageing until
-            you mount them again.
+            Parts you have taken off a bike, plus spares you add here. They keep their accumulated
+            wear and stop ageing until you mount them again.
           </SheetDescription>
         </SheetHeader>
 
@@ -154,6 +155,8 @@ export function PartsBankSheet({ components }: PartsBankSheetProps) {
               );
             })
           )}
+
+          <AddBankPartDialog />
         </div>
       </SheetContent>
     </Sheet>

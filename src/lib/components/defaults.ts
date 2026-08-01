@@ -164,6 +164,24 @@ export function getAvailableComponentTypes(
 }
 
 /**
+ * Every wearing part type a user might stock in the parts bank, independent of
+ * any bike's configuration. The "add part to bank" dialog has no bike config to
+ * constrain its choices, so it offers this full list. Containers are excluded:
+ * a wheel is an assembly you build on a bike, not a spare you drop in the bank.
+ */
+export const ALL_ADDABLE_COMPONENTS: DefaultComponent[] = [
+  ...UNIVERSAL_COMPONENTS,
+  { name: "Brake Pads (Front)", type: "brake_pads_front", recommended_distance: 3_500_000 },
+  { name: "Brake Pads (Rear)", type: "brake_pads_rear", recommended_distance: 3_500_000 },
+  { name: "Brake Rotor (Front)", type: "brake_rotor_front", recommended_distance: 25_000_000 },
+  { name: "Brake Rotor (Rear)", type: "brake_rotor_rear", recommended_distance: 25_000_000 },
+  { name: "Brake Cables", type: "brake_cables", recommended_distance: 12_000_000 },
+  { name: "Shifter Cables", type: "shifter_cables", recommended_distance: 10_000_000 },
+  { name: "Inner Tube (Front)", type: "inner_tube_front", recommended_distance: 5_000_000 },
+  { name: "Inner Tube (Rear)", type: "inner_tube_rear", recommended_distance: 4_000_000 },
+];
+
+/**
  * Legacy default list — used for unconfigured bikes only.
  * Kept for backwards compatibility with existing data.
  */
