@@ -72,6 +72,7 @@ A Husky `pre-commit` hook runs `lint-staged` (Biome on staged files) and `pnpm t
 
 ## Tech Stack
 
+- Node.js 24 (pinned in `engines.node` + `.nvmrc`; `engine-strict=true` in `.npmrc`)
 - Next.js 16 with App Router (Turbopack by default)
 - React 19, TypeScript 5.9 (strict mode)
 - Auth.js v5 (`next-auth@beta`) for Strava OAuth

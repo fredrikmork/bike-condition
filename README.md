@@ -8,7 +8,10 @@ Next.js 16 (App Router, Turbopack) · React 19 · TypeScript 5.9 (strict) · Aut
 
 ## Getting started
 
+**Node.js 24** is required (pinned via `engines.node` in `package.json` and `.nvmrc`). `engine-strict=true` in `.npmrc` makes `pnpm install` fail fast on an older runtime.
+
 ```bash
+nvm use        # picks up .nvmrc (Node 24)
 pnpm install   # also installs Husky hooks via the `prepare` script
 pnpm dev       # http://localhost:3000
 ```
